@@ -1,0 +1,3 @@
+[submodule "marl-gpt"]
+	path = marl-gpt
+	url = https://github.com/Cognitive-AI-Systems/marl-gpt
