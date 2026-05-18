@@ -1,5 +1,5 @@
-export PROJECT_NAME="research-project-template"
-export DISPLAY_NAME="🔬 Research Project Template"
+export PROJECT_NAME="marl-gpt-interp"
+export DISPLAY_NAME="🔬 MARL GPT Interp"
 
 mkdir -p $HOME/.ipython/kernels/${PROJECT_NAME}
 cp -r ${WORK}/${PROJECT_NAME}/.venv/share/jupyter/kernels/python3/* $HOME/.ipython/kernels/${PROJECT_NAME}/

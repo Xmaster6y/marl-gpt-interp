@@ -4,7 +4,7 @@
 
 - This repository is a research project template for turning user ideas, intuitions, and hunches into research questions, experiments, claims, decisions, and paper text.
 - First setup establishes the project slug, Python package name, paper title, documentation identity, and any cluster paths in `Justfile`.
-- If the project name changes, derive the package name with `project_name.replace("-", "_")`, then rename `src/research_project_template/` and update imports, tests, notebooks, and `pyproject.toml`.
+- If the project name changes, derive the package name with `project_name.replace("-", "_")`, then rename the package directory under `src/` and update imports, tests, notebooks, and `pyproject.toml`.
 - Keep project-specific identity in `docs/`, `latex/`, `pyproject.toml`, and cluster config, not in this file.
 
 ## Structure

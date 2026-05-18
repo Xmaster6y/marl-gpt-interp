@@ -6,7 +6,7 @@ import wandb
 import sys
 import time
 
-from research_project_template.core import loss_function
+from marl_gpt_interp.core import loss_function
 
 
 def main(cfg: DictConfig):

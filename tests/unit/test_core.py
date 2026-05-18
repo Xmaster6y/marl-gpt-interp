@@ -1,6 +1,6 @@
 import pytest
 
-from research_project_template.core import loss_function
+from marl_gpt_interp.core import loss_function
 
 
 @pytest.mark.unit

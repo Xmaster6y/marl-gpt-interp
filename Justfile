@@ -1,7 +1,7 @@
 cluster_host_cv := "cv"
 cluster_host_jz := "jz"
-cluster_repo_cv := "~/work/research-project-template"
-cluster_repo_jz := "/lustre/fswork/projects/rech/nwq/uim47nr/research-project-template"
+cluster_repo_cv := "~/work/marl-gpt-interp"
+cluster_repo_jz := "/lustre/fswork/projects/rech/nwq/uim47nr/marl-gpt-interp"
 result_folders := "experiments hydra slurm"
 
 install:

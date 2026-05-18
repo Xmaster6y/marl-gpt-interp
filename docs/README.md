@@ -2,7 +2,7 @@
 
 ## Snapshot
 
-- Project: `research-project-template`
+- Project: `marl-gpt-interp`
 - Phase: setup
 - Status: scaffold only
 - Paper: [`../latex/`](../latex/)

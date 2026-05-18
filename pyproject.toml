@@ -1,7 +1,7 @@
 [project]
-name = "research-project-template"
+name = "marl-gpt-interp"
 version = "0.1.0"
-description = "Pragmatic research project template for Python experiments and LaTeX papers."
+description = "Research code for marl-gpt-interp."
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
