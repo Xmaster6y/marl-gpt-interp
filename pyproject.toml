@@ -1,0 +1,37 @@
+[project]
+name = "research-project-template"
+version = "0.1.0"
+description = "Pragmatic research project template for Python experiments and LaTeX papers."
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = ""},
+]
+requires-python = ">=3.11"
+dependencies = [
+    "hydra-core",
+    "ipykernel",
+    "loguru",
+    "wandb",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit",
+    "pytest",
+    "pytest-cov",
+]
+
+[build]
+target-dir = "build/dist"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.ruff]
+line-length = 119
+target-version = "py311"
