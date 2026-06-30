@@ -412,7 +412,7 @@ wheels = [
 [[package]]
 name = "gfootball"
 version = "2.10.3"
-source = { git = "https://github.com/Xmaster6y/football.git?rev=b3a0768e#b3a0768e55164aa7d3e3ce2b81ffce785a285947" }
+source = { git = "https://github.com/Xmaster6y/football.git?rev=55b84ba#55b84ba1cd089b0649f436354e9b9a11f53a1f56" }
 dependencies = [
     { name = "absl-py" },
     { name = "gymnasium" },
@@ -724,7 +724,7 @@ dev = [
     { name = "pytest-cov" },
 ]
 grf = [
-    { name = "gfootball", git = "https://github.com/Xmaster6y/football.git?rev=b3a0768e" },
+    { name = "gfootball", git = "https://github.com/Xmaster6y/football.git?rev=55b84ba" },
     { name = "gymnasium", specifier = ">=1.2.0" },
     { name = "numpy", specifier = ">=2.2.6" },
     { name = "pydantic", specifier = ">=2.10" },

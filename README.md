@@ -44,7 +44,8 @@ just run grf_rollout_stats=2026-06-30-smoke
 The first GRF experiment expects the MARL-GPT checkpoint at `results/marl-gpt-main.pt`.
 The checkpoint is untracked; put it there manually or set `grf_rollout_stats.download_checkpoint=true`.
 Installing `gfootball` requires system CMake and Boost.Python libraries matching the Python used for the virtual environment.
-Use `just grf-install` after loading the matching system Python and Boost.Python stack; it disables uv-managed Python so the interpreter, CMake, and Boost.Python agree.
+Use `just grf-install` after loading CMake and a Boost.Python stack for the same Python minor version; it uses uv-managed Python and passes that interpreter into the GRF CMake build.
+The default is uv-managed Python 3.12 for JZ. Pass an explicit version when needed, for example `just grf-install 3.13` on local macOS if the available Boost.Python is `boost_python313`.
 
 Slurm launch recipes:
 

@@ -22,7 +22,7 @@ dev = [
     "pytest-cov",
 ]
 grf = [
-    "gfootball @ git+https://github.com/Xmaster6y/football.git@b3a0768e",
+    "gfootball @ git+https://github.com/Xmaster6y/football.git@55b84ba",
     "gymnasium>=1.2.0",
     "numpy>=2.2.6",
     "pydantic>=2.10",
