@@ -7,14 +7,14 @@
 [![LaTeX](https://img.shields.io/badge/latex-grey.svg?logo=latex)](https://www.latex-project.org/)
 ![ci](https://github.com/Xmaster6y/marl-gpt-interp/actions/workflows/ci.yml/badge.svg)
 
-Research project scaffold for `marl-gpt-interp`.
+Research code and project memory for interpreting MARL-GPT football behavior in Google Research Football.
 
 ## Layout
 
 - `src/` contains reusable Python package code.
 - `scripts/` contains experiment entrypoints.
 - `configs/` contains experiment configs.
-- `docs/` contains project status, questions, literature, experiment conclusions, and Slurm launch artifacts.
+- `docs/` contains project status, questions, claims, decisions, reviews, literature, experiment conclusions, and Slurm launch artifacts.
 - `latex/` contains the paper.
 - `results/` is untracked scratch space for logs, outputs, checkpoints, and generated artifacts.
 - `AGENTS.md` contains the operational guidelines.
@@ -25,8 +25,9 @@ Python environment and package commands:
 
 ```bash
 uv sync
+uv sync --group grf
 uv add <package>
-uv run -m scripts.run_experiment demo=first
+uv run -m scripts.run_experiment grf_rollout_stats=2026-06-30-smoke
 ```
 
 Reusable recipes:
@@ -36,14 +37,20 @@ uv tool install rust-just
 just install
 just checks
 just tests
-just run demo=first
+just run grf_rollout_stats=2026-06-30-smoke
 ```
+
+The first GRF experiment expects the MARL-GPT checkpoint at `results/marl-gpt-main.pt`.
+The checkpoint is untracked; put it there manually or set `grf_rollout_stats.download_checkpoint=true`.
+Installing `gfootball` may require system CMake and Boost.Python libraries matching the active Python version; the JZ templates assume that system setup is provided by the cluster environment or `secret-env.sh`.
 
 Slurm launch recipes:
 
 ```bash
-bash docs/experiments/to-launch/example.sh
+bash docs/experiments/to-launch/2026-06-30-grf-rollout-statistics-v100.sh
 just launch-all --dry-run
+just retrieve jz
+just clean
 ```
 
 ## LaTeX

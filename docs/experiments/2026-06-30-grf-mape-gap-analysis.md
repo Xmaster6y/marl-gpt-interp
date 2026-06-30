@@ -37,4 +37,4 @@ Run this only if it answers a specific blocked or ambiguous GRF question. Do not
 
 ## Links
 
-- [GRF-MAPE gap](../questions/grf-mape-gap.md)
+- [GRF-MAPE gap](../questions/2026-06-30-grf-mape-gap.md)

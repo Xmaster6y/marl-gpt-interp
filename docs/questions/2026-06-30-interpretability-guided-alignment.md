@@ -37,6 +37,6 @@ If interventions predictably affect behavior and improve human-like metrics, int
 
 ## Links
 
-- [MARL-GPT](../literature/marl-gpt.md)
-- [Adaptive Action Supervision](../literature/adaptive-action-supervision.md)
-- [Simulation-human modelling gap](simulation-human-modelling-gap.md)
+- [MARL-GPT](../literature/2026-06-30-marl-gpt.md)
+- [Adaptive Action Supervision](../literature/2026-06-30-adaptive-action-supervision.md)
+- [Simulation-human modelling gap](2026-06-30-simulation-human-modelling-gap.md)

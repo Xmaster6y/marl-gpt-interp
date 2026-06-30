@@ -2,10 +2,10 @@
 
 ## Target
 
-- Workshop: [NU Sports ML Workshop 2026](literature/nu-sports-ml-workshop-2026.md)
-- Deadline: June 1, 2026
+- Workshop: [NU Sports ML Workshop 2026](literature/2026-06-30-nu-sports-ml-workshop-2026.md)
+- Deadline: June 1, 2026, now historical as of June 30, 2026
 - Limit: 500 words
-- Status: Draft for planned work
+- Status: Historical draft for planned work
 
 ## Candidate Title
 

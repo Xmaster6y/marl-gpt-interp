@@ -1,5 +1,5 @@
 defaults:
-  - optional demo: null
+  - optional grf_rollout_stats: null
   - _self_
 
 hydra:
@@ -9,6 +9,6 @@ hydra:
     dir: results/hydra/${hydra.job.name}_sweep/${now:%Y-%m-%d_%H-%M-%S}
 
 wandb:
-  project: sweep-test
+  project: marl-gpt-interp
   entity: yp-edu
   mode: offline

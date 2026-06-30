@@ -40,5 +40,5 @@ If probes reveal stable and causal concepts, use them as the basis for alignment
 
 ## Links
 
-- [Coordination representations](../questions/coordination-representations-in-marl-gpt.md)
-- [MARL-GPT](../literature/marl-gpt.md)
+- [Coordination representations](../questions/2026-06-30-coordination-representations-in-marl-gpt.md)
+- [MARL-GPT](../literature/2026-06-30-marl-gpt.md)

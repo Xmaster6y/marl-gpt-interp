@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+#SBATCH --job-name=grf-stats
+#SBATCH --account=nwq@v100
+#SBATCH --cpus-per-task=10
+#SBATCH --gres=gpu:1
+#SBATCH --partition=gpu_p13
+#SBATCH --error=results/slurm/%x-%j.err
+#SBATCH --hint=nomultithread
+#SBATCH --mail-type=FAIL
+#SBATCH --output=results/slurm/%x-%j.out
+#SBATCH --qos=qos_gpu-t3
+#SBATCH --time=20:00:00
+
+set -euo pipefail
+
+if [[ -z "${SLURM_JOB_ID:-}" ]]; then
+    mkdir -p results/slurm
+    exec sbatch "$0"
+fi
+
+module purge
+source ./secret-env.sh
+
+mkdir -p results/experiments results/slurm
+
+export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
+export MKL_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
+export NUMEXPR_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
+
+uv run -m scripts.run_experiment \
+    grf_rollout_stats=2026-06-30-v100-small \
+    hydra.run.dir="results/hydra/2026-06-30-grf-rollout-statistics/${SLURM_JOB_ID}"

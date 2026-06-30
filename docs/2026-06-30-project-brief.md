@@ -11,7 +11,7 @@ The project studies what MARL-GPT learns about multi-agent coordination in footb
 ## Workshop Target
 
 - Venue: [NU Sports ML Workshop 2026](https://sites.google.com/g.sp.m.is.nagoya-u.ac.jp/nu-ml-sports-workshop-2026/home?authuser=0)
-- Abstract deadline: June 1, 2026
+- Abstract deadline: June 1, 2026, now historical as of June 30, 2026
 - Abstract format: title, authors, and max 500 words
 - Fit: agent-based modelling and reinforcement learning, play evaluation, player dynamics, and practical sports analytics
 
@@ -54,15 +54,16 @@ GRF is the primary environment because MARL-GPT is trained on it and it is footb
 
 ## Key Risks
 
-- MARL-GPT weights are not available yet, so the first phase must be planned around interfaces and analysis design.
+- The MARL-GPT checkpoint loads locally, but this repository still needs a self-contained fresh-environment setup for GRF and JZ.
 - Human tracking data may lack direct action labels or may only provide event labels for sparse moments.
 - GRF actions and human football events are not semantically identical.
 - Attention maps alone are not sufficient evidence for interpretability; causal tests and representation probes are needed.
+- Flank-pass comparison currently depends on `../interp-gfootball` and `light_malib`, so it is deferred until the GRF-only path is reproducible.
 - R2DRL integration may consume engineering time before it produces research evidence.
 
 ## Near-Term Milestones
 
-- Before June 1: submit a planned-work abstract focused on interpreting and aligning MARL-GPT with human football trajectories.
-- When weights are available: run a small inference and activation-capture smoke test on GRF.
+- First: run a config-driven GRF rollout statistics experiment locally and on JZ.
+- Then: add activation capture to the MARL-GPT inference path.
 - After activation capture: define simulator-derived concept labels and run first probes.
 - After human data access: compare human and simulator trajectories at the concept level before attempting action-level supervision.

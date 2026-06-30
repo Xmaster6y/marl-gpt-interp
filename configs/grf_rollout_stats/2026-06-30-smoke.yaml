@@ -1,0 +1,21 @@
+defaults:
+  - _self_
+
+output_dir: results/experiments/2026-06-30-grf-rollout-statistics
+checkpoint: results/marl-gpt-main.pt
+download_checkpoint: false
+model_url: https://huggingface.co/nortem/marl-gpt-model/resolve/main/marl-gpt-main.pt
+
+map_name: academy_pass_and_shoot_with_keeper
+device: cpu
+history_len: 6
+history_step: 1
+model_type: actor
+last_token: true
+sample_actions: false
+action_size: 20
+
+seeds:
+  - 0
+episodes_per_seed: 1
+max_steps: 20

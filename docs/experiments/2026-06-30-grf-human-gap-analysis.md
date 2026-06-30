@@ -42,5 +42,5 @@ If human and simulator states can be mapped into shared concepts, proceed to con
 
 ## Links
 
-- [Simulation-human modelling gap](../questions/simulation-human-modelling-gap.md)
-- [Adaptive Action Supervision](../literature/adaptive-action-supervision.md)
+- [Simulation-human modelling gap](../questions/2026-06-30-simulation-human-modelling-gap.md)
+- [Adaptive Action Supervision](../literature/2026-06-30-adaptive-action-supervision.md)

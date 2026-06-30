@@ -38,5 +38,5 @@ If the largest gaps are visible at concept or representation level, the project 
 
 ## Links
 
-- [Adaptive Action Supervision](../literature/adaptive-action-supervision.md)
-- [GRF-human gap analysis](../experiments/grf-human-gap-analysis.md)
+- [Adaptive Action Supervision](../literature/2026-06-30-adaptive-action-supervision.md)
+- [GRF-human gap analysis](../experiments/2026-06-30-grf-human-gap-analysis.md)

@@ -9,7 +9,7 @@
 #SBATCH --mail-type=FAIL
 #SBATCH --qos=short
 #SBATCH --time=10:00:00
-#SBATCH --array=<first-last%max_concurrent>
+#SBATCH --array=<start-end%max_concurrent>
 
 set -euo pipefail
 
@@ -18,6 +18,7 @@ if [[ -z "${SLURM_JOB_ID:-}" ]]; then
     exec sbatch "$0"
 fi
 
+module purge
 source ./secret-env.sh
 
 mkdir -p results/experiments results/slurm
@@ -27,9 +28,9 @@ export MKL_NUM_THREADS="${SLURM_CPUS_PER_TASK:-7}"
 export NUMEXPR_NUM_THREADS="${SLURM_CPUS_PER_TASK:-7}"
 
 RUNS=(
-    "demo=first seed=0"
-    "demo=first seed=1"
-    "demo=first seed=2"
+    "grf_rollout_stats=2026-06-30-smoke grf_rollout_stats.seeds=[0]"
+    "grf_rollout_stats=2026-06-30-smoke grf_rollout_stats.seeds=[1]"
+    "grf_rollout_stats=2026-06-30-smoke grf_rollout_stats.seeds=[2]"
 )
 
 if [ "$SLURM_ARRAY_TASK_ID" -ge "${#RUNS[@]}" ]; then

@@ -30,4 +30,4 @@ Use MAPE only if GRF analyses are blocked or if a specific mechanism needs a con
 
 ## Links
 
-- [Project brief](../project-brief.md)
+- [Project brief](../2026-06-30-project-brief.md)

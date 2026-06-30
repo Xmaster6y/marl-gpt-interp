@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=<job_name>
-#SBATCH --cpus-per-task=7
-#SBATCH --gpus-per-node=a100_3g.40gb:1
-#SBATCH --mem=100G
+#SBATCH --account=nwq@v100
+#SBATCH --cpus-per-task=10
+#SBATCH --gres=gpu:1
+#SBATCH --partition=gpu_p13
 #SBATCH --error=results/slurm/%x-%j.err
 #SBATCH --hint=nomultithread
 #SBATCH --mail-type=FAIL
 #SBATCH --output=results/slurm/%x-%j.out
-#SBATCH --qos=short
-#SBATCH --time=10:00:00
+#SBATCH --qos=qos_gpu-t3
+#SBATCH --time=20:00:00
 
 set -euo pipefail
 
@@ -22,8 +23,8 @@ source ./secret-env.sh
 
 mkdir -p results/experiments results/slurm
 
-export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-7}"
-export MKL_NUM_THREADS="${SLURM_CPUS_PER_TASK:-7}"
-export NUMEXPR_NUM_THREADS="${SLURM_CPUS_PER_TASK:-7}"
+export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
+export MKL_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
+export NUMEXPR_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
 
 <experiment_command>

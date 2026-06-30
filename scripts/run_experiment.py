@@ -4,7 +4,7 @@ Orchestrator for experiment scripts.
 Run a script with its config:
 
 ```bash
-uv run -m scripts.run_experiment demo=first
+uv run -m scripts.run_experiment grf_rollout_stats=2026-06-30-smoke
 ```
 
 By default, no script runs.
@@ -22,7 +22,7 @@ from omegaconf import DictConfig, OmegaConf
 
 ScriptMain: TypeAlias = Callable[[DictConfig], object]
 
-SCRIPTS = {"demo": "scripts.demo:main"}
+SCRIPTS = {"grf_rollout_stats": "scripts.grf_rollout_stats:main"}
 
 
 def _load_script(target: str) -> ScriptMain:
