@@ -49,7 +49,7 @@ The run writes per-step JSONL, per-episode JSONL, aggregate JSON, and aggregate 
 
 ## Verification Notes
 
-Base unit tests and checks do not require GRF. The `gfootball` dependency is pinned to a fork commit branched from `b3a0768` that passes the uv-managed build interpreter into GRF's CMake engine build. On the local macOS machine, uv-managed Python 3.13.5 plus Homebrew Boost.Python 3.13 builds, links against uv's `libpython3.13.dylib`, and passes a direct `gfootball.env.create_environment` reset and one-step smoke test. On JZ, use the default `just grf-install` path for uv-managed Python 3.12 after loading matching CMake and Boost.Python 3.12 build dependencies.
+Base unit tests and checks do not require GRF. The `gfootball` dependency is pinned to a fork commit branched from `b3a0768` that passes the uv-managed build interpreter into GRF's CMake engine build. On the local macOS machine, uv-managed Python 3.13.5 plus Homebrew Boost.Python 3.13 builds, links against uv's `libpython3.13.dylib`, and passes a direct `gfootball.env.create_environment` reset and one-step smoke test. On JZ, `just grf-install` should use uv-managed Python 3.12, but the raw platform must still provide matching native dependencies, especially CMake, SDL libraries, and a Boost.Python component for Python 3.12. If `boost_python312` is unavailable, either choose a uv Python minor with matching Boost.Python or build Boost.Python locally before installing GRF.
 
 ## Decision Rule
 
