@@ -17,7 +17,7 @@ A short config-driven rollout should produce stable infrastructure evidence: che
 Local smoke:
 
 ```bash
-uv sync --group grf
+just grf-install
 uv run -m scripts.run_experiment grf_rollout_stats=2026-06-30-smoke
 ```
 
@@ -49,7 +49,7 @@ The run writes per-step JSONL, per-episode JSONL, aggregate JSON, and aggregate 
 
 ## Verification Notes
 
-Base unit tests and checks do not require GRF. On the local macOS machine, `uv sync --group grf` currently fails while building `gfootball` because CMake finds a mismatched Boost.Python variant. The JZ run should be validated after `secret-env.sh` or the cluster module setup provides matching GRF build dependencies.
+Base unit tests and checks do not require GRF. On the local macOS machine, plain `uv sync --group grf` with Python 3.12 fails while building `gfootball` because CMake finds a different Python/Boost.Python stack. `uv sync --python 3.13 --group grf` installs with uv-managed CPython 3.13.5, but the GRF runtime smoke fails because the compiled extension links against the system Python 3.13 framework. The working local path is `just grf-install`, which uses system Python 3.13 and rebuilds `gfootball`; a direct `gfootball.env.create_environment` reset and one-step smoke test passes. The JZ run should be validated after `secret-env.sh` or the cluster module setup provides matching Python 3.13, CMake, and Boost.Python build dependencies.
 
 ## Decision Rule
 

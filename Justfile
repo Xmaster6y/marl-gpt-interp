@@ -3,10 +3,14 @@ cluster_host_jz := "jz"
 cluster_repo_cv := "~/work/marl-gpt-interp"
 cluster_repo_jz := "/lustre/fswork/projects/rech/nwq/uim47nr/marl-gpt-interp"
 result_folders := "experiments hydra slurm"
+grf_python := "3.13"
 
 install:
 	uv run pre-commit install
 	uv sync
+
+grf-install python=grf_python:
+	UV_NO_MANAGED_PYTHON=1 uv sync --python {{python}} --group grf --reinstall-package gfootball
 
 checks:
 	uv run pre-commit run --all-files

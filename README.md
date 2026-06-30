@@ -3,7 +3,7 @@
 [![license](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://docs.astral.sh/ruff/)
-[![python versions](https://img.shields.io/badge/python-3.11%20|%203.12-blue)](https://www.python.org/downloads/)
+[![python versions](https://img.shields.io/badge/python-3.11%20|%203.12%20|%203.13-blue)](https://www.python.org/downloads/)
 [![LaTeX](https://img.shields.io/badge/latex-grey.svg?logo=latex)](https://www.latex-project.org/)
 ![ci](https://github.com/Xmaster6y/marl-gpt-interp/actions/workflows/ci.yml/badge.svg)
 
@@ -25,7 +25,7 @@ Python environment and package commands:
 
 ```bash
 uv sync
-uv sync --group grf
+just grf-install
 uv add <package>
 uv run -m scripts.run_experiment grf_rollout_stats=2026-06-30-smoke
 ```
@@ -35,6 +35,7 @@ Reusable recipes:
 ```bash
 uv tool install rust-just
 just install
+just grf-install
 just checks
 just tests
 just run grf_rollout_stats=2026-06-30-smoke
@@ -42,7 +43,8 @@ just run grf_rollout_stats=2026-06-30-smoke
 
 The first GRF experiment expects the MARL-GPT checkpoint at `results/marl-gpt-main.pt`.
 The checkpoint is untracked; put it there manually or set `grf_rollout_stats.download_checkpoint=true`.
-Installing `gfootball` may require system CMake and Boost.Python libraries matching the active Python version; the JZ templates assume that system setup is provided by the cluster environment or `secret-env.sh`.
+Installing `gfootball` requires system CMake and Boost.Python libraries matching the Python used for the virtual environment.
+Use `just grf-install` after loading the matching system Python and Boost.Python stack; it disables uv-managed Python so the interpreter, CMake, and Boost.Python agree.
 
 Slurm launch recipes:
 
