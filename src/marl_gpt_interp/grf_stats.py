@@ -61,9 +61,7 @@ def _mean_pairwise_distance(points: Sequence[tuple[float, float]]) -> float | No
     return total / count if count else None
 
 
-def _nearest_distance(
-    point: tuple[float, float] | None, points: Sequence[tuple[float, float]]
-) -> float | None:
+def _nearest_distance(point: tuple[float, float] | None, points: Sequence[tuple[float, float]]) -> float | None:
     if point is None or not points:
         return None
     return min(_distance(point, candidate) for candidate in points)

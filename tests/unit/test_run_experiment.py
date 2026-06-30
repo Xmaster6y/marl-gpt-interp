@@ -4,9 +4,7 @@ from scripts import run_experiment
 
 
 def test_dispatch_registry_contains_grf_stats_and_not_demo():
-    assert run_experiment.SCRIPTS == {
-        "grf_rollout_stats": "scripts.grf_rollout_stats:main"
-    }
+    assert run_experiment.SCRIPTS == {"grf_rollout_stats": "scripts.grf_rollout_stats:main"}
 
 
 def test_dispatch_runs_exactly_one_selected_script(monkeypatch):

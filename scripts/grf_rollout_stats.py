@@ -44,8 +44,10 @@ def _ensure_checkpoint(path: Path, url: str, download: bool) -> None:
 def _load_grf_stack(root: Path) -> tuple[Any, Any, Any]:
     sys.path.insert(0, str(root / "marl-gpt"))
     try:
+        _patch_gymnasium_wrapper_compat()
         from envs.grf_env.config import GRFInferenceConfig
         from envs.grf_env.create_env import make_grf_marl_gpt
+        from envs.grf_env.grf import GRFv0
         from gpt.inference import InferenceConfig, MARLGPTInference
     except ImportError as exc:
         raise SystemExit(
@@ -53,7 +55,101 @@ def _load_grf_stack(root: Path) -> tuple[Any, Any, Any]:
             "`uv sync --group grf` and make sure the vendored `marl-gpt/` code is present. "
             f"Original error: {exc}"
         ) from exc
+    _patch_grf_step_compat(GRFv0)
     return GRFInferenceConfig, make_grf_marl_gpt, (InferenceConfig, MARLGPTInference)
+
+
+def _patch_gymnasium_wrapper_compat() -> None:
+    """Bridge older MARL-GPT wrappers to newer Gymnasium behavior."""
+
+    import gymnasium as gym
+
+    def observation_reset(self, *, seed=None, options=None):
+        obs = self.env.reset()
+        return self.observation(obs)
+
+    def reward_reset(self, *, seed=None, options=None):
+        return self.env.reset()
+
+    gym.ObservationWrapper.reset = observation_reset
+    gym.RewardWrapper.reset = reward_reset
+
+    if not hasattr(gym.Wrapper, "__getattr__"):
+
+        def wrapper_getattr(self, name):
+            return getattr(self.env, name)
+
+        gym.Wrapper.__getattr__ = wrapper_getattr
+
+
+def _patch_grf_step_compat(grf_class: Any) -> None:
+    if getattr(grf_class.step, "_marl_gpt_interp_compat", False):
+        return
+
+    def step(self, actions):
+        step_result = self._env.step(actions)
+        if len(step_result) == 5:
+            observations, rew, terminated, truncated, info = step_result
+            done = terminated or truncated
+        else:
+            observations, rew, done, info = step_result
+            truncated = False
+
+        import numpy as np
+
+        terminated_flags = np.array([done for _ in range(self.num_agents)])
+        truncated_flags = np.array([truncated for _ in range(self.num_agents)])
+        current_raw_score = [0, 0]
+        current_game_mode = None
+        football_env = self._env.unwrapped
+        if hasattr(football_env, "_env") and hasattr(football_env._env, "observation"):
+            core_observation = football_env._env.observation()
+            if isinstance(core_observation, dict):
+                current_raw_score = core_observation.get("score", current_raw_score)
+                current_game_mode = core_observation.get("game_mode", current_game_mode)
+
+        if current_game_mode is not None:
+            if self._previous_game_mode != current_game_mode:
+                if current_game_mode == 2:
+                    self._goal_kick_count += 1
+                elif current_game_mode == 3:
+                    self._free_kick_count += 1
+                elif current_game_mode == 4:
+                    self._corner_count += 1
+                elif current_game_mode == 5:
+                    self._throw_in_count += 1
+                elif current_game_mode == 6:
+                    self._penalty_count += 1
+            self._previous_game_mode = current_game_mode
+
+        left_score = current_raw_score[0]
+        right_score = current_raw_score[1]
+        infos_list = []
+        for i in range(self.num_agents):
+            agent_stats = {}
+            if i == 0:
+                agent_stats = info.copy()
+                agent_stats["current_score_L_R"] = [left_score, right_score]
+                agent_stats["goal_difference"] = left_score - right_score
+                agent_stats["free_kick_count"] = self._free_kick_count
+                agent_stats["goal_kick_count"] = self._goal_kick_count
+                agent_stats["corner_count"] = self._corner_count
+                agent_stats["throw_in_count"] = self._throw_in_count
+                agent_stats["penalty_count"] = self._penalty_count
+                agent_stats["current_game_mode"] = current_game_mode
+            infos_list.append({"episode_stats": agent_stats})
+
+        observations = [{"obs": obs} for obs in self.handle_single_agent_data(observations)]
+        return (
+            observations,
+            self.handle_single_agent_data(rew),
+            terminated_flags,
+            truncated_flags,
+            infos_list,
+        )
+
+    step._marl_gpt_interp_compat = True
+    grf_class.step = step
 
 
 def _raw_observation(env: Any) -> Any:
@@ -95,10 +191,7 @@ def _episode_summary(
     action_counts = [0 for _ in range(action_size)]
     total_reward = 0.0
     for row in step_rows:
-        action_counts = [
-            left + right
-            for left, right in zip(action_counts, row["action_counts"], strict=True)
-        ]
+        action_counts = [left + right for left, right in zip(action_counts, row["action_counts"], strict=True)]
         total_reward += float(row["reward_sum"])
 
     last = step_rows[-1] if step_rows else {}
@@ -115,53 +208,30 @@ def _episode_summary(
         "action_counts": action_counts,
         "action_entropy": action_entropy(action_counts),
         "possession_left_fraction": average_present(
-            1
-            if row.get("ball_owned_team") == 0
-            else 0
-            if row.get("ball_owned_team") in (-1, 1)
-            else None
+            1 if row.get("ball_owned_team") == 0 else 0 if row.get("ball_owned_team") in (-1, 1) else None
             for row in step_rows
         ),
-        "mean_distance_to_goal": average_present(
-            row.get("distance_to_goal") for row in step_rows
-        ),
-        "mean_nearest_defender_distance": average_present(
-            row.get("nearest_defender_distance") for row in step_rows
-        ),
-        "mean_defensive_compactness": average_present(
-            row.get("defensive_compactness") for row in step_rows
-        ),
+        "mean_distance_to_goal": average_present(row.get("distance_to_goal") for row in step_rows),
+        "mean_nearest_defender_distance": average_present(row.get("nearest_defender_distance") for row in step_rows),
+        "mean_defensive_compactness": average_present(row.get("defensive_compactness") for row in step_rows),
     }
 
 
 def _aggregate(episode_rows: list[dict[str, Any]], action_size: int) -> dict[str, Any]:
     action_counts = [0 for _ in range(action_size)]
     for row in episode_rows:
-        action_counts = [
-            left + right
-            for left, right in zip(action_counts, row["action_counts"], strict=True)
-        ]
+        action_counts = [left + right for left, right in zip(action_counts, row["action_counts"], strict=True)]
     return {
         "episodes": len(episode_rows),
         "mean_steps": average_present(row.get("steps") for row in episode_rows),
-        "mean_total_reward": average_present(
-            row.get("total_reward") for row in episode_rows
-        ),
-        "mean_goal_difference": average_present(
-            row.get("goal_difference") for row in episode_rows
-        ),
-        "mean_possession_left_fraction": average_present(
-            row.get("possession_left_fraction") for row in episode_rows
-        ),
-        "mean_distance_to_goal": average_present(
-            row.get("mean_distance_to_goal") for row in episode_rows
-        ),
+        "mean_total_reward": average_present(row.get("total_reward") for row in episode_rows),
+        "mean_goal_difference": average_present(row.get("goal_difference") for row in episode_rows),
+        "mean_possession_left_fraction": average_present(row.get("possession_left_fraction") for row in episode_rows),
+        "mean_distance_to_goal": average_present(row.get("mean_distance_to_goal") for row in episode_rows),
         "mean_nearest_defender_distance": average_present(
             row.get("mean_nearest_defender_distance") for row in episode_rows
         ),
-        "mean_defensive_compactness": average_present(
-            row.get("mean_defensive_compactness") for row in episode_rows
-        ),
+        "mean_defensive_compactness": average_present(row.get("mean_defensive_compactness") for row in episode_rows),
         "action_counts": action_counts,
         "action_entropy": action_entropy(action_counts),
     }
