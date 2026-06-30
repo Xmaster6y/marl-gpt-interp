@@ -10,7 +10,8 @@ install:
 	uv sync
 
 grf-install python=grf_python:
-	UV_MANAGED_PYTHON=1 uv sync --python {{python}} --group grf --reinstall-package gfootball
+	mkdir -p results/uv-cache results/tmp
+	UV_CACHE_DIR="$PWD/results/uv-cache" TMPDIR="$PWD/results/tmp" UV_MANAGED_PYTHON=1 uv sync --python {{python}} --group grf --reinstall-package gfootball
 
 checks:
 	uv run pre-commit run --all-files

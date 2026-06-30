@@ -43,9 +43,10 @@ just run grf_rollout_stats=2026-06-30-smoke
 
 The first GRF experiment expects the MARL-GPT checkpoint at `results/marl-gpt-main.pt`.
 The checkpoint is untracked; put it there manually or set `grf_rollout_stats.download_checkpoint=true`.
-Installing `gfootball` requires system CMake and Boost.Python libraries matching the Python used for the virtual environment.
-Use `just grf-install` after loading CMake and a Boost.Python stack for the same Python minor version; it uses uv-managed Python and passes that interpreter into the GRF CMake build.
-The default is uv-managed Python 3.12 for JZ. This still requires platform libraries such as `boost_python312`, SDL2, SDL2_image, SDL2_ttf, SDL2_gfx, OpenGL/EGL, and CMake to be available from modules or a local install.
+Installing `gfootball` requires system CMake and native GRF engine libraries in addition to Python packages.
+Use `just grf-install` after loading CMake and native GRF build dependencies; it uses uv-managed Python and passes that interpreter into the GRF CMake build.
+The default is uv-managed Python 3.12 for JZ, with uv cache and temp files kept under `results/` so cluster cache environment variables do not break installation. This still requires platform libraries such as `boost_python312`, SDL2, SDL2_image, SDL2_ttf, SDL2_gfx, OpenGL/EGL, and CMake to be available from modules or a local install.
+On a raw JZ shell, uv reaches the native build but CMake fails at missing `SDL2Config.cmake`; plain uv does not provide those C/C++ development packages for GRF.
 Pass an explicit version when needed, for example `just grf-install 3.13` on local macOS if the available Boost.Python is `boost_python313`.
 
 Slurm launch recipes:
