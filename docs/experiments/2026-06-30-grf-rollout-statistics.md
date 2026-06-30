@@ -53,6 +53,12 @@ Base unit tests and checks do not require GRF. The `gfootball` dependency is pin
 
 JZ Slurm job `1126349` failed before running Python because the launch script sourced missing `./secret-env.sh`. The retrieved log is `results/slurm/grf-stats-1126349.err`, and no `results/experiments/` or `results/hydra/` directory existed remotely after the failure. The active launch script and Slurm templates now source `secret-env.sh` only when present, and `just retrieve jz` skips missing remote result folders after retrieving `results/slurm/`. The next JZ run still needs the checkpoint at `results/marl-gpt-main.pt` or `grf_rollout_stats.download_checkpoint=true`.
 
+JZ Slurm job `1154231` reached Hydra setup but failed before rollout with `No module named 'gymnasium'`. The checkpoint was present at `results/marl-gpt-main.pt`, but the launch script used plain `uv run`, which installed only the default dependency groups. The active launch script now runs `uv run --python 3.12 --group grf` with project-local uv cache and temp directories under `results/`.
+
+JZ Slurm job `1154677` failed before Hydra setup while uv was resolving the `gfootball` Git dependency. The Slurm log reported `Git executable not found` when fetching `https://github.com/Xmaster6y/football.git`. The active launch script now prepends `/usr/bin:/bin` to `PATH` and prints the resolved `git` executable before running uv.
+
+JZ compute nodes do not have internet access, so Slurm jobs must not let uv sync or resolve missing dependencies. Prepare the environment on a login node first with `just grf-install`, then submit the Slurm launch script. The active launch script uses `uv run --no-sync --python 3.12 --group grf` so dependency installation happens only during the login-node preparation step.
+
 ## Decision Rule
 
 If the fresh-env run works on local and JZ, move to activation capture and first concept probes. If GRF runtime or checkpoint access fails, document the blocker and use offline checkpoint inspection or dataset batches before claiming any probing result.

@@ -25,11 +25,18 @@ if [[ -f ./secret-env.sh ]]; then
 fi
 
 mkdir -p results/experiments results/slurm
+mkdir -p results/uv-cache results/tmp
 
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
 export MKL_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
 export NUMEXPR_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
+export UV_CACHE_DIR="$PWD/results/uv-cache"
+export TMPDIR="$PWD/results/tmp"
+export UV_MANAGED_PYTHON=1
+export PATH="/usr/bin:/bin:${PATH}"
 
-uv run -m scripts.run_experiment \
+echo "Using git: $(command -v git || true)"
+
+uv run --no-sync --python 3.12 --group grf -m scripts.run_experiment \
     grf_rollout_stats=2026-06-30-v100-small \
     hydra.run.dir="results/hydra/2026-06-30-grf-rollout-statistics/${SLURM_JOB_ID}"
