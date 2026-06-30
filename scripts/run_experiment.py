@@ -22,7 +22,11 @@ from omegaconf import DictConfig, OmegaConf
 
 ScriptMain: TypeAlias = Callable[[DictConfig], object]
 
-SCRIPTS = {"grf_rollout_stats": "scripts.grf_rollout_stats:main"}
+SCRIPTS = {
+    "grf_rollout_stats": "scripts.grf_rollout_stats:main",
+    "normalize_soccer_data": "scripts.normalize_soccer_data:main",
+    "compare_soccer_stats": "scripts.compare_soccer_stats:main",
+}
 
 
 def _load_script(target: str) -> ScriptMain:

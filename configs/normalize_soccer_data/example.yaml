@@ -1,0 +1,101 @@
+defaults:
+  - _self_
+
+sources:
+  - dataset: human
+    kind: events
+    input_path: tests/fixtures/soccer/human_events.csv
+    output_path: results/examples/soccer/normalized/human/events.jsonl
+    column_map:
+      match_id: match_id
+      possession_id: possession_id
+      team_id: team_id
+      player_id: player_id
+      timestamp: second
+      event_type: event_type
+      outcome: outcome
+      x: x
+      y: y
+      end_x: end_x
+      end_y: end_y
+
+  - dataset: human
+    kind: tracking
+    input_path: tests/fixtures/soccer/human_tracking.csv
+    output_path: results/examples/soccer/normalized/human/tracking.jsonl
+    column_map:
+      match_id: match_id
+      frame_id: frame_id
+      timestamp: second
+      team_id: team_id
+      player_id: player_id
+      x: x
+      y: y
+      vx: vx
+      vy: vy
+      is_ball: is_ball
+
+  - dataset: grf
+    kind: events
+    input_path: tests/fixtures/soccer/grf_events.csv
+    output_path: results/examples/soccer/normalized/grf/events.jsonl
+    column_map:
+      match_id: episode
+      timestamp: step
+      team_id: team_id
+      player_id: player_id
+      event_type: type
+      outcome: result
+      x: x
+      y: y
+      end_x: target_x
+      end_y: target_y
+
+  - dataset: grf
+    kind: tracking
+    input_path: tests/fixtures/soccer/grf_tracking.csv
+    output_path: results/examples/soccer/normalized/grf/tracking.jsonl
+    column_map:
+      match_id: episode
+      frame_id: step
+      timestamp: step
+      team_id: team_id
+      player_id: player_id
+      x: x
+      y: y
+      vx: vx
+      vy: vy
+      is_ball: is_ball
+
+  - dataset: robocup2d
+    kind: events
+    input_path: tests/fixtures/soccer/robocup2d_events.csv
+    output_path: results/examples/soccer/normalized/robocup2d/events.jsonl
+    column_map:
+      match_id: game_id
+      possession_id: possession
+      timestamp: cycle
+      team_id: team
+      player_id: unum
+      event_type: type
+      outcome: result
+      x: x
+      y: y
+      end_x: target_x
+      end_y: target_y
+
+  - dataset: robocup2d
+    kind: tracking
+    input_path: tests/fixtures/soccer/robocup2d_tracking.csv
+    output_path: results/examples/soccer/normalized/robocup2d/tracking.jsonl
+    column_map:
+      match_id: game_id
+      frame_id: cycle
+      timestamp: cycle
+      team_id: team
+      player_id: unum
+      x: x
+      y: y
+      vx: vx
+      vy: vy
+      is_ball: is_ball

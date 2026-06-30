@@ -1,0 +1,4 @@
+game_id,possession,team,unum,cycle,type,result,x,y,target_x,target_y
+r1,rp1,left,7,12,pass,complete,15,28,40,28
+r1,rp1,left,9,22,pass,complete,40,28,62,32
+r1,rp1,left,9,30,shot,failed,82,33,105,34

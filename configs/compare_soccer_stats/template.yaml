@@ -1,0 +1,18 @@
+defaults:
+  - _self_
+
+output_dir: results/analysis/soccer-comparison
+
+event_paths:
+  - results/normalized/human/events.jsonl
+  - results/normalized/grf/events.jsonl
+  - results/normalized/robocup2d/events.jsonl
+
+tracking_paths:
+  - results/normalized/human/tracking.jsonl
+  - results/normalized/grf/tracking.jsonl
+  - results/normalized/robocup2d/tracking.jsonl
+
+pitch_control:
+  grid_x: 12
+  grid_y: 8

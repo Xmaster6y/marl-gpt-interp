@@ -1,0 +1,4 @@
+match_id,possession_id,team_id,player_id,second,event_type,outcome,x,y,end_x,end_y
+h1,p1,home,10,1.0,pass,complete,10,20,24,22
+h1,p1,home,8,4.0,pass,failed,24,22,35,30
+h1,p2,away,9,10.0,shot,goal,88,34,105,34

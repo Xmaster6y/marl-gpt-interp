@@ -1,0 +1,18 @@
+defaults:
+  - _self_
+
+output_dir: results/examples/soccer/analysis
+
+event_paths:
+  - results/examples/soccer/normalized/human/events.jsonl
+  - results/examples/soccer/normalized/grf/events.jsonl
+  - results/examples/soccer/normalized/robocup2d/events.jsonl
+
+tracking_paths:
+  - results/examples/soccer/normalized/human/tracking.jsonl
+  - results/examples/soccer/normalized/grf/tracking.jsonl
+  - results/examples/soccer/normalized/robocup2d/tracking.jsonl
+
+pitch_control:
+  grid_x: 6
+  grid_y: 4

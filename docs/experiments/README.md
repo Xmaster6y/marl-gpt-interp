@@ -11,3 +11,4 @@
 - [GRF representation probes](2026-06-30-grf-representation-probes.md): Planned.
 - [GRF-human gap analysis](2026-06-30-grf-human-gap-analysis.md): Planned; blocked until human data access.
 - [GRF-MAPE gap analysis](2026-06-30-grf-mape-gap-analysis.md): Optional planned analysis.
+- [Cross-dataset soccer statistics](2026-06-30-cross-dataset-soccer-statistics.md): Scaffolded normalization and comparison scripts for human, GRF, and RoboCup 2D data.

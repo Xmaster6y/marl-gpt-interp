@@ -1,5 +1,7 @@
 defaults:
   - optional grf_rollout_stats: null
+  - optional normalize_soccer_data: null
+  - optional compare_soccer_stats: null
   - _self_
 
 hydra:
