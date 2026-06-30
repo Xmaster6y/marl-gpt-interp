@@ -19,7 +19,10 @@ if [[ -z "${SLURM_JOB_ID:-}" ]]; then
 fi
 
 module purge
-source ./secret-env.sh
+
+if [[ -f ./secret-env.sh ]]; then
+    source ./secret-env.sh
+fi
 
 mkdir -p results/experiments results/slurm
 

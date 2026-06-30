@@ -2,7 +2,7 @@ cluster_host_cv := "cv"
 cluster_host_jz := "jz"
 cluster_repo_cv := "~/work/marl-gpt-interp"
 cluster_repo_jz := "/lustre/fswork/projects/rech/nwq/uim47nr/marl-gpt-interp"
-result_folders := "experiments hydra slurm"
+result_folders := "slurm experiments hydra"
 grf_python := "3.12"
 
 install:
@@ -78,7 +78,11 @@ retrieve cluster folder="":
 		esac
 		mkdir -p "./results/$folder"
 		echo "Syncing results/$folder/ from {{cluster}}..."
-		rsync -a "$host:$repo/results/$folder/" "./results/$folder/"
+		if ssh -q "$host" "test -d '$repo/results/$folder'"; then
+			rsync -a "$host:$repo/results/$folder/" "./results/$folder/"
+		else
+			echo "Skipping missing remote folder: $repo/results/$folder" >&2
+		fi
 	done
 
 clean folder="":
