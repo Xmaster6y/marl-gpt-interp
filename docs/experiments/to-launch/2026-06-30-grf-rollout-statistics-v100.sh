@@ -27,16 +27,20 @@ fi
 mkdir -p results/experiments results/slurm
 mkdir -p results/uv-cache results/tmp
 
+export PREFIX="$PWD/results/grf-native/py3.12"
+export PYROOT="$PWD/results/uv-python/cpython-3.12.11-linux-x86_64-gnu"
+export LD_LIBRARY_PATH="$PREFIX/lib:$PREFIX/lib64:$PYROOT/lib:${LD_LIBRARY_PATH:-}"
 export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
 export MKL_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
 export NUMEXPR_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
 export UV_CACHE_DIR="$PWD/results/uv-cache"
+export UV_PYTHON_INSTALL_DIR="$PWD/results/uv-python"
 export TMPDIR="$PWD/results/tmp"
 export UV_MANAGED_PYTHON=1
 export PATH="/usr/bin:/bin:${PATH}"
 
-echo "Using git: $(command -v git || true)"
+echo "Using native prefix: $PREFIX"
 
-uv run --no-sync --python 3.12 --group grf -m scripts.run_experiment \
+uv run --no-sync --python 3.12.11 --group grf -m scripts.run_experiment \
     grf_rollout_stats=2026-06-30-v100-small \
     hydra.run.dir="results/hydra/2026-06-30-grf-rollout-statistics/${SLURM_JOB_ID}"
