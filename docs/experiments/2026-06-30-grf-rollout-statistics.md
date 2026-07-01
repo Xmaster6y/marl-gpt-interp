@@ -63,6 +63,8 @@ JZ Slurm job `1157646` reached Hydra setup but failed before rollout with `No mo
 
 JZ Slurm job `1158389` reached environment reset and model setup, then failed on the V100 with `CUDA error: no kernel image is available for execution on the device`. The installed Torch wheel was `2.12.1+cu130`, which warned that it supports CUDA compute capability `7.5` and newer, while the V100 is compute capability `7.0`. Installing cached `torch==2.8.0` produced `torch 2.8.0+cu128`; Slurm probe job `1158897` completed on a V100 and verified CUDA availability, device capability `(7, 0)`, arch list including `sm_70`, and successful CUDA tensor allocation.
 
+JZ Slurm job `1164968` failed immediately with exit `127` because the batch shell did not define the `module` command used by `module purge`. The active launch script now guards the purge with `if command -v module >/dev/null 2>&1`.
+
 ## Decision Rule
 
 If the fresh-env run works on local and JZ, move to activation capture and first concept probes. If GRF runtime or checkpoint access fails, document the blocker and use offline checkpoint inspection or dataset batches before claiming any probing result.
