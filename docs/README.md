@@ -8,6 +8,7 @@
 - Paper: [`../latex/`](../latex/)
 - Project brief: [`2026-06-30-project-brief.md`](2026-06-30-project-brief.md)
 - Roadmap: [`2026-06-30-roadmap.md`](2026-06-30-roadmap.md)
+- MARL-GPT architecture visual: [`marl-gpt-architecture.html`](marl-gpt-architecture.html)
 - Soccer analytics statistics: [`2026-06-30-soccer-analytics-statistics.md`](2026-06-30-soccer-analytics-statistics.md)
 - Workshop abstract draft: [`2026-06-30-workshop-abstract.md`](2026-06-30-workshop-abstract.md)
 - Historical target: [NU Sports ML Workshop 2026](literature/2026-06-30-nu-sports-ml-workshop-2026.md), abstract deadline June 1, 2026
