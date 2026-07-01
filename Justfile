@@ -8,6 +8,7 @@ grf_jz_python := "3.12.11"
 grf_jz_native_prefix := "results/grf-native/py3.12"
 grf_jz_python_install_dir := "results/uv-python"
 grf_jz_wheel := "results/wheels/gfootball-2.10.3-cp312-cp312-linux_x86_64.whl"
+grf_jz_torch := "2.8.0"
 
 install:
 	uv run pre-commit install
@@ -38,7 +39,8 @@ grf-install-jz python=grf_jz_python:
 	export UV_PYTHON_INSTALL_DIR="$PWD/{{grf_jz_python_install_dir}}"
 	export UV_CACHE_DIR="$cache_dir"
 	export TMPDIR="$PWD/results/tmp"
-	uv sync --python {{python}} --group grf --no-install-package gfootball --no-install-package wandb --inexact
+	uv sync --python {{python}} --group grf --no-install-package gfootball --no-install-package torch --no-install-package wandb --inexact
+	uv pip install --python .venv/bin/python --offline "torch=={{grf_jz_torch}}"
 	uv pip install --python .venv/bin/python --no-deps "$wheel"
 	uv run --no-sync --python {{python}} --group grf python -c "import gymnasium, gfootball, torch; print('jz grf env ok')"
 
