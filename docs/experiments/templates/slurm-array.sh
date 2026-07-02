@@ -18,7 +18,9 @@ if [[ -z "${SLURM_JOB_ID:-}" ]]; then
     exec sbatch "$0"
 fi
 
-module purge
+if command -v module >/dev/null 2>&1; then
+    module purge
+fi
 
 if [[ -f ./secret-env.sh ]]; then
     source ./secret-env.sh

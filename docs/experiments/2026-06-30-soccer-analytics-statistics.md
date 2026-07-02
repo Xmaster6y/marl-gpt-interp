@@ -183,7 +183,7 @@ The first probing batch should stay small enough to debug end to end.
 
 ## Links
 
-- [Project brief](2026-06-30-project-brief.md)
-- [Coordination representations in MARL-GPT](questions/2026-06-30-coordination-representations-in-marl-gpt.md)
-- [GRF representation probes](experiments/2026-06-30-grf-representation-probes.md)
-- [MARL-GPT literature note](literature/2026-06-30-marl-gpt.md)
+- [Project brief](../2026-06-30-project-brief.md)
+- [Coordination representations in MARL-GPT](../questions/2026-06-30-coordination-representations-in-marl-gpt.md)
+- [GRF representation probes](2026-06-30-grf-representation-probes.md)
+- [MARL-GPT literature note](../literature/2026-06-30-marl-gpt.md)

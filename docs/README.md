@@ -7,10 +7,7 @@
 - Status: MARL-GPT GRF smoke path exists locally; next gate is a self-contained config-driven statistics run before probing or steering
 - Paper: [`../latex/`](../latex/)
 - Project brief: [`2026-06-30-project-brief.md`](2026-06-30-project-brief.md)
-- Roadmap: [`2026-06-30-roadmap.md`](2026-06-30-roadmap.md)
-- MARL-GPT architecture visual: [`marl-gpt-architecture.html`](marl-gpt-architecture.html)
-- Soccer analytics statistics: [`2026-06-30-soccer-analytics-statistics.md`](2026-06-30-soccer-analytics-statistics.md)
-- Workshop abstract draft: [`2026-06-30-workshop-abstract.md`](2026-06-30-workshop-abstract.md)
+- Setup notes: [`2026-07-02-grf-jz-setup.md`](2026-07-02-grf-jz-setup.md)
 - Historical target: [NU Sports ML Workshop 2026](literature/2026-06-30-nu-sports-ml-workshop-2026.md), abstract deadline June 1, 2026
 
 ## Index
@@ -30,9 +27,14 @@
 ## Current Decisions
 
 - [Start with GRF rollout statistics](decisions/2026-06-30-start-with-grf-rollout-statistics.md): use simple GRF statistics as the first reproducible gate before probes, steering, or flank-pass comparison.
+- [Stage work from GRF to human gap](decisions/2026-06-30-stage-work-from-grf-to-human-gap.md): run and instrument GRF before human-football modelling-gap claims.
 - Treat R2DRL as a later online-bridge candidate, not the first environment target.
 - Treat human tracking data first as trajectory and tactical-concept evidence, not as clean discrete action labels.
 - Use interpretability as the main contribution; online transfer and alignment are downstream questions.
+
+## Current Infrastructure
+
+- [GRF on JZ setup](2026-07-02-grf-jz-setup.md): login-node preparation path is ready; rollout completion remains the active experiment gate.
 
 ## Active Questions
 
@@ -48,6 +50,7 @@
 ## Planned Analyses
 
 - [GRF rollout statistics](experiments/2026-06-30-grf-rollout-statistics.md)
+- [Soccer analytics statistics](experiments/2026-06-30-soccer-analytics-statistics.md)
 - [GRF representation probes](experiments/2026-06-30-grf-representation-probes.md)
 - [GRF-human gap analysis](experiments/2026-06-30-grf-human-gap-analysis.md)
 - [GRF-MAPE gap analysis](experiments/2026-06-30-grf-mape-gap-analysis.md)

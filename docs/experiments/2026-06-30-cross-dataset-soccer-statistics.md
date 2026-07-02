@@ -60,4 +60,4 @@ If the same schema supports at least one small sample from each source, extend t
 ## Links
 
 - [GRF-human gap analysis](2026-06-30-grf-human-gap-analysis.md)
-- [Soccer analytics statistics](../2026-06-30-soccer-analytics-statistics.md)
+- [Soccer analytics statistics](2026-06-30-soccer-analytics-statistics.md)

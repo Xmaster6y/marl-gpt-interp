@@ -2,7 +2,7 @@
 
 ## Status
 
-Blocked on JZ as of 2026-06-30.
+JZ setup path is ready; rollout completion is still the active gate as of 2026-07-02.
 
 ## Question
 
@@ -47,23 +47,9 @@ No scientific baseline. This is an infrastructure and descriptive-statistics gat
 
 The run writes per-step JSONL, per-episode JSONL, aggregate JSON, and aggregate CSV under `results/experiments/2026-06-30-grf-rollout-statistics/`. The output should be enough to decide whether GRF is ready for probes.
 
-## Verification Notes
+## Setup Notes
 
-Base unit tests and checks do not require GRF. The `gfootball` dependency is pinned to a fork commit branched from `b3a0768` that passes the uv-managed build interpreter into GRF's CMake engine build. On the local macOS machine, uv-managed Python 3.13.5 plus Homebrew Boost.Python 3.13 builds, links against uv's `libpython3.13.dylib`, and passes a direct `gfootball.env.create_environment` reset and one-step smoke test. On JZ, `just grf-install` uses uv-managed Python 3.12 and project-local uv cache/temp directories under `results/`; this avoids the raw shell's `XDG_CACHE_HOME=/.cache` failure. A direct JZ test with `gcc/11.5.0`, `cmake/3.26.6`, and `boost/1.86.0` reached the native CMake build with uv's CPython 3.12.3, then failed because `SDL2Config.cmake` was unavailable. The JZ `boost/1.86.0` GCC variants also did not expose `libboost_python*` libraries in the module lib directory during inspection. So plain uv is not sufficient for GRF on a raw JZ platform; JZ still needs native SDL2, SDL2_image, SDL2_ttf, SDL2_gfx, OpenGL/EGL, and Boost.Python for the chosen Python minor, or a separate native-dependency bootstrap/wheel build.
-
-JZ Slurm job `1126349` failed before running Python because the launch script sourced missing `./secret-env.sh`. The retrieved log is `results/slurm/grf-stats-1126349.err`, and no `results/experiments/` or `results/hydra/` directory existed remotely after the failure. The active launch script and Slurm templates now source `secret-env.sh` only when present, and `just retrieve jz` skips missing remote result folders after retrieving `results/slurm/`. The next JZ run still needs the checkpoint at `results/marl-gpt-main.pt` or `grf_rollout_stats.download_checkpoint=true`.
-
-JZ Slurm job `1154231` reached Hydra setup but failed before rollout with `No module named 'gymnasium'`. The checkpoint was present at `results/marl-gpt-main.pt`, but the launch script used plain `uv run`, which installed only the default dependency groups. The active launch script now runs `uv run --python 3.12 --group grf` with project-local uv cache and temp directories under `results/`.
-
-JZ Slurm job `1154677` failed before Hydra setup while uv was resolving the `gfootball` Git dependency. The Slurm log reported `Git executable not found` when fetching `https://github.com/Xmaster6y/football.git`. The active launch script now prepends `/usr/bin:/bin` to `PATH` and prints the resolved `git` executable before running uv.
-
-JZ compute nodes do not have internet access, so Slurm jobs must not let uv sync or resolve missing dependencies. The stable JZ path uses the prebuilt wheel at `results/wheels/gfootball-2.10.3-cp312-cp312-linux_x86_64.whl`, the native prefix at `results/grf-native/py3.12`, and uv-managed CPython `3.12.11` under `results/uv-python/`. Prepare or update the environment on a login node first with `just grf-install-jz`, then submit the Slurm launch script. `just grf-install-jz` uses the populated JZ user uv cache when available, syncs the GRF dependency group with `--no-install-package gfootball --no-install-package torch --no-install-package wandb --inexact`, installs cached `torch==2.8.0`, installs the prebuilt GRF wheel with `uv pip install --no-deps`, and verifies imports without rebuilding GRF. The active launch script exports the matching `LD_LIBRARY_PATH`, `UV_PYTHON_INSTALL_DIR`, and runs `uv run --no-sync --python 3.12.11 --group grf` so dependency installation happens only during the login-node preparation step. This setup passed on the JZ login node and printed `jz grf env ok`.
-
-JZ Slurm job `1157646` reached Hydra setup but failed before rollout with `No module named 'envs'`. The `marl-gpt` submodule was uninitialized on JZ: `git submodule status` showed `-26ea879... marl-gpt`, and the directory was empty. Initializing it on the login node with `git submodule update --init marl-gpt` fixed the missing vendored module; a no-sync JZ import check for `envs.grf_env` and `gpt.inference` then passed.
-
-JZ Slurm job `1158389` reached environment reset and model setup, then failed on the V100 with `CUDA error: no kernel image is available for execution on the device`. The installed Torch wheel was `2.12.1+cu130`, which warned that it supports CUDA compute capability `7.5` and newer, while the V100 is compute capability `7.0`. Installing cached `torch==2.8.0` produced `torch 2.8.0+cu128`; Slurm probe job `1158897` completed on a V100 and verified CUDA availability, device capability `(7, 0)`, arch list including `sm_70`, and successful CUDA tensor allocation.
-
-JZ Slurm job `1164968` failed immediately with exit `127` because the batch shell did not define the `module` command used by `module purge`. The active launch script now guards the purge with `if command -v module >/dev/null 2>&1`.
+The durable GRF/JZ setup path is now documented in [GRF on JZ setup](../2026-07-02-grf-jz-setup.md). Raw Slurm logs remain under `results/slurm/`.
 
 ## Decision Rule
 
@@ -74,3 +60,4 @@ If the fresh-env run works on local and JZ, move to activation capture and first
 - [Start with GRF rollout statistics](../decisions/2026-06-30-start-with-grf-rollout-statistics.md)
 - [Pretrained weights smoke test](2026-06-30-pretrained-weights-smoke-test.md)
 - [Coordination representations in MARL-GPT](../questions/2026-06-30-coordination-representations-in-marl-gpt.md)
+- [GRF on JZ setup](../2026-07-02-grf-jz-setup.md)
