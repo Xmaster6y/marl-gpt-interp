@@ -455,6 +455,7 @@ def collect_batches(root: Path, dataset_config: dict[str, Any], cfg: DictConfig)
     activation_tables: dict[str, list[Any]] = defaultdict(list)
     activation_true_labels = []
     activation_prompted_labels = []
+    activation_conditions = []
     behavior_rows = []
 
     model = None
@@ -509,6 +510,7 @@ def collect_batches(root: Path, dataset_config: dict[str, Any], cfg: DictConfig)
                     activation_tables[name].append(features.detach().cpu())
                 activation_true_labels.append(env_labels.detach().cpu())
                 activation_prompted_labels.append(prompt_ids.detach().cpu())
+                activation_conditions.extend([condition] * int(env_labels.shape[0]))
 
                 if correct_logits is not None:
                     delta = (act_logits - correct_logits).detach()
@@ -537,23 +539,49 @@ def collect_batches(root: Path, dataset_config: dict[str, Any], cfg: DictConfig)
         "activation_prompted_labels": torch.cat(activation_prompted_labels, dim=0)
         if activation_prompted_labels
         else None,
+        "activation_conditions": activation_conditions,
         "behavior_rows": behavior_rows,
     }
 
 
+def _condition_mask(conditions: list[str], requested: list[str]):
+    torch = _load_torch()
+    if not conditions or not requested:
+        return None
+    requested_set = set(requested)
+    return torch.tensor([condition in requested_set for condition in conditions], dtype=torch.bool)
+
+
 def run_probes(collected: dict[str, Any], cfg: DictConfig) -> list[dict[str, Any]]:
     rows = []
-    for source, feature_key, label_key in [
-        ("input", "input_features", "input_true_labels"),
-        ("activation_true_env", "activation_features", "activation_true_labels"),
-        ("activation_prompted_env", "activation_features", "activation_prompted_labels"),
-    ]:
+    activation_probe_conditions = list(OmegaConf.select(cfg, "activation_probe_conditions", default=[]))
+    activation_probe_label_targets = set(
+        OmegaConf.select(cfg, "activation_probe_label_targets", default=["true_env", "prompted_env"])
+    )
+    activation_mask = _condition_mask(collected.get("activation_conditions", []), activation_probe_conditions)
+    probe_specs = [("input", "input_features", "input_true_labels")]
+    if "true_env" in activation_probe_label_targets:
+        probe_specs.append(("activation_true_env", "activation_features", "activation_true_labels"))
+    if "prompted_env" in activation_probe_label_targets:
+        probe_specs.append(("activation_prompted_env", "activation_features", "activation_prompted_labels"))
+    for source, feature_key, label_key in probe_specs:
         labels = collected.get(label_key)
         if labels is None:
             continue
         for name, features in collected[feature_key].items():
-            result = train_linear_probe(features.to(str(cfg.device)), labels.to(str(cfg.device)), cfg)
-            result.update({"source": source, "feature": name})
+            probe_features = features
+            probe_labels = labels
+            condition_label = "all"
+            if feature_key == "activation_features" and activation_mask is not None:
+                probe_features = features[activation_mask]
+                probe_labels = labels[activation_mask]
+                condition_label = ",".join(activation_probe_conditions)
+            result = train_linear_probe(
+                probe_features.to(str(cfg.device)),
+                probe_labels.to(str(cfg.device)),
+                cfg,
+            )
+            result.update({"source": source, "feature": name, "condition": condition_label})
             rows.append(result)
     return rows
 
@@ -587,6 +615,10 @@ def main(cfg: DictConfig) -> dict[str, Any]:
             "num_activation_examples": int(collected["activation_true_labels"].shape[0])
             if collected["activation_true_labels"] is not None
             else 0,
+            "activation_condition_counts": {
+                condition: collected["activation_conditions"].count(condition)
+                for condition in sorted(set(collected["activation_conditions"]))
+            },
             "probe_rows": len(probe_rows),
             "behavior_rows": len(collected["behavior_rows"]),
             "config": _to_plain_config(cfg),
