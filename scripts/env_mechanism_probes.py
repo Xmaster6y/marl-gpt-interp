@@ -4,11 +4,15 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import random
 import sys
 from collections import defaultdict
 from collections.abc import Iterable
+from contextlib import contextmanager
+from copy import deepcopy
 from dataclasses import dataclass
+from os import PathLike
 from pathlib import Path
 from typing import Any
 
@@ -65,6 +69,46 @@ def _load_torch():
 def _as_path(root: Path, value: str | Path) -> Path:
     path = Path(value)
     return path if path.is_absolute() else root / path
+
+
+def _existing_data_path(root: Path, value: str | PathLike[str]) -> str:
+    path = Path(value)
+    if path.is_absolute():
+        return str(path)
+
+    candidates = [root / path, root / "marl-gpt" / path]
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
+    return str(candidates[0])
+
+
+def _with_absolute_dataset_paths(root: Path, dataset_config: dict[str, Any]) -> dict[str, Any]:
+    resolved = deepcopy(dataset_config)
+    for env_cfg in resolved.values():
+        env_cfg["folder_paths"] = [
+            _existing_data_path(root, folder) for folder in env_cfg.get("folder_paths", [])
+        ]
+    return resolved
+
+
+def _missing_dataset_paths(dataset_config: dict[str, Any]) -> list[str]:
+    missing = []
+    for env_cfg in dataset_config.values():
+        for folder in env_cfg.get("folder_paths", []):
+            if not Path(folder).exists():
+                missing.append(str(folder))
+    return missing
+
+
+@contextmanager
+def _marl_gpt_cwd(root: Path):
+    old_cwd = Path.cwd()
+    os.chdir(root / "marl-gpt")
+    try:
+        yield
+    finally:
+        os.chdir(old_cwd)
 
 
 def _marl_gpt_path(root: Path) -> None:
@@ -129,6 +173,7 @@ def inspect_dataset_files(root: Path, dataset_config: dict[str, Any], cfg: DictC
     torch = _load_torch()
     max_files = int(OmegaConf.select(cfg, "max_inspect_files_per_folder", default=2))
     inspection: dict[str, Any] = {}
+    dataset_config = _with_absolute_dataset_paths(root, dataset_config)
 
     for env, env_cfg in dataset_config.items():
         folder_rows = []
@@ -169,6 +214,17 @@ def inspect_dataset_files(root: Path, dataset_config: dict[str, Any], cfg: DictC
 def _build_loader(root: Path, dataset_config: dict[str, Any], cfg: DictConfig):
     _marl_gpt_path(root)
     from utils.multi_env_dataset import MultiEnvAggregateDataset
+
+    dataset_config = _with_absolute_dataset_paths(root, dataset_config)
+    missing_paths = _missing_dataset_paths(dataset_config)
+    if missing_paths:
+        preview = "\n".join(f"- {path}" for path in missing_paths[:12])
+        suffix = "" if len(missing_paths) <= 12 else f"\n... and {len(missing_paths) - 12} more"
+        raise SystemExit(
+            "Offline MARL-GPT dataset folders are missing. Install or link the Hugging Face "
+            "`nortem/marl-gpt-datasets` tree so these paths exist:\n"
+            f"{preview}{suffix}"
+        )
 
     for env_cfg in dataset_config.values():
         env_cfg.setdefault("config", {})
@@ -404,14 +460,16 @@ def collect_batches(root: Path, dataset_config: dict[str, Any], cfg: DictConfig)
     model_config = None
     hooks = []
     if bool(OmegaConf.select(cfg, "run_model", default=False)):
-        model, model_config = _load_model(root, cfg)
-        last_attr_pos = model_config.n_attr - 1
+        with _marl_gpt_cwd(root):
+            model, model_config = _load_model(root, cfg)
+            last_attr_pos = model_config.n_attr - 1
     else:
         last_attr_pos = None
 
     try:
         for batch_index in range(int(cfg.num_batches)):
-            batch_obs, _target, _mask_target, _batch_obs_next, _batch_info = next(iterator)
+            with _marl_gpt_cwd(root):
+                batch_obs, _target, _mask_target, _batch_obs_next, _batch_info = next(iterator)
             env_labels = _env_labels_for_batch(loader)
             if env_labels.shape[0] != batch_obs["obs"].shape[0]:
                 raise RuntimeError(
@@ -438,7 +496,7 @@ def collect_batches(root: Path, dataset_config: dict[str, Any], cfg: DictConfig)
 
                 captured: dict[str, Any] = {}
                 hooks = _activation_hooks(model, captured)
-                with torch.no_grad():
+                with _marl_gpt_cwd(root), torch.no_grad():
                     act_logits, val_logits, _loss, _info = model(prompted_obs)
                 for active_hook in hooks:
                     active_hook.remove()
