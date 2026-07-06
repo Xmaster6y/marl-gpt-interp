@@ -40,6 +40,14 @@ Start with the same small balanced JZ subset used by the environment-mechanism p
 
 Scale only after the cache schema, layer grouping, and summary metrics are stable.
 
+## Implementation
+
+- Entrypoint: [`../../scripts/cross_env_compute_sharing.py`](../../scripts/cross_env_compute_sharing.py)
+- Shared helpers: [`../../src/marl_gpt_interp/marl_gpt_tools.py`](../../src/marl_gpt_interp/marl_gpt_tools.py)
+- Config: [2026-07-06-jz-small.yaml][cross-env-config]
+- Launch artifact:
+  [`to-launch/2026-07-06-cross-env-compute-sharing-v100.sh`](to-launch/2026-07-06-cross-env-compute-sharing-v100.sh)
+
 ## Measures
 
 ### Representation Geometry
@@ -147,3 +155,5 @@ classification.
 
 - [Cross-environment compute sharing in MARL-GPT](../questions/2026-07-06-cross-env-compute-sharing.md)
 - [Environment mechanism probes](2026-07-06-environment-mechanism-probes.md)
+
+[cross-env-config]: ../../configs/cross_env_compute_sharing/2026-07-06-jz-small.yaml

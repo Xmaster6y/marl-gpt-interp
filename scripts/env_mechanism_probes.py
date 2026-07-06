@@ -2,261 +2,44 @@
 
 from __future__ import annotations
 
-import csv
-import json
-import os
 import random
-import sys
 from collections import defaultdict
-from collections.abc import Iterable
-from contextlib import contextmanager
-from copy import deepcopy
-from dataclasses import dataclass
-from os import PathLike
 from pathlib import Path
 from typing import Any
 
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 
-
-ENV_TO_ID = {"smac": 1, "pogema": 2, "grf": 3}
-ID_TO_ENV = {value: key for key, value in ENV_TO_ID.items()}
-
-
-@dataclass(frozen=True)
-class ProbeDataset:
-    x_train: Any
-    y_train: Any
-    x_test: Any
-    y_test: Any
-
-
-def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[1]
-
-
-def _json_default(value: Any) -> Any:
-    if hasattr(value, "tolist"):
-        return value.tolist()
-    if hasattr(value, "item"):
-        return value.item()
-    return str(value)
-
-
-def _write_json(path: Path, payload: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w") as handle:
-        json.dump(payload, handle, default=_json_default, indent=2, sort_keys=True)
-
-
-def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
-    if not rows:
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = sorted({key for row in rows for key in row})
-    with path.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
-
-
-def _load_torch():
-    import torch
-
-    return torch
-
-
-def _as_path(root: Path, value: str | Path) -> Path:
-    path = Path(value)
-    return path if path.is_absolute() else root / path
-
-
-def _existing_data_path(root: Path, value: str | PathLike[str]) -> str:
-    path = Path(value)
-    if path.is_absolute():
-        return str(path)
-
-    candidates = [root / path, root / "marl-gpt" / path]
-    for candidate in candidates:
-        if candidate.exists():
-            return str(candidate)
-    return str(candidates[0])
-
-
-def _with_absolute_dataset_paths(root: Path, dataset_config: dict[str, Any]) -> dict[str, Any]:
-    resolved = deepcopy(dataset_config)
-    for env_cfg in resolved.values():
-        env_cfg["folder_paths"] = [
-            _existing_data_path(root, folder) for folder in env_cfg.get("folder_paths", [])
-        ]
-    return resolved
-
-
-def _missing_dataset_paths(dataset_config: dict[str, Any]) -> list[str]:
-    missing = []
-    for env_cfg in dataset_config.values():
-        for folder in env_cfg.get("folder_paths", []):
-            if not Path(folder).exists():
-                missing.append(str(folder))
-    return missing
-
-
-@contextmanager
-def _marl_gpt_cwd(root: Path):
-    old_cwd = Path.cwd()
-    os.chdir(root / "marl-gpt")
-    try:
-        yield
-    finally:
-        os.chdir(old_cwd)
-
-
-def _marl_gpt_path(root: Path) -> None:
-    path = str(root / "marl-gpt")
-    if path not in sys.path:
-        sys.path.insert(0, path)
-
-
-def _to_plain_config(cfg: DictConfig | dict[str, Any]) -> dict[str, Any]:
-    return OmegaConf.to_container(cfg, resolve=True, throw_on_missing=False)  # type: ignore[return-value]
-
-
-def _resolve_dataset_config(root: Path, script_cfg: DictConfig) -> dict[str, Any]:
-    if OmegaConf.select(script_cfg, "dataset_config") is not None:
-        return _to_plain_config(script_cfg.dataset_config)
-
-    config_path = _as_path(root, str(script_cfg.dataset_config_path))
-    with config_path.open() as handle:
-        payload = json.load(handle)
-    split = str(OmegaConf.select(script_cfg, "dataset_config_split", default="train"))
-    if split in payload:
-        payload = payload[split]
-    return payload
-
-
-def _enabled_envs(dataset_config: dict[str, Any], requested: Iterable[str]) -> list[str]:
-    envs = []
-    for env in requested:
-        if env not in ENV_TO_ID:
-            raise SystemExit(f"Unknown environment {env!r}; expected one of {sorted(ENV_TO_ID)}")
-        paths = dataset_config.get(env, {}).get("folder_paths", [])
-        if paths:
-            envs.append(env)
-    if not envs:
-        raise SystemExit("No enabled environments have non-empty folder_paths.")
-    return envs
-
-
-def _glob_pt_files(folder: Path, limit: int) -> list[Path]:
-    files = sorted(folder.glob("*.pt"))
-    if limit > 0:
-        files = files[:limit]
-    return files
-
-
-def _tensor_summary(value: Any) -> dict[str, Any]:
-    summary: dict[str, Any] = {"type": type(value).__name__}
-    if hasattr(value, "shape"):
-        summary["shape"] = list(value.shape)
-    if hasattr(value, "dtype"):
-        summary["dtype"] = str(value.dtype)
-    if hasattr(value, "numel") and value.numel() > 0:
-        try:
-            summary["min"] = float(value.min().item())
-            summary["max"] = float(value.max().item())
-        except Exception:
-            pass
-    return summary
-
-
-def inspect_dataset_files(root: Path, dataset_config: dict[str, Any], cfg: DictConfig) -> dict[str, Any]:
-    torch = _load_torch()
-    max_files = int(OmegaConf.select(cfg, "max_inspect_files_per_folder", default=2))
-    inspection: dict[str, Any] = {}
-    dataset_config = _with_absolute_dataset_paths(root, dataset_config)
-
-    for env, env_cfg in dataset_config.items():
-        folder_rows = []
-        for raw_folder in env_cfg.get("folder_paths", []):
-            folder = _as_path(root, raw_folder)
-            files = _glob_pt_files(folder, max_files)
-            file_rows = []
-            for file_path in files:
-                try:
-                    payload = torch.load(file_path, map_location="cpu")
-                except Exception as exc:
-                    file_rows.append({"path": str(file_path), "load_error": str(exc)})
-                    continue
-                keys = sorted(payload.keys()) if isinstance(payload, dict) else []
-                file_rows.append(
-                    {
-                        "path": str(file_path),
-                        "keys": keys,
-                        "tensors": {key: _tensor_summary(payload[key]) for key in keys},
-                    }
-                )
-            folder_rows.append(
-                {
-                    "folder": str(folder),
-                    "exists": folder.exists(),
-                    "num_pt_files_seen": len(files),
-                    "files": file_rows,
-                }
-            )
-        inspection[env] = {
-            "config": env_cfg.get("config", {}),
-            "folder_paths": folder_rows,
-            "map_types": env_cfg.get("map_types", []),
-        }
-    return inspection
-
-
-def _build_loader(root: Path, dataset_config: dict[str, Any], cfg: DictConfig):
-    _marl_gpt_path(root)
-    from utils.multi_env_dataset import MultiEnvAggregateDataset
-
-    dataset_config = _with_absolute_dataset_paths(root, dataset_config)
-    missing_paths = _missing_dataset_paths(dataset_config)
-    if missing_paths:
-        preview = "\n".join(f"- {path}" for path in missing_paths[:12])
-        suffix = "" if len(missing_paths) <= 12 else f"\n... and {len(missing_paths) - 12} more"
-        raise SystemExit(
-            "Offline MARL-GPT dataset folders are missing. Install or link the Hugging Face "
-            "`nortem/marl-gpt-datasets` tree so these paths exist:\n"
-            f"{preview}{suffix}"
-        )
-
-    for env_cfg in dataset_config.values():
-        env_cfg.setdefault("config", {})
-        env_cfg["config"]["last_token"] = bool(OmegaConf.select(cfg, "last_token", default=True))
-        env_cfg["config"]["env_specific"] = bool(OmegaConf.select(cfg, "env_specific", default=True))
-
-    with _marl_gpt_cwd(root):
-        return MultiEnvAggregateDataset(
-            batch_size=int(cfg.batch_size),
-            dataset_config=dataset_config,
-            device=str(cfg.device),
-            max_block_size=int(cfg.max_block_size),
-            max_action_size=int(cfg.max_action_size),
-        )
-
-
-def _env_labels_for_batch(loader: Any) -> Any:
-    torch = _load_torch()
-    labels = []
-    for env, batch_size in loader.batch_sizes.items():
-        if env in loader.dataloaders and batch_size > 0:
-            labels.extend([ENV_TO_ID[env]] * int(batch_size))
-    return torch.tensor(labels, dtype=torch.long, device=loader.device)
-
-
-def _copy_obs(batch_obs: dict[str, Any]) -> dict[str, Any]:
-    return {key: value.clone() for key, value in batch_obs.items()}
+from marl_gpt_interp.marl_gpt_tools import (
+    ENV_TO_ID,
+    activation_direction_rows,
+    activation_hooks,
+    as_path,
+    build_loader,
+    condition_mask,
+    collect_parameter_gradients_by_env,
+    copy_obs,
+    enabled_envs,
+    entropy,
+    env_labels_for_batch,
+    feature_groups,
+    inspect_dataset_files,
+    load_model,
+    load_torch,
+    marl_gpt_cwd,
+    parameter_gradient_cosine_rows,
+    pooled_activations,
+    repo_root,
+    resolve_dataset_config,
+    to_plain_config,
+    train_linear_probe,
+    write_csv,
+    write_json,
+)
 
 
 def _wrong_prompt_ids(true_env_ids: Any) -> Any:
-    torch = _load_torch()
+    torch = load_torch()
     choices = torch.tensor([1, 2, 3], device=true_env_ids.device)
     wrong = []
     for label in true_env_ids.tolist():
@@ -265,262 +48,12 @@ def _wrong_prompt_ids(true_env_ids: Any) -> Any:
     return torch.tensor(wrong, dtype=torch.long, device=true_env_ids.device)
 
 
-def _flatten_feature(tensor: Any, *, max_columns: int) -> Any:
-    torch = _load_torch()
-    flat = tensor.detach().float().reshape(tensor.shape[0], -1)
-    if max_columns > 0 and flat.shape[1] > max_columns:
-        stride = max(flat.shape[1] // max_columns, 1)
-        flat = flat[:, ::stride][:, :max_columns]
-    return torch.nan_to_num(flat)
-
-
-def _feature_groups(batch_obs: dict[str, Any], cfg: DictConfig) -> dict[str, Any]:
-    torch = _load_torch()
-    max_columns = int(OmegaConf.select(cfg, "max_feature_columns", default=4096))
-    groups: dict[str, Any] = {}
-
-    positional_keys = [key for key in ("group_pos", "agent_pos", "time_pos", "attr_pos") if key in batch_obs]
-    for key in ("obs", "action_mask"):
-        if key in batch_obs:
-            groups[key] = _flatten_feature(batch_obs[key], max_columns=max_columns)
-    if positional_keys:
-        groups["positions"] = torch.cat(
-            [_flatten_feature(batch_obs[key], max_columns=max_columns) for key in positional_keys],
-            dim=1,
-        )
-    available = [groups[key] for key in ("obs", "action_mask", "positions") if key in groups]
-    if available:
-        groups["full_input"] = torch.cat(available, dim=1)
-    groups["final_token"] = torch.stack(
-        [
-            batch_obs["obs"][:, -1].float(),
-            batch_obs["attr_pos"][:, -1].float()
-            if "attr_pos" in batch_obs
-            else torch.zeros_like(batch_obs["obs"][:, -1]),
-        ],
-        dim=1,
-    )
-    return groups
-
-
-def _standardize(train_x: Any, test_x: Any) -> tuple[Any, Any]:
-    mean = train_x.mean(dim=0, keepdim=True)
-    std = train_x.std(dim=0, keepdim=True).clamp_min(1e-6)
-    return (train_x - mean) / std, (test_x - mean) / std
-
-
-def _split_probe_dataset(x: Any, y: Any, train_fraction: float) -> ProbeDataset:
-    torch = _load_torch()
-    n = x.shape[0]
-    indices = torch.randperm(n, device=x.device)
-    train_n = max(1, min(n - 1, int(round(n * train_fraction))))
-    train_idx = indices[:train_n]
-    test_idx = indices[train_n:]
-    train_x, test_x = _standardize(x[train_idx], x[test_idx])
-    return ProbeDataset(train_x, y[train_idx], test_x, y[test_idx])
-
-
-def _macro_f1(y_true: Any, y_pred: Any, labels: list[int]) -> float:
-    scores = []
-    for label in labels:
-        pred_pos = y_pred == label
-        true_pos = y_true == label
-        tp = (pred_pos & true_pos).sum().item()
-        fp = (pred_pos & ~true_pos).sum().item()
-        fn = (~pred_pos & true_pos).sum().item()
-        precision = tp / (tp + fp) if tp + fp else 0.0
-        recall = tp / (tp + fn) if tp + fn else 0.0
-        scores.append((2 * precision * recall / (precision + recall)) if precision + recall else 0.0)
-    return float(sum(scores) / len(scores))
-
-
-def _confusion_matrix(y_true: Any, y_pred: Any, labels: list[int]) -> list[list[int]]:
-    matrix = []
-    for true_label in labels:
-        row = []
-        for pred_label in labels:
-            row.append(int(((y_true == true_label) & (y_pred == pred_label)).sum().item()))
-        matrix.append(row)
-    return matrix
-
-
-def _cosine(a: Any, b: Any) -> float:
-    torch = _load_torch()
-    a = a.detach().float().reshape(-1)
-    b = b.detach().float().reshape(-1)
-    return float(torch.nn.functional.cosine_similarity(a, b, dim=0, eps=1e-12).item())
-
-
-def _top_abs_indices(vector: Any, limit: int) -> list[int]:
-    if limit <= 0:
-        return []
-    k = min(limit, int(vector.numel()))
-    if k == 0:
-        return []
-    return [int(index) for index in vector.detach().float().abs().topk(k).indices.tolist()]
-
-
-def train_linear_probe(x: Any, y: Any, cfg: DictConfig) -> dict[str, Any]:
-    torch = _load_torch()
-    labels = sorted(int(label) for label in y.unique().tolist())
-    if len(labels) < 2 or x.shape[0] < 4:
-        return {"status": "skipped", "reason": "need at least two labels and four examples"}
-
-    dataset = _split_probe_dataset(x, y, float(OmegaConf.select(cfg, "train_fraction", default=0.7)))
-    label_to_index = {label: index for index, label in enumerate(labels)}
-    y_train = torch.tensor([label_to_index[int(label)] for label in dataset.y_train.tolist()], device=x.device)
-    y_test = torch.tensor([label_to_index[int(label)] for label in dataset.y_test.tolist()], device=x.device)
-
-    model = torch.nn.Linear(dataset.x_train.shape[1], len(labels), device=x.device)
-    optimizer = torch.optim.AdamW(
-        model.parameters(),
-        lr=float(OmegaConf.select(cfg, "probe_lr", default=0.05)),
-        weight_decay=float(OmegaConf.select(cfg, "probe_weight_decay", default=0.01)),
-    )
-    steps = int(OmegaConf.select(cfg, "probe_steps", default=200))
-    for _ in range(steps):
-        optimizer.zero_grad(set_to_none=True)
-        loss = torch.nn.functional.cross_entropy(model(dataset.x_train), y_train)
-        loss.backward()
-        optimizer.step()
-
-    with torch.no_grad():
-        logits = model(dataset.x_test)
-        pred_idx = logits.argmax(dim=1)
-        pred = torch.tensor([labels[int(index)] for index in pred_idx.tolist()], device=x.device)
-        accuracy = float((pred == dataset.y_test).float().mean().item())
-        per_label_recall = {}
-        for label in labels:
-            mask = dataset.y_test == label
-            per_label_recall[str(label)] = float((pred[mask] == label).float().mean().item()) if mask.any() else None
-
-    with torch.no_grad():
-        weights = model.weight.detach().cpu()
-        class_weight_norms = {
-            str(label): float(weights[index].norm().item()) for index, label in enumerate(labels)
-        }
-        pairwise_weight_cosine = {}
-        for left_index, left_label in enumerate(labels):
-            for right_index, right_label in enumerate(labels[left_index + 1 :], start=left_index + 1):
-                pairwise_weight_cosine[f"{left_label}_vs_{right_label}"] = _cosine(
-                    weights[left_index], weights[right_index]
-                )
-
-    return {
-        "status": "ok",
-        "n_train": int(dataset.x_train.shape[0]),
-        "n_test": int(dataset.x_test.shape[0]),
-        "n_features": int(dataset.x_train.shape[1]),
-        "labels": labels,
-        "accuracy": accuracy,
-        "balanced_accuracy": float(
-            sum(v for v in per_label_recall.values() if v is not None)
-            / max(sum(v is not None for v in per_label_recall.values()), 1)
-        ),
-        "macro_f1": _macro_f1(dataset.y_test, pred, labels),
-        "per_label_recall": per_label_recall,
-        "confusion_matrix": _confusion_matrix(dataset.y_test, pred, labels),
-        "class_weight_norms": class_weight_norms,
-        "pairwise_weight_cosine": pairwise_weight_cosine,
-        "top_weight_features": {
-            str(label): _top_abs_indices(
-                weights[index],
-                int(OmegaConf.select(cfg, "top_direction_features", default=8)),
-            )
-            for index, label in enumerate(labels)
-        },
-    }
-
-
-def _load_model(root: Path, cfg: DictConfig):
-    torch = _load_torch()
-    _marl_gpt_path(root)
-    from gpt.inference import strip_prefix_from_state_dict
-    from gpt.model_ac import CriticGPTConfig, CriticWithLoss
-
-    checkpoint_path = _as_path(root, str(cfg.checkpoint))
-    if not checkpoint_path.exists():
-        raise SystemExit(f"Checkpoint not found: {checkpoint_path}")
-    checkpoint = torch.load(checkpoint_path, map_location=str(cfg.device))
-    model_config = CriticGPTConfig(**checkpoint["model_args"])
-    model = CriticWithLoss(model_config)
-    model.load_state_dict(strip_prefix_from_state_dict(checkpoint["model"]), strict=False)
-    model.to(str(cfg.device))
-    model.eval()
-    return model, model_config
-
-
-def _activation_hooks(model: Any, captured: dict[str, Any]):
-    hooks = []
-
-    def hook(name: str):
-        def save_output(_module, _inputs, output):
-            captured[name] = output.detach()
-
-        return save_output
-
-    hooks.append(model.transformer.drop.register_forward_hook(hook("embed")))
-    for index, block in enumerate(model.transformer.h):
-        hooks.append(block.register_forward_hook(hook(f"layer_{index:02d}")))
-    hooks.append(model.transformer.act_layers.register_forward_hook(hook("actor_layer")))
-    hooks.append(model.transformer.critic_layers.register_forward_hook(hook("critic_layer")))
-    return hooks
-
-
-def _pooled_activations(captured: dict[str, Any]) -> dict[str, Any]:
-    pooled = {}
-    for name, tensor in captured.items():
-        pooled[f"{name}:mean"] = tensor.mean(dim=1)
-        pooled[f"{name}:final"] = tensor[:, -1, :]
-    return pooled
-
-
-def _slice_batch(batch: Any, mask: Any) -> Any:
-    if isinstance(batch, dict):
-        return {key: _slice_batch(value, mask) for key, value in batch.items()}
-    if hasattr(batch, "shape") and batch.shape[:1] == mask.shape[:1]:
-        return batch[mask]
-    return batch
-
-
-def _parameter_group(name: str) -> str:
-    if "obs_encoder" in name or "wte" in name:
-        return "token_embeddings"
-    if name.startswith("transformer.h."):
-        parts = name.split(".")
-        if len(parts) >= 3 and parts[2].isdigit():
-            return f"layer_{int(parts[2]):02d}"
-    if "actor" in name:
-        return "actor_head"
-    if "critic" in name:
-        return "critic_head"
-    if "pos" in name or "emb" in name:
-        return "position_embeddings"
-    return "other"
-
-
-def _named_gradient_groups(model: Any) -> dict[str, Any]:
-    torch = _load_torch()
-    groups: dict[str, list[Any]] = defaultdict(list)
-    for name, parameter in model.named_parameters():
-        if parameter.grad is None:
-            continue
-        groups[_parameter_group(name)].append(parameter.grad.detach().float().flatten().cpu())
-    return {name: torch.cat(chunks) for name, chunks in groups.items() if chunks}
-
-
-def _entropy(logits: Any) -> Any:
-    torch = _load_torch()
-    probs = torch.nn.functional.softmax(logits, dim=-1)
-    return -(probs * torch.log(probs.clamp_min(1e-12))).sum(dim=-1)
-
-
 def collect_batches(root: Path, dataset_config: dict[str, Any], cfg: DictConfig) -> dict[str, Any]:
-    torch = _load_torch()
+    torch = load_torch()
     torch.manual_seed(int(OmegaConf.select(cfg, "seed", default=0)))
     random.seed(int(OmegaConf.select(cfg, "seed", default=0)))
 
-    loader = _build_loader(root, dataset_config, cfg)
+    loader = build_loader(root, dataset_config, cfg)
     iterator = iter(loader)
     true_feature_tables: dict[str, list[Any]] = defaultdict(list)
     true_labels = []
@@ -537,23 +70,22 @@ def collect_batches(root: Path, dataset_config: dict[str, Any], cfg: DictConfig)
     model_config = None
     hooks = []
     if bool(OmegaConf.select(cfg, "run_model", default=False)):
-        with _marl_gpt_cwd(root):
-            model, model_config = _load_model(root, cfg)
+        with marl_gpt_cwd(root):
+            model, model_config = load_model(root, cfg)
             last_attr_pos = model_config.n_attr - 1
     else:
         last_attr_pos = None
 
     try:
         for batch_index in range(int(cfg.num_batches)):
-            with _marl_gpt_cwd(root):
+            with marl_gpt_cwd(root):
                 batch_obs, target, mask_target, batch_obs_next, batch_info = next(iterator)
-            env_labels = _env_labels_for_batch(loader)
+            env_labels = env_labels_for_batch(loader)
             if env_labels.shape[0] != batch_obs["obs"].shape[0]:
                 raise RuntimeError(
                     f"Label count {env_labels.shape[0]} does not match batch size {batch_obs['obs'].shape[0]}"
                 )
-            feature_groups = _feature_groups(batch_obs, cfg)
-            for name, features in feature_groups.items():
+            for name, features in feature_groups(batch_obs, cfg).items():
                 true_feature_tables[name].append(features.detach().cpu())
             true_labels.append(env_labels.detach().cpu())
 
@@ -561,65 +93,22 @@ def collect_batches(root: Path, dataset_config: dict[str, Any], cfg: DictConfig)
                 continue
 
             parameter_cfg = OmegaConf.select(cfg, "parameter_sensitivity", default={})
-            if bool(OmegaConf.select(parameter_cfg, "enabled", default=False)):
-                max_gradient_batches = int(OmegaConf.select(parameter_cfg, "max_batches", default=1))
-                if batch_index < max_gradient_batches:
-                    for env_id in sorted(int(label) for label in env_labels.unique().tolist()):
-                        env_mask = env_labels == env_id
-                        if not bool(env_mask.any()):
-                            continue
-                        env_obs = _slice_batch(batch_obs, env_mask)
-                        env_next_obs = _slice_batch(batch_obs_next, env_mask)
-                        env_info = _slice_batch(batch_info, env_mask)
-                        env_target = target[env_mask].long()
-                        env_mask_target = mask_target[env_mask].long()
-                        try:
-                            model.zero_grad(set_to_none=True)
-                            with _marl_gpt_cwd(root), torch.enable_grad():
-                                target_val = model.calculate_target_val(env_obs, env_next_obs, env_info)
-                                _act_logits, _val_logits, loss, loss_info = model(
-                                    env_obs, env_target, env_mask_target, target_val
-                                )
-                                if loss is None:
-                                    raise RuntimeError("model returned no loss")
-                                loss.backward()
-                            for group_name, gradient in _named_gradient_groups(model).items():
-                                parameter_rows.append(
-                                    {
-                                        "batch": batch_index,
-                                        "env": ID_TO_ENV.get(env_id, str(env_id)),
-                                        "env_id": env_id,
-                                        "parameter_group": group_name,
-                                        "gradient_l2": float(gradient.norm().item()),
-                                        "gradient_l1_mean": float(gradient.abs().mean().item()),
-                                        "gradient_abs_max": float(gradient.abs().max().item()),
-                                        "loss": float(loss.detach().item()),
-                                        "bc_loss": float(loss_info["bc_loss"].detach().item())
-                                        if loss_info.get("bc_loss") is not None
-                                        else None,
-                                        "critic_loss": float(loss_info["critic_loss"].detach().item())
-                                        if loss_info.get("critic_loss") is not None
-                                        else None,
-                                    }
-                                )
-                                existing = gradient_sums[group_name].get(env_id)
-                                gradient_sums[group_name][env_id] = (
-                                    gradient.clone() if existing is None else existing + gradient
-                                )
-                                gradient_counts[group_name][env_id] += 1
-                        except Exception as exc:
-                            parameter_rows.append(
-                                {
-                                    "batch": batch_index,
-                                    "env": ID_TO_ENV.get(env_id, str(env_id)),
-                                    "env_id": env_id,
-                                    "parameter_group": "all",
-                                    "status": "failed",
-                                    "error": str(exc),
-                                }
-                            )
-                        finally:
-                            model.zero_grad(set_to_none=True)
+            max_gradient_batches = int(OmegaConf.select(parameter_cfg, "max_batches", default=1))
+            if bool(OmegaConf.select(parameter_cfg, "enabled", default=False)) and batch_index < max_gradient_batches:
+                collect_parameter_gradients_by_env(
+                    root=root,
+                    model=model,
+                    batch_index=batch_index,
+                    batch_obs=batch_obs,
+                    target=target,
+                    mask_target=mask_target,
+                    batch_obs_next=batch_obs_next,
+                    batch_info=batch_info,
+                    env_labels=env_labels,
+                    parameter_rows=parameter_rows,
+                    gradient_sums=gradient_sums,
+                    gradient_counts=gradient_counts,
+                )
 
             prompt_sets = {"correct": env_labels, "wrong": _wrong_prompt_ids(env_labels)}
             for env_id in (1, 2, 3):
@@ -627,14 +116,14 @@ def collect_batches(root: Path, dataset_config: dict[str, Any], cfg: DictConfig)
 
             correct_logits = None
             for condition, prompt_ids in prompt_sets.items():
-                prompted_obs = _copy_obs(batch_obs)
+                prompted_obs = copy_obs(batch_obs)
                 prompted_obs["obs"][:, -1] = prompt_ids
                 if last_attr_pos is not None:
                     prompted_obs["attr_pos"][:, -1] = last_attr_pos
 
                 captured: dict[str, Any] = {}
-                hooks = _activation_hooks(model, captured)
-                with _marl_gpt_cwd(root), torch.no_grad():
+                hooks = activation_hooks(model, captured)
+                with marl_gpt_cwd(root), torch.no_grad():
                     act_logits, val_logits, _loss, _info = model(prompted_obs)
                 for active_hook in hooks:
                     active_hook.remove()
@@ -642,7 +131,7 @@ def collect_batches(root: Path, dataset_config: dict[str, Any], cfg: DictConfig)
 
                 if condition == "correct":
                     correct_logits = act_logits.detach()
-                for name, features in _pooled_activations(captured).items():
+                for name, features in pooled_activations(captured).items():
                     activation_tables[name].append(features.detach().cpu())
                 activation_true_labels.append(env_labels.detach().cpu())
                 activation_prompted_labels.append(prompt_ids.detach().cpu())
@@ -655,7 +144,7 @@ def collect_batches(root: Path, dataset_config: dict[str, Any], cfg: DictConfig)
                             "batch": batch_index,
                             "condition": condition,
                             "mean_abs_action_logit_delta": float(delta.abs().mean().item()),
-                            "mean_entropy": float(_entropy(act_logits).mean().item()),
+                            "mean_entropy": float(entropy(act_logits).mean().item()),
                             "selected_action_change_fraction": float(
                                 (act_logits.argmax(dim=1) != correct_logits.argmax(dim=1)).float().mean().item()
                             ),
@@ -683,129 +172,13 @@ def collect_batches(root: Path, dataset_config: dict[str, Any], cfg: DictConfig)
     }
 
 
-def _condition_mask(conditions: list[str], requested: list[str]):
-    torch = _load_torch()
-    if not conditions or not requested:
-        return None
-    requested_set = set(requested)
-    return torch.tensor([condition in requested_set for condition in conditions], dtype=torch.bool)
-
-
-def activation_direction_rows(collected: dict[str, Any], cfg: DictConfig) -> list[dict[str, Any]]:
-    torch = _load_torch()
-    rows = []
-    direction_conditions = list(OmegaConf.select(cfg, "direction_conditions", default=["wrong"]))
-    labels = collected.get("activation_true_labels")
-    conditions = collected.get("activation_conditions", [])
-    if labels is None or not conditions:
-        return rows
-
-    base_mask = _condition_mask(conditions, direction_conditions)
-    if base_mask is None:
-        base_mask = torch.ones(labels.shape[0], dtype=torch.bool)
-        condition_label = "all"
-    else:
-        condition_label = ",".join(direction_conditions)
-
-    for feature_name, features in collected.get("activation_features", {}).items():
-        feature_values = features[base_mask].float()
-        feature_labels = labels[base_mask]
-        env_ids = sorted(int(label) for label in feature_labels.unique().tolist())
-        if len(env_ids) < 2:
-            continue
-        means = {}
-        for env_id in env_ids:
-            env_features = feature_values[feature_labels == env_id]
-            if env_features.numel() == 0:
-                continue
-            means[env_id] = env_features.mean(dim=0)
-            rows.append(
-                {
-                    "feature": feature_name,
-                    "condition": condition_label,
-                    "direction_type": "class_mean",
-                    "env": ID_TO_ENV.get(env_id, str(env_id)),
-                    "env_id": env_id,
-                    "n_examples": int(env_features.shape[0]),
-                    "mean_l2": float(means[env_id].norm().item()),
-                    "mean_abs": float(means[env_id].abs().mean().item()),
-                    "top_abs_features": _top_abs_indices(
-                        means[env_id],
-                        int(OmegaConf.select(cfg, "top_direction_features", default=8)),
-                    ),
-                }
-            )
-        for left_index, left_env in enumerate(env_ids):
-            for right_env in env_ids[left_index + 1 :]:
-                if left_env not in means or right_env not in means:
-                    continue
-                delta = means[left_env] - means[right_env]
-                rows.append(
-                    {
-                        "feature": feature_name,
-                        "condition": condition_label,
-                        "direction_type": "mean_difference",
-                        "env_pair": f"{ID_TO_ENV.get(left_env, left_env)}_vs_{ID_TO_ENV.get(right_env, right_env)}",
-                        "left_env_id": left_env,
-                        "right_env_id": right_env,
-                        "cosine_between_means": _cosine(means[left_env], means[right_env]),
-                        "difference_l2": float(delta.norm().item()),
-                        "difference_abs_mean": float(delta.abs().mean().item()),
-                        "top_abs_features": _top_abs_indices(
-                            delta,
-                            int(OmegaConf.select(cfg, "top_direction_features", default=8)),
-                        ),
-                    }
-                )
-    return rows
-
-
-def parameter_gradient_cosine_rows(collected: dict[str, Any]) -> list[dict[str, Any]]:
-    rows = []
-    gradient_sums = collected.get("gradient_sums", {})
-    gradient_counts = collected.get("gradient_counts", {})
-    for group_name, env_gradients in gradient_sums.items():
-        averaged = {}
-        for env_id, gradient in env_gradients.items():
-            count = int(gradient_counts[group_name].get(env_id, 0))
-            if count <= 0:
-                continue
-            averaged[env_id] = gradient / count
-            rows.append(
-                {
-                    "parameter_group": group_name,
-                    "direction_type": "mean_gradient",
-                    "env": ID_TO_ENV.get(int(env_id), str(env_id)),
-                    "env_id": int(env_id),
-                    "n_batches": count,
-                    "gradient_l2": float(averaged[env_id].norm().item()),
-                    "gradient_abs_mean": float(averaged[env_id].abs().mean().item()),
-                    "gradient_abs_max": float(averaged[env_id].abs().max().item()),
-                }
-            )
-        env_ids = sorted(int(env_id) for env_id in averaged)
-        for left_index, left_env in enumerate(env_ids):
-            for right_env in env_ids[left_index + 1 :]:
-                rows.append(
-                    {
-                        "parameter_group": group_name,
-                        "direction_type": "gradient_cosine",
-                        "env_pair": f"{ID_TO_ENV.get(left_env, left_env)}_vs_{ID_TO_ENV.get(right_env, right_env)}",
-                        "left_env_id": left_env,
-                        "right_env_id": right_env,
-                        "cosine": _cosine(averaged[left_env], averaged[right_env]),
-                    }
-                )
-    return rows
-
-
 def run_probes(collected: dict[str, Any], cfg: DictConfig) -> list[dict[str, Any]]:
     rows = []
     activation_probe_conditions = list(OmegaConf.select(cfg, "activation_probe_conditions", default=[]))
     activation_probe_label_targets = set(
         OmegaConf.select(cfg, "activation_probe_label_targets", default=["true_env", "prompted_env"])
     )
-    activation_mask = _condition_mask(collected.get("activation_conditions", []), activation_probe_conditions)
+    activation_mask = condition_mask(collected.get("activation_conditions", []), activation_probe_conditions)
     probe_specs = [("input", "input_features", "input_true_labels")]
     if "true_env" in activation_probe_label_targets:
         probe_specs.append(("activation_true_env", "activation_features", "activation_true_labels"))
@@ -835,32 +208,41 @@ def run_probes(collected: dict[str, Any], cfg: DictConfig) -> list[dict[str, Any
 
 def main(cfg: DictConfig) -> dict[str, Any]:
     script_cfg = cfg.env_mechanism_probes
-    root = _repo_root()
-    output_dir = _as_path(root, str(script_cfg.output_dir))
+    root = repo_root()
+    output_dir = as_path(root, str(script_cfg.output_dir))
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    dataset_config = _resolve_dataset_config(root, script_cfg)
+    dataset_config = resolve_dataset_config(root, script_cfg)
     requested_envs = list(OmegaConf.select(script_cfg, "envs", default=["smac", "pogema", "grf"]))
-    active_envs = _enabled_envs(dataset_config, requested_envs)
+    active_envs = enabled_envs(dataset_config, requested_envs)
     dataset_config = {env: dataset_config[env] for env in active_envs}
 
     inspection = inspect_dataset_files(root, dataset_config, script_cfg)
-    _write_json(output_dir / "dataset_inspection.json", inspection)
+    write_json(output_dir / "dataset_inspection.json", inspection)
 
     collected = collect_batches(root, dataset_config, script_cfg)
     probe_rows = run_probes(collected, script_cfg)
-    direction_rows = activation_direction_rows(collected, script_cfg)
-    parameter_gradient_rows = parameter_gradient_cosine_rows(collected)
-    _write_json(output_dir / "probe_results.json", probe_rows)
-    _write_csv(output_dir / "probe_results.csv", probe_rows)
-    _write_json(output_dir / "activation_directions.json", direction_rows)
-    _write_csv(output_dir / "activation_directions.csv", direction_rows)
-    _write_csv(output_dir / "token_swap_behavior.csv", collected["behavior_rows"])
-    _write_json(output_dir / "parameter_sensitivity.json", collected["parameter_rows"])
-    _write_csv(output_dir / "parameter_sensitivity.csv", collected["parameter_rows"])
-    _write_json(output_dir / "parameter_gradient_cosines.json", parameter_gradient_rows)
-    _write_csv(output_dir / "parameter_gradient_cosines.csv", parameter_gradient_rows)
-    _write_json(
+    direction_rows = activation_direction_rows(
+        collected["activation_features"],
+        collected["activation_true_labels"],
+        cfg=script_cfg,
+        conditions=collected["activation_conditions"],
+        requested_conditions=list(OmegaConf.select(script_cfg, "direction_conditions", default=["wrong"])),
+    )
+    parameter_gradient_rows = parameter_gradient_cosine_rows(
+        collected["gradient_sums"],
+        collected["gradient_counts"],
+    )
+    write_json(output_dir / "probe_results.json", probe_rows)
+    write_csv(output_dir / "probe_results.csv", probe_rows)
+    write_json(output_dir / "activation_directions.json", direction_rows)
+    write_csv(output_dir / "activation_directions.csv", direction_rows)
+    write_csv(output_dir / "token_swap_behavior.csv", collected["behavior_rows"])
+    write_json(output_dir / "parameter_sensitivity.json", collected["parameter_rows"])
+    write_csv(output_dir / "parameter_sensitivity.csv", collected["parameter_rows"])
+    write_json(output_dir / "parameter_gradient_cosines.json", parameter_gradient_rows)
+    write_csv(output_dir / "parameter_gradient_cosines.csv", parameter_gradient_rows)
+    write_json(
         output_dir / "summary.json",
         {
             "active_envs": active_envs,
@@ -879,7 +261,7 @@ def main(cfg: DictConfig) -> dict[str, Any]:
             "behavior_rows": len(collected["behavior_rows"]),
             "parameter_sensitivity_rows": len(collected["parameter_rows"]),
             "parameter_gradient_cosine_rows": len(parameter_gradient_rows),
-            "config": _to_plain_config(cfg),
+            "config": to_plain_config(cfg),
         },
     )
     logger.info(f"Wrote environment mechanism probe outputs to {output_dir}")

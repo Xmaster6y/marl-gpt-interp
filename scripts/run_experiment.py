@@ -25,6 +25,7 @@ ScriptMain: TypeAlias = Callable[[DictConfig], object]
 SCRIPTS = {
     "grf_rollout_stats": "scripts.grf_rollout_stats:main",
     "env_mechanism_probes": "scripts.env_mechanism_probes:main",
+    "cross_env_compute_sharing": "scripts.cross_env_compute_sharing:main",
     "normalize_soccer_data": "scripts.normalize_soccer_data:main",
     "compare_soccer_stats": "scripts.compare_soccer_stats:main",
 }

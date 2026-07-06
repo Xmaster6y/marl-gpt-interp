@@ -1,0 +1,54 @@
+defaults:
+  - _self_
+
+output_dir: results/experiments/2026-07-06-cross-env-compute-sharing
+checkpoint: results/marl-gpt-main.pt
+
+dataset_config:
+  smac:
+    config:
+      history_len: 6
+      history_step: 1
+      part_of_dataset: 1
+    map_types:
+      - zerg
+    folder_paths:
+      - dataset/zerg_5_vs_5
+  pogema:
+    config:
+      part_of_dataset: 1
+    folder_paths:
+      - dataset/dataset_pogema_ll/random
+  grf:
+    config:
+      history_len: 6
+      history_step: 1
+      part_of_dataset: 1
+      load_part_file: false
+    folder_paths:
+      - dataset/dataset_grf/trajectories/academy_corner
+
+envs:
+  - smac
+  - pogema
+  - grf
+device: cuda:0
+seed: 2
+batch_size: 60
+num_batches: 8
+max_block_size: 700
+max_action_size: 20
+last_token: true
+env_specific: true
+
+parameter_sensitivity:
+  enabled: true
+  max_batches: 2
+
+max_inspect_files_per_folder: 1
+max_feature_columns: 4096
+top_direction_features: 12
+train_fraction: 0.7
+probe_steps: 250
+probe_lr: 0.03
+probe_weight_decay: 0.01
