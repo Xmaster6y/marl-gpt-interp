@@ -255,6 +255,83 @@ This strengthens the observation-derived environment channel result. Corrupting 
 
 This still should not be treated as a mechanistic localization claim. Because input-channel probes are already near perfect, this run establishes robustness of true-environment decodability under token corruption, not the existence of dedicated environment-specific heads, channels, or parameters.
 
+## Planned Run: 2026-07-06 Direction And Parameter Probes
+
+Question:
+
+Which activation directions and parameter groups differ most between GRF, SMAC, and POGEMA observations under the wrong-token condition?
+
+Hypothesis:
+
+If true-environment identity is observation-derived rather than only copied from the explicit environment token, then class-mean activation directions and linear-probe directions should remain separated under wrong-token prompts. If model computation is partly environment-specialized, gradient sensitivity under the model's action/critic loss should show environment-dependent magnitudes or low gradient cosine in some parameter groups. If gradient directions are highly aligned across environments, the safer conclusion is shared effective computation with environment-identifying activations, not parameter specialization.
+
+Config and launch:
+
+- Config: [`../../configs/env_mechanism_probes/2026-07-06-jz-directions.yaml`](../../configs/env_mechanism_probes/2026-07-06-jz-directions.yaml)
+- Slurm script: [`archived/2026-07-06-environment-direction-parameter-probes-v100.sh`](archived/2026-07-06-environment-direction-parameter-probes-v100.sh)
+- Expected results: `results/experiments/2026-07-06-environment-direction-parameter-probes/`
+
+Run scope:
+
+- Environments: SMAC zerg 5v5, POGEMA random, GRF academy corner.
+- Examples: 8 balanced batches of 60 examples.
+- Activation condition for direction analysis: random wrong environment token.
+- Parameter sensitivity: first 2 batches, split by true environment, using the checkpoint's existing action/critic loss.
+
+Primary outputs:
+
+- `activation_directions.csv`: class-mean vectors and pairwise mean-difference directions per activation feature.
+- `probe_results.csv`: linear probe metrics plus compact probe-weight direction summaries.
+- `parameter_sensitivity.csv`: per-environment gradient norms by parameter group.
+- `parameter_gradient_cosines.csv`: average gradient cosine between environment pairs by parameter group.
+- `token_swap_behavior.csv`: action-logit, entropy, value, and selected-action changes under token swaps.
+
+Decision rule:
+
+Treat large activation separation plus high parameter-gradient overlap as evidence for environment-identifying representations implemented by mostly shared computation. Treat stable, low-cosine or high-magnitude differences in specific parameter groups only as localization candidates until a follow-up ablation or patching run shows environment-specific behavioral effects.
+
+## Result: 2026-07-06 Direction And Parameter Probes
+
+Slurm job `1379980` completed with exit code `0:0`, but the parameter-sensitivity rows failed because the action targets reached the model with a non-index tensor dtype. The script now casts per-environment action targets to `long` before the loss forward pass.
+
+Fixed Slurm job `1380926` completed with exit code `0:0` in 3 minutes 0 seconds on JZ.
+
+Result location: `results/experiments/2026-07-06-environment-direction-parameter-probes/`.
+
+Run scope:
+
+- Environments: SMAC zerg 5v5, POGEMA random, GRF academy corner.
+- Input examples: 480.
+- Activation examples: 2,400, from correct-token, wrong-token, and all-token prompt sweeps.
+- Activation-direction rows: 120.
+- Parameter-sensitivity rows: 66.
+- Parameter-gradient cosine rows: 66.
+
+Main activation findings:
+
+- True environment again remains perfectly decodable from wrong-token activations after the first transformer block. The wrong final-token embedding itself is near chance for true environment, with accuracy 0.326.
+- Mean-pooled activation directions separate POGEMA versus GRF most strongly. The largest mean-difference directions are `actor_layer:mean` for POGEMA versus GRF with L2 37.36 and cosine 0.475, followed by `critic_layer:mean` with L2 34.12 and cosine 0.698.
+- POGEMA versus GRF separation grows across the transformer: `layer_02:mean` through `layer_06:mean` all have L2 around 32-33. SMAC versus GRF also separates in later mean-pooled layers, but the means are much more aligned, with cosines around 0.97-0.98 in layers 4-6.
+- Token swaps remain behaviorally relevant. Random wrong-token prompts changed the selected action for 28.1% of examples, with mean absolute action-logit delta 3.60. Prompting all examples as POGEMA or GRF produced the same selected-action change rate; prompting all examples as SMAC shifted logits less and did not change selected actions in this subset.
+
+Main parameter-gradient findings:
+
+- Gradient magnitudes differ by environment and layer. SMAC has much larger sensitivity in token embeddings, layer 0, and miscellaneous non-layer parameters; POGEMA and GRF have larger sensitivity in layer 2.
+- SMAC gradients are almost orthogonal to both POGEMA and GRF across most parameter groups. Transformer-layer gradient cosines for SMAC versus POGEMA range from -0.003 to 0.099, and SMAC versus GRF from -0.008 to 0.068 across layers 1-6.
+- POGEMA and GRF gradients are much more aligned in transformer layers, with cosines 0.724 at layer 0, 0.930 at layer 1, 0.961 at layer 2, and 0.827-0.866 in layers 3-6. Actor and critic heads show the same pattern: POGEMA versus GRF cosines are 0.838 and 0.706, while SMAC-pair cosines are much lower.
+
+Interpretation:
+
+The result strengthens the claim that environment identity is not only copied from the explicit final token. Wrong-token activations recover the true environment almost everywhere after the first block, and mean-difference directions are large in later pooled activations and actor/critic branches.
+
+The parameter-gradient result is a localization signal, not yet a causal parameter-specialization claim. The cleanest pattern is that SMAC has a distinct loss-gradient direction from both POGEMA and GRF, while POGEMA and GRF share much more aligned gradient directions through most transformer layers. This suggests that the model's effective computation may be more similar for POGEMA and GRF than for SMAC in this subset, or that the current SMAC sample/loss scale induces a different gradient regime.
+
+Limitations:
+
+- Parameter sensitivity used only the first two balanced batches, so the gradient-cosine pattern needs a seed and sample-size rerun before being treated as stable.
+- Gradient directions are measured under the training-style action/critic loss, not under a causal ablation or patching intervention.
+- The environment identity signal remains trivially available in raw input channels, so these results localize separability and sensitivity but do not prove semantically meaningful environment concepts.
+
 ## Implementation Notes
 
 The local MARL-GPT loader already emits tokenized observation dictionaries and targets from `MultiEnvAggregateDataset`. The design should reuse that path so padding, history length, and positional fields match MARL-GPT inference. The experiment should also preserve input-channel feature tables before the model forward pass, because those controls explain how much environment identity is available without learned transformer computation.
