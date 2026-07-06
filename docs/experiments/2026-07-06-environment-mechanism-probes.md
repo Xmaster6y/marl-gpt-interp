@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned.
+Ready to launch on JZ.
 
 ## Question
 
@@ -162,6 +162,22 @@ The full-input baseline will probably classify environments well because GRF, SM
 6. Compare true-env and prompted-env decodability across layers, token groups, and token-swap conditions.
 7. Measure action-logit, value, entropy, and selected-action changes under token swaps.
 8. If token-swap results are stable, run activation clustering, sparse probes, attribution, and targeted ablations to estimate shared versus environment-specific computation.
+
+## Launch
+
+Initial JZ run:
+
+```bash
+uv run -m scripts.run_experiment env_mechanism_probes=2026-07-06-jz-small
+```
+
+Cluster launch artifact:
+
+- Config: [`../../configs/env_mechanism_probes/2026-07-06-jz-small.yaml`](../../configs/env_mechanism_probes/2026-07-06-jz-small.yaml)
+- Slurm script: [`to-launch/2026-07-06-environment-mechanism-probes-v100.sh`](to-launch/2026-07-06-environment-mechanism-probes-v100.sh)
+- Expected results: `results/experiments/2026-07-06-environment-mechanism-probes/`
+
+This initial run records dataset/file schemas, trains input-channel probes, caches layerwise pooled activations under correct, wrong, and all-token-sweep environment prompts, trains true-environment and prompted-environment linear probes on those activations, and writes token-swap behavior summaries.
 
 ## Implementation Notes
 

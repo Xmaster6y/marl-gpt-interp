@@ -1,5 +1,6 @@
 defaults:
   - optional grf_rollout_stats: null
+  - optional env_mechanism_probes: null
   - optional normalize_soccer_data: null
   - optional compare_soccer_stats: null
   - _self_
