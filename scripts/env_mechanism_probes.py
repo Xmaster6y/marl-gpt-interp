@@ -231,13 +231,14 @@ def _build_loader(root: Path, dataset_config: dict[str, Any], cfg: DictConfig):
         env_cfg["config"]["last_token"] = bool(OmegaConf.select(cfg, "last_token", default=True))
         env_cfg["config"]["env_specific"] = bool(OmegaConf.select(cfg, "env_specific", default=True))
 
-    return MultiEnvAggregateDataset(
-        batch_size=int(cfg.batch_size),
-        dataset_config=dataset_config,
-        device=str(cfg.device),
-        max_block_size=int(cfg.max_block_size),
-        max_action_size=int(cfg.max_action_size),
-    )
+    with _marl_gpt_cwd(root):
+        return MultiEnvAggregateDataset(
+            batch_size=int(cfg.batch_size),
+            dataset_config=dataset_config,
+            device=str(cfg.device),
+            max_block_size=int(cfg.max_block_size),
+            max_action_size=int(cfg.max_action_size),
+        )
 
 
 def _env_labels_for_batch(loader: Any) -> Any:
