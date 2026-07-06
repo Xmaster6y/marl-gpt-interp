@@ -6,6 +6,7 @@
 
 ## Planned Analyses
 
+- [Environment mechanism probes](2026-07-06-environment-mechanism-probes.md): Planned; test env-token counterfactuals, true-env recovery, and shared-versus-environment-specific computation.
 - [GRF rollout statistics](2026-06-30-grf-rollout-statistics.md): First self-contained fresh-env gate before probing or steering; JZ setup path documented separately in [GRF on JZ setup](../2026-07-02-grf-jz-setup.md).
 - [Pretrained weights smoke test](2026-06-30-pretrained-weights-smoke-test.md): Checkpoint loads and runs a 20-step GRF rollout; activation capture pending.
 - [GRF representation probes](2026-06-30-grf-representation-probes.md): Planned.

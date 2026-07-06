@@ -38,6 +38,7 @@
 
 ## Active Questions
 
+- [Environment representations in MARL-GPT](questions/2026-07-06-environment-representations-in-marl-gpt.md)
 - [Coordination representations in MARL-GPT](questions/2026-06-30-coordination-representations-in-marl-gpt.md)
 - [Simulation-human modelling gap](questions/2026-06-30-simulation-human-modelling-gap.md)
 - [Interpretability-guided alignment](questions/2026-06-30-interpretability-guided-alignment.md)
@@ -49,6 +50,7 @@
 
 ## Planned Analyses
 
+- [Environment mechanism probes](experiments/2026-07-06-environment-mechanism-probes.md)
 - [GRF rollout statistics](experiments/2026-06-30-grf-rollout-statistics.md)
 - [Soccer analytics statistics](experiments/2026-06-30-soccer-analytics-statistics.md)
 - [GRF representation probes](experiments/2026-06-30-grf-representation-probes.md)
