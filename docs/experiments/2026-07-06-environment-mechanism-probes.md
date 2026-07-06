@@ -2,7 +2,7 @@
 
 ## Status
 
-Initial JZ subset run completed.
+Initial JZ subset runs completed.
 
 ## Question
 
@@ -174,7 +174,7 @@ uv run -m scripts.run_experiment env_mechanism_probes=2026-07-06-jz-small
 Cluster launch artifact:
 
 - Config: [`../../configs/env_mechanism_probes/2026-07-06-jz-small.yaml`](../../configs/env_mechanism_probes/2026-07-06-jz-small.yaml)
-- Slurm script: [`to-launch/2026-07-06-environment-mechanism-probes-v100.sh`](to-launch/2026-07-06-environment-mechanism-probes-v100.sh)
+- Slurm script: [`archived/2026-07-06-environment-mechanism-probes-v100.sh`](archived/2026-07-06-environment-mechanism-probes-v100.sh)
 - Expected results: `results/experiments/2026-07-06-environment-mechanism-probes/`
 
 This initial run records dataset/file schemas, trains input-channel probes, caches layerwise pooled activations under correct, wrong, and all-token-sweep environment prompts, trains true-environment and prompted-environment linear probes on those activations, and writes token-swap behavior summaries.
@@ -208,6 +208,52 @@ Limitations:
 - This is a small file-level subset chosen for JZ feasibility, not the full MARL-GPT dataset.
 - The split is random over sampled examples, not a held-out file or trajectory split.
 - The run demonstrates environment identity and token sensitivity, not stable head/channel specialization or shared-compute estimates.
+
+## Result: 2026-07-06 Wrong-Token True-Label Probes
+
+Slurm job `1379511` completed with exit code `0:0` in 2 minutes 3 seconds on JZ.
+
+Result location: `results/experiments/2026-07-06-environment-mechanism-probes/`.
+
+This run trained activation probes only on activations from the random-wrong-token condition while keeping the target label as the true source environment. It kept the same 480 sampled input examples and produced 480 wrong-token activation examples for probe training and evaluation.
+
+Main findings:
+
+- True environment remains linearly decodable from wrong-token activations.
+- Mean-pooled embedding activations reached 1.00 accuracy, showing that the observation/action/position stream already identifies the source environment before transformer blocks mix information into the final-token position.
+- The corrupted final-token embedding itself was near chance for the true source environment, with 0.333 accuracy.
+- After the first transformer block, both mean-pooled and final-token activations reached 1.00 accuracy for true environment across nearly every layer and head-specific branch summary. The only non-perfect row was `layer_06:mean` at 0.993 accuracy.
+
+Wrong-token true-label probe accuracy:
+
+| Feature | Accuracy |
+| --- | ---: |
+| `embed:mean` | 1.000 |
+| `embed:final` | 0.333 |
+| `layer_00:mean` | 1.000 |
+| `layer_00:final` | 1.000 |
+| `layer_01:mean` | 1.000 |
+| `layer_01:final` | 1.000 |
+| `layer_02:mean` | 1.000 |
+| `layer_02:final` | 1.000 |
+| `layer_03:mean` | 1.000 |
+| `layer_03:final` | 1.000 |
+| `layer_04:mean` | 1.000 |
+| `layer_04:final` | 1.000 |
+| `layer_05:mean` | 1.000 |
+| `layer_05:final` | 1.000 |
+| `layer_06:mean` | 0.993 |
+| `layer_06:final` | 1.000 |
+| `critic_layer:mean` | 1.000 |
+| `critic_layer:final` | 1.000 |
+| `actor_layer:mean` | 1.000 |
+| `actor_layer:final` | 1.000 |
+
+Interpretation:
+
+This strengthens the observation-derived environment channel result. Corrupting the explicit final environment token does not prevent recovery of the true environment from hidden states. The final-token position does not know the true environment at the embedding stage when the token is wrong, but it recovers the true label after one transformer block, presumably by attending to or mixing with environment-identifying observation, action-mask, and positional tokens.
+
+This still should not be treated as a mechanistic localization claim. Because input-channel probes are already near perfect, this run establishes robustness of true-environment decodability under token corruption, not the existence of dedicated environment-specific heads, channels, or parameters.
 
 ## Implementation Notes
 
