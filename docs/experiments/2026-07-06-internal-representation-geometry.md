@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned JZ small run.
+Completed JZ small run. Job `1398530` completed successfully on 2026-07-06 with exit code `0:0`.
 
 ## Question
 
@@ -39,7 +39,10 @@ normal positional/index channels.
 - Shared helpers: [`../../src/marl_gpt_interp/marl_gpt_tools.py`](../../src/marl_gpt_interp/marl_gpt_tools.py)
 - Config: [2026-07-06-jz-small.yaml][config]
 - Launch artifact:
-  [`to-launch/2026-07-06-internal-representation-geometry-v100.sh`](to-launch/2026-07-06-internal-representation-geometry-v100.sh)
+  [`archived/2026-07-06-internal-representation-geometry-v100.sh`](archived/2026-07-06-internal-representation-geometry-v100.sh)
+- Results: [`../../results/experiments/2026-07-06-internal-representation-geometry/`](../../results/experiments/2026-07-06-internal-representation-geometry/)
+- Slurm logs: `../../results/slurm/repr-geometry-1398530.out` and
+  `../../results/slurm/repr-geometry-1398530.err`
 
 ## Measures
 
@@ -90,6 +93,10 @@ Also write the existing linear CKA table for direct comparison with the previous
 
 Output: `activation_subspace_similarity.csv`.
 
+Future reruns should also write `self_subspace_similarity.csv`, a split-half within-environment CKA table. This is the
+baseline for deciding whether low cross-environment CKA is low relative to the model's own within-environment
+activation reliability.
+
 ## Decision Rule
 
 If within-environment spread is low and between-environment separation is high, treat low CKA as evidence of
@@ -97,6 +104,42 @@ environment-specific representation geometry. If all environments are internally
 separation signal. If POGEMA-GRF has stronger directed containment or lower normalized separation than SMAC pairs,
 interpret the earlier POGEMA-GRF gradient alignment as partial sharing despite coordinate mismatch. If asymmetric scores
 are directionally imbalanced, identify which environment's representation basis better contains the other.
+
+## Result
+
+The run used 480 natural activation examples from eight batches and wrote the expected proximity, separation,
+asymmetric containment, CKA, natural-behavior, dataset-inspection, and summary artifacts. `tdhook` was not available in
+the JZ environment, so the run used the built-in PCA subspace-containment baseline rather than the library method.
+
+The strongest result is that environments are internally coherent enough for low CKA to be meaningful. Every
+environment pair has same-environment nearest-neighbor fraction `1.0` across all analyzed features. Median
+within-environment pairwise L2 is smallest for GRF (`1.54`), larger for POGEMA (`2.37`), and largest for SMAC (`3.22`).
+Median pairwise cosine distance follows the same order: GRF `0.0004`, POGEMA `0.0041`, SMAC `0.0754`. SMAC therefore
+appears more internally diffuse, especially in final-token transformer states, but not so diffuse that cross-env
+separation becomes uninterpretable.
+
+CKA remains low, consistent with the earlier compute-sharing run. Mean linear CKA is `0.0231` for SMAC-POGEMA,
+`0.0162` for SMAC-GRF, and `0.0217` for POGEMA-GRF, with no pair exceeding `0.0512`.
+
+Normalized separation is high for all pairs, but it depends strongly on token pooling. After excluding degenerate
+near-zero-spread rows, median normalized centroid L2 is `5.38` for SMAC-POGEMA, `13.40` for SMAC-GRF, and `6.35` for
+POGEMA-GRF. Median silhouette scores are `0.798`, `0.905`, and `0.798`, respectively. This means all environments are
+well separated, and SMAC-GRF is the most separated pair overall. POGEMA-GRF is not uniformly closest: mean-pooled
+transformer states often separate POGEMA-GRF more than SMAC-POGEMA, while final-token and actor/critic branch states
+make POGEMA-GRF the closest pair.
+
+Asymmetric PCA containment gives a partial-sharing signal but not a clean POGEMA-GRF-only story. At rank 16, median
+target-variance explained is highest for `pogema_to_grf` (`0.5865`) and `grf_to_smac` (`0.5787`), followed by
+`pogema_to_smac` (`0.5451`), `smac_to_grf` (`0.3575`), `grf_to_pogema` (`0.3237`), and `smac_to_pogema` (`0.2685`).
+The strongest interpretable direction is that POGEMA's low-rank basis contains GRF better than GRF contains POGEMA.
+SMAC's basis is weakest at containing POGEMA.
+
+Conclusion: the low CKA result should not be dismissed as all environments being internally scattered. The
+representations are environment-separated with perfect nearest-neighbor identity, and SMAC is the most internally
+diffuse. The previous POGEMA-GRF gradient alignment is compatible with a coordinate-mismatch story: final/branch
+representations and POGEMA-to-GRF low-rank containment show some closeness, but mean-pooled hidden states remain clearly
+separated. The next useful step is concept-level transfer or targeted representation patching, because geometry alone
+still cannot distinguish shared abstract knowledge from dataset-format structure.
 
 ## Expected Reviewer Objection
 

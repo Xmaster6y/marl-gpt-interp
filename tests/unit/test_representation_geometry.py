@@ -9,6 +9,7 @@ from marl_gpt_interp.marl_gpt_tools import (  # noqa: E402
     asymmetric_subspace_rows,
     representation_proximity_rows,
     representation_separation_rows,
+    self_subspace_similarity_rows,
 )
 
 
@@ -90,3 +91,28 @@ def test_asymmetric_subspace_rows_are_directional():
     assert {row["direction"] for row in rows} == {"smac_to_pogema", "pogema_to_smac"}
     assert {row["requested_rank"] for row in rows} == {1, 2}
     assert all(0.0 <= row["target_variance_explained"] <= 1.0 for row in rows)
+
+
+def test_self_subspace_similarity_rows_compare_split_halves():
+    features = {
+        "layer:mean": torch.tensor(
+            [
+                [1.0, 0.0],
+                [2.0, 0.0],
+                [1.0, 0.1],
+                [2.0, 0.1],
+                [0.0, 1.0],
+                [0.0, 2.0],
+                [0.1, 1.0],
+                [0.1, 2.0],
+            ]
+        )
+    }
+    labels = torch.tensor([1, 1, 1, 1, 2, 2, 2, 2])
+
+    rows = self_subspace_similarity_rows(features, labels)
+
+    assert len(rows) == 2
+    assert {row["env"] for row in rows} == {"smac", "pogema"}
+    assert all(row["n_examples_per_split"] == 2 for row in rows)
+    assert all(0.0 <= row["linear_cka"] <= 1.0 for row in rows)

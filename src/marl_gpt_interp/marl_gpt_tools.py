@@ -961,6 +961,35 @@ def asymmetric_subspace_rows(
     return rows
 
 
+def self_subspace_similarity_rows(activation_features: dict[str, Any], labels: Any) -> list[dict[str, Any]]:
+    """Estimate within-environment CKA by split-half activation similarity."""
+
+    if labels is None:
+        return []
+    rows = []
+    env_ids = sorted(int(label) for label in labels.unique().tolist())
+    for feature_name, features in activation_features.items():
+        for env_id in env_ids:
+            env_features = features[labels == env_id].float()
+            n = int(env_features.shape[0])
+            half = n // 2
+            if half < 2:
+                continue
+            left = env_features[:half]
+            right = env_features[half : half * 2]
+            rows.append(
+                {
+                    "feature": feature_name,
+                    "env": ID_TO_ENV.get(env_id, str(env_id)),
+                    "env_id": env_id,
+                    "n_examples_per_split": half,
+                    "split_method": "first_half_vs_second_half",
+                    "linear_cka": linear_cka(left, right),
+                }
+            )
+    return rows
+
+
 def activation_subspace_similarity_rows(activation_features: dict[str, Any], labels: Any) -> list[dict[str, Any]]:
     rows = []
     if labels is None:

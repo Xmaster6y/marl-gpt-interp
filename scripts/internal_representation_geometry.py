@@ -27,6 +27,7 @@ from marl_gpt_interp.marl_gpt_tools import (
     representation_proximity_rows,
     representation_separation_rows,
     resolve_dataset_config,
+    self_subspace_similarity_rows,
     to_plain_config,
     write_csv,
     write_json,
@@ -133,6 +134,10 @@ def main(cfg: DictConfig) -> dict[str, Any]:
         collected["activation_features"],
         collected["activation_labels"],
     )
+    self_cka_rows = self_subspace_similarity_rows(
+        collected["activation_features"],
+        collected["activation_labels"],
+    )
     status = tdhook_status()
 
     write_json(output_dir / "internal_representation_proximity.json", proximity_rows)
@@ -143,6 +148,8 @@ def main(cfg: DictConfig) -> dict[str, Any]:
     write_csv(output_dir / "asymmetric_representation_analysis.csv", asymmetric_rows)
     write_json(output_dir / "activation_subspace_similarity.json", cka_rows)
     write_csv(output_dir / "activation_subspace_similarity.csv", cka_rows)
+    write_json(output_dir / "self_subspace_similarity.json", self_cka_rows)
+    write_csv(output_dir / "self_subspace_similarity.csv", self_cka_rows)
     write_csv(output_dir / "natural_behavior.csv", collected["behavior_rows"])
     write_json(
         output_dir / "summary.json",
@@ -155,6 +162,7 @@ def main(cfg: DictConfig) -> dict[str, Any]:
             "separation_rows": len(separation_rows),
             "asymmetric_rows": len(asymmetric_rows),
             "cka_rows": len(cka_rows),
+            "self_cka_rows": len(self_cka_rows),
             "behavior_rows": len(collected["behavior_rows"]),
             "tdhook": status,
             "config": to_plain_config(cfg),
@@ -166,4 +174,5 @@ def main(cfg: DictConfig) -> dict[str, Any]:
         "separation_rows": separation_rows,
         "asymmetric_rows": asymmetric_rows,
         "cka_rows": cka_rows,
+        "self_cka_rows": self_cka_rows,
     }
