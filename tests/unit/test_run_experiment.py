@@ -7,6 +7,8 @@ def test_dispatch_registry_contains_grf_stats_and_not_demo():
     assert run_experiment.SCRIPTS == {
         "grf_rollout_stats": "scripts.grf_rollout_stats:main",
         "env_mechanism_probes": "scripts.env_mechanism_probes:main",
+        "cross_env_compute_sharing": "scripts.cross_env_compute_sharing:main",
+        "internal_representation_geometry": "scripts.internal_representation_geometry:main",
         "normalize_soccer_data": "scripts.normalize_soccer_data:main",
         "compare_soccer_stats": "scripts.compare_soccer_stats:main",
     }

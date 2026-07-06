@@ -7,7 +7,8 @@
 ## Planned Analyses
 
 - [Environment mechanism probes](2026-07-06-environment-mechanism-probes.md): JZ subset runs completed; wrong-token activations decode true environment after the first transformer block, and parameter gradients separate SMAC from the more aligned POGEMA/GRF pair.
-- [Cross-environment compute sharing](2026-07-06-cross-env-compute-sharing.md): Planned natural-inference analysis of shared versus environment-specific computation, parameters, and abstract concept transfer.
+- [Cross-environment compute sharing](2026-07-06-cross-env-compute-sharing.md): JZ small run completed; POGEMA-GRF gradients align strongly, while SMAC is near orthogonal to both and activation CKA is low across all pairs.
+- [Internal representation geometry](2026-07-06-internal-representation-geometry.md): Planned follow-up to test within-environment compactness, normalized cross-environment separation, and asymmetric subspace containment.
 - [GRF rollout statistics](2026-06-30-grf-rollout-statistics.md): JZ small run completed; self-contained GRF rollout path writes expected statistics artifacts.
 - [Pretrained weights smoke test](2026-06-30-pretrained-weights-smoke-test.md): Checkpoint loads and runs a 20-step GRF rollout; activation capture pending.
 - [GRF representation probes](2026-06-30-grf-representation-probes.md): Planned.

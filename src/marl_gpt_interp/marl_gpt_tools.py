@@ -706,6 +706,261 @@ def linear_cka(x: Any, y: Any) -> float:
     return float((numerator / denominator).item())
 
 
+def _limited_examples(features: Any, max_examples: int) -> Any:
+    if max_examples > 0 and features.shape[0] > max_examples:
+        return features[:max_examples]
+    return features
+
+
+def _safe_float(value: Any) -> float:
+    return float(value.detach().float().cpu().item()) if hasattr(value, "detach") else float(value)
+
+
+def _upper_triangle_values(matrix: Any) -> Any:
+    torch = load_torch()
+    if matrix.shape[0] < 2:
+        return torch.empty(0, device=matrix.device, dtype=matrix.dtype)
+    indices = torch.triu_indices(matrix.shape[0], matrix.shape[1], offset=1, device=matrix.device)
+    return matrix[indices[0], indices[1]]
+
+
+def _pca_variance_summary(centered: Any, max_rank: int) -> dict[str, Any]:
+    torch = load_torch()
+    if centered.shape[0] < 2 or centered.numel() == 0:
+        return {
+            "pca_rank": 0,
+            "pca_top1_var": None,
+            "pca_top5_var": None,
+            "pca_top10_var": None,
+            "pca_components_90": None,
+            "participation_ratio": None,
+            "effective_rank": None,
+        }
+    singular_values = torch.linalg.svdvals(centered)
+    if max_rank > 0:
+        singular_values = singular_values[:max_rank]
+    variances = singular_values.square()
+    total = variances.sum().clamp_min(1e-12)
+    ratios = variances / total
+    cumulative = ratios.cumsum(dim=0)
+    entropy_value = -(ratios * ratios.clamp_min(1e-12).log()).sum()
+    components_90 = int((cumulative < 0.9).sum().item()) + 1
+    return {
+        "pca_rank": int(variances.numel()),
+        "pca_top1_var": _safe_float(cumulative[min(0, cumulative.numel() - 1)]),
+        "pca_top5_var": _safe_float(cumulative[min(4, cumulative.numel() - 1)]),
+        "pca_top10_var": _safe_float(cumulative[min(9, cumulative.numel() - 1)]),
+        "pca_components_90": min(components_90, int(cumulative.numel())),
+        "participation_ratio": _safe_float(total.square() / variances.square().sum().clamp_min(1e-12)),
+        "effective_rank": _safe_float(entropy_value.exp()),
+    }
+
+
+def representation_proximity_rows(
+    activation_features: dict[str, Any],
+    labels: Any,
+    *,
+    cfg: DictConfig,
+) -> list[dict[str, Any]]:
+    """Summarize within-environment compactness for each activation feature."""
+
+    torch = load_torch()
+    if labels is None:
+        return []
+    max_examples = int(OmegaConf.select(cfg, "max_pairwise_examples_per_env", default=256))
+    max_rank = int(OmegaConf.select(cfg, "max_pca_rank", default=128))
+    rows = []
+    for feature_name, features in activation_features.items():
+        for env_id in sorted(int(label) for label in labels.unique().tolist()):
+            env_features = _limited_examples(features[labels == env_id].float(), max_examples)
+            n_examples = int(env_features.shape[0])
+            if n_examples < 2:
+                continue
+            centroid = env_features.mean(dim=0)
+            centered = env_features - centroid
+            l2_to_centroid = centered.norm(dim=1)
+            pairwise_l2 = torch.pdist(env_features, p=2)
+            normalized = torch.nn.functional.normalize(env_features, dim=1, eps=1e-12)
+            pairwise_cosine_distance = 1 - _upper_triangle_values(normalized @ normalized.T)
+            centroid_cosine = torch.nn.functional.cosine_similarity(
+                env_features,
+                centroid.unsqueeze(0),
+                dim=1,
+                eps=1e-12,
+            )
+            row = {
+                "feature": feature_name,
+                "env": ID_TO_ENV.get(env_id, str(env_id)),
+                "env_id": env_id,
+                "n_examples": n_examples,
+                "n_features": int(env_features.shape[1]),
+                "centroid_l2": float(centroid.norm().item()),
+                "mean_l2_to_centroid": float(l2_to_centroid.mean().item()),
+                "std_l2_to_centroid": float(l2_to_centroid.std(unbiased=False).item()),
+                "max_l2_to_centroid": float(l2_to_centroid.max().item()),
+                "mean_pairwise_l2": float(pairwise_l2.mean().item()),
+                "std_pairwise_l2": float(pairwise_l2.std(unbiased=False).item()),
+                "mean_pairwise_cosine_distance": float(pairwise_cosine_distance.mean().item()),
+                "std_pairwise_cosine_distance": float(pairwise_cosine_distance.std(unbiased=False).item()),
+                "mean_cosine_to_centroid": float(centroid_cosine.mean().item()),
+                "std_cosine_to_centroid": float(centroid_cosine.std(unbiased=False).item()),
+            }
+            row.update(_pca_variance_summary(centered, max_rank))
+            rows.append(row)
+    return rows
+
+
+def representation_separation_rows(
+    activation_features: dict[str, Any],
+    labels: Any,
+    *,
+    cfg: DictConfig,
+) -> list[dict[str, Any]]:
+    """Summarize between-environment separation normalized by within-env spread."""
+
+    torch = load_torch()
+    if labels is None:
+        return []
+    max_examples = int(OmegaConf.select(cfg, "max_pairwise_examples_per_env", default=256))
+    rows = []
+    env_ids = sorted(int(label) for label in labels.unique().tolist())
+    for feature_name, features in activation_features.items():
+        env_features = {
+            env_id: _limited_examples(features[labels == env_id].float(), max_examples) for env_id in env_ids
+        }
+        for left_index, left_env in enumerate(env_ids):
+            left = env_features[left_env]
+            if left.shape[0] < 2:
+                continue
+            left_centroid = left.mean(dim=0)
+            left_centered = left - left_centroid
+            left_within_sq = left_centered.square().sum(dim=1).mean()
+            for right_env in env_ids[left_index + 1 :]:
+                right = env_features[right_env]
+                if right.shape[0] < 2:
+                    continue
+                right_centroid = right.mean(dim=0)
+                right_centered = right - right_centroid
+                right_within_sq = right_centered.square().sum(dim=1).mean()
+                centroid_delta = left_centroid - right_centroid
+                centroid_l2 = centroid_delta.norm()
+                pooled_within_sq = ((left_within_sq + right_within_sq) / 2).clamp_min(1e-12)
+
+                cross_dist = torch.cdist(left, right, p=2)
+                left_dist = torch.cdist(left, left, p=2)
+                right_dist = torch.cdist(right, right, p=2)
+                left_dist.fill_diagonal_(float("inf"))
+                right_dist.fill_diagonal_(float("inf"))
+                left_same_nearest = left_dist.min(dim=1).values < cross_dist.min(dim=1).values
+                right_same_nearest = right_dist.min(dim=1).values < cross_dist.min(dim=0).values
+                same_env_nn_fraction = torch.cat([left_same_nearest, right_same_nearest]).float().mean()
+
+                left_a = left_dist.masked_fill(torch.isinf(left_dist), 0).sum(dim=1) / max(left.shape[0] - 1, 1)
+                right_a = right_dist.masked_fill(torch.isinf(right_dist), 0).sum(dim=1) / max(right.shape[0] - 1, 1)
+                left_b = cross_dist.mean(dim=1)
+                right_b = cross_dist.mean(dim=0)
+                silhouette_values = torch.cat(
+                    [
+                        (left_b - left_a) / torch.maximum(left_a, left_b).clamp_min(1e-12),
+                        (right_b - right_a) / torch.maximum(right_a, right_b).clamp_min(1e-12),
+                    ]
+                )
+                energy_distance = (
+                    2 * cross_dist.mean() - torch.pdist(left, p=2).mean() - torch.pdist(right, p=2).mean()
+                )
+                rows.append(
+                    {
+                        "feature": feature_name,
+                        "env_pair": f"{ID_TO_ENV.get(left_env, left_env)}_vs_{ID_TO_ENV.get(right_env, right_env)}",
+                        "left_env_id": left_env,
+                        "right_env_id": right_env,
+                        "n_left": int(left.shape[0]),
+                        "n_right": int(right.shape[0]),
+                        "centroid_l2": float(centroid_l2.item()),
+                        "normalized_centroid_l2": float((centroid_l2 / pooled_within_sq.sqrt()).item()),
+                        "fisher_ratio": float((centroid_l2.square() / pooled_within_sq).item()),
+                        "mean_cross_l2": float(cross_dist.mean().item()),
+                        "energy_distance": float(energy_distance.item()),
+                        "silhouette_l2": float(silhouette_values.mean().item()),
+                        "same_env_nearest_neighbor_fraction": float(same_env_nn_fraction.item()),
+                    }
+                )
+    return rows
+
+
+def asymmetric_subspace_rows(
+    activation_features: dict[str, Any],
+    labels: Any,
+    *,
+    cfg: DictConfig,
+) -> list[dict[str, Any]]:
+    """Measure directed PCA subspace containment between environment activations."""
+
+    torch = load_torch()
+    if labels is None:
+        return []
+    max_examples = int(OmegaConf.select(cfg, "max_pairwise_examples_per_env", default=256))
+    top_ks = [int(value) for value in OmegaConf.select(cfg, "asymmetric_top_ks", default=[1, 2, 4, 8, 16, 32, 64])]
+    rows = []
+    env_ids = sorted(int(label) for label in labels.unique().tolist())
+    for feature_name, features in activation_features.items():
+        env_features = {
+            env_id: _limited_examples(features[labels == env_id].float(), max_examples) for env_id in env_ids
+        }
+        bases = {}
+        centered_values = {}
+        total_variances = {}
+        for env_id, values in env_features.items():
+            if values.shape[0] < 2:
+                continue
+            centered = values - values.mean(dim=0, keepdim=True)
+            try:
+                _u, _s, vh = torch.linalg.svd(centered, full_matrices=False)
+            except RuntimeError:
+                continue
+            bases[env_id] = vh
+            centered_values[env_id] = centered
+            total_variances[env_id] = centered.square().sum().clamp_min(1e-12)
+
+        for source_env in env_ids:
+            if source_env not in bases:
+                continue
+            source_basis = bases[source_env]
+            max_k = int(source_basis.shape[0])
+            for target_env in env_ids:
+                if source_env == target_env or target_env not in centered_values:
+                    continue
+                target = centered_values[target_env]
+                total_target_variance = total_variances[target_env]
+                for requested_k in top_ks:
+                    k = min(requested_k, max_k)
+                    if k <= 0:
+                        continue
+                    basis = source_basis[:k].T
+                    projected = target @ basis @ basis.T
+                    explained = projected.square().sum() / total_target_variance
+                    rows.append(
+                        {
+                            "feature": feature_name,
+                            "source_env": ID_TO_ENV.get(source_env, str(source_env)),
+                            "target_env": ID_TO_ENV.get(target_env, str(target_env)),
+                            "source_env_id": source_env,
+                            "target_env_id": target_env,
+                            "direction": (
+                                f"{ID_TO_ENV.get(source_env, source_env)}_to_"
+                                f"{ID_TO_ENV.get(target_env, target_env)}"
+                            ),
+                            "method": "pca_subspace_containment",
+                            "requested_rank": requested_k,
+                            "rank": k,
+                            "n_source": int(env_features[source_env].shape[0]),
+                            "n_target": int(env_features[target_env].shape[0]),
+                            "target_variance_explained": float(explained.item()),
+                        }
+                    )
+    return rows
+
+
 def activation_subspace_similarity_rows(activation_features: dict[str, Any], labels: Any) -> list[dict[str, Any]]:
     rows = []
     if labels is None:

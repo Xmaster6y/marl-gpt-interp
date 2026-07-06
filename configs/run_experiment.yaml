@@ -2,6 +2,7 @@ defaults:
   - optional grf_rollout_stats: null
   - optional env_mechanism_probes: null
   - optional cross_env_compute_sharing: null
+  - optional internal_representation_geometry: null
   - optional normalize_soccer_data: null
   - optional compare_soccer_stats: null
   - _self_

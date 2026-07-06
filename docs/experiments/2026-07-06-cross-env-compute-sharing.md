@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned.
+Completed JZ small run. Job `1387279` completed successfully on 2026-07-06 with exit code `0:0`.
 
 ## Question
 
@@ -46,7 +46,10 @@ Scale only after the cache schema, layer grouping, and summary metrics are stabl
 - Shared helpers: [`../../src/marl_gpt_interp/marl_gpt_tools.py`](../../src/marl_gpt_interp/marl_gpt_tools.py)
 - Config: [2026-07-06-jz-small.yaml][cross-env-config]
 - Launch artifact:
-  [`to-launch/2026-07-06-cross-env-compute-sharing-v100.sh`](to-launch/2026-07-06-cross-env-compute-sharing-v100.sh)
+  [`archived/2026-07-06-cross-env-compute-sharing-v100.sh`](archived/2026-07-06-cross-env-compute-sharing-v100.sh)
+- Results: [`../../results/experiments/2026-07-06-cross-env-compute-sharing/`](../../results/experiments/2026-07-06-cross-env-compute-sharing/)
+- Slurm logs: `../../results/slurm/cross-env-share-1387279.out` and
+  `../../results/slurm/cross-env-share-1387279.err`
 
 ## Measures
 
@@ -144,6 +147,38 @@ If activation subspaces, parameter gradients, and concept directions transfer ac
 evidence for shared multi-agent computation. If environment identity is separable but concept transfer fails and
 important components do not overlap, treat the model as mostly environment-specific. If only some concepts or
 environment pairs transfer, focus on partial generalization and name which abstractions appear shared.
+
+## Result
+
+The small natural-inference run gives evidence for pairwise POGEMA-GRF effective-computation overlap, but not for
+broad compute sharing across all three environments.
+
+The run used 480 activation/input examples from eight natural batches. The Slurm job completed in 5m31s. It wrote the
+expected activation geometry, activation CKA, parameter gradient, gradient overlap, input-probe, dataset inspection, and
+natural behavior artifacts.
+
+Environment identity is an easy confound in this setup. Linear probes classify the environment with perfect held-out
+accuracy from observation features, action masks, positions, full input, and even the two-dimensional final-token input
+summary. This means later cross-environment claims cannot rest on environment separability or raw input controls.
+
+Activation subspace similarity is low in all environment pairs. Mean linear CKA is 0.0247 for SMAC-POGEMA, 0.0158 for
+SMAC-GRF, and 0.0368 for POGEMA-GRF. The largest CKA value is only 0.0910, for `pogema_vs_grf` at `layer_01:mean`.
+Mean activation differences are also smallest for POGEMA-GRF: mean difference L2 is 15.69 for POGEMA-GRF, 30.82 for
+SMAC-POGEMA, and 34.83 for SMAC-GRF.
+
+Gradient alignment shows the strongest positive result. Mean gradient cosine is 0.7792 for POGEMA-GRF, but only 0.0692
+for SMAC-POGEMA and 0.0647 for SMAC-GRF. The POGEMA-GRF alignment is high across transformer layers: 0.7159 at
+`layer_00`, 0.9295 at `layer_01`, 0.9603 at `layer_02`, and 0.8262-0.8686 across `layer_03` through `layer_06`.
+Token embeddings are less aligned but still positive for POGEMA-GRF at 0.4148. SMAC gradients are near orthogonal or
+slightly negative against both other environments in most transformer layers.
+
+The current run does not yet answer the abstract knowledge transfer part of the plan. No `concept_transfer.csv` or
+concept direction outputs were produced, so the strongest publishable form of the claim is narrower than the original
+question.
+
+Conclusion: treat SMAC as environment-specific relative to the POGEMA-GRF pair in this small run. Treat POGEMA-GRF
+gradient alignment as a promising partial-sharing signal that needs concept-transfer validation and robustness checks
+before it can support a claim about shared multi-agent abstractions.
 
 ## Expected Reviewer Objection
 
