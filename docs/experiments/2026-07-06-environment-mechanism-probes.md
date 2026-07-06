@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready to launch on JZ.
+Initial JZ subset run completed.
 
 ## Question
 
@@ -178,6 +178,36 @@ Cluster launch artifact:
 - Expected results: `results/experiments/2026-07-06-environment-mechanism-probes/`
 
 This initial run records dataset/file schemas, trains input-channel probes, caches layerwise pooled activations under correct, wrong, and all-token-sweep environment prompts, trains true-environment and prompted-environment linear probes on those activations, and writes token-swap behavior summaries.
+
+## Result: 2026-07-06 JZ Small Subset
+
+Slurm job `1377379` completed with exit code `0:0` in 1 minute 58 seconds on JZ.
+
+Result location: `results/experiments/2026-07-06-environment-mechanism-probes/`.
+
+Run scope:
+
+- Environments: SMAC zerg 5v5, POGEMA random, GRF academy corner.
+- Input examples: 480.
+- Activation examples: 2,400, from correct-token, wrong-token, and all-token prompt sweeps.
+- Probe rows: 45.
+
+Main findings:
+
+- Environment identity is trivially available in the input. Linear probes reached about 0.99 to 1.00 accuracy from observation values, action masks, positional channels, the final token, and full input features.
+- True environment is perfectly decodable from mean pooled embedding and all later layer activations in this subset. The raw embedded final-token position alone is near chance for true environment, but becomes perfectly true-environment decodable after the first transformer block.
+- Prompted environment is perfectly decodable from the final-token representation at every layer, including the embedding. Mean-pooled representations only partially encode prompted environment and decline from about 0.81 at layer 0 to about 0.48 by layer 6.
+- Counterfactual environment tokens have a behavioral effect. Random wrong-token prompts changed the selected action for about 28.5% of examples, with mean absolute action-logit shift about 3.61. Prompting all examples as POGEMA or GRF produced similar selected-action change rates; prompting all examples as SMAC shifted logits less and did not change selected actions in this run.
+
+Interpretation:
+
+This supports the "both channels" mechanism for the subset: hidden states retain true environment information from observation/action/position structure while the final token retains the prompted environment. Token swaps are behaviorally relevant, but the current result should not be treated as a general environment-specialization claim because environment identity is already linearly separable from shallow input channels.
+
+Limitations:
+
+- This is a small file-level subset chosen for JZ feasibility, not the full MARL-GPT dataset.
+- The split is random over sampled examples, not a held-out file or trajectory split.
+- The run demonstrates environment identity and token sensitivity, not stable head/channel specialization or shared-compute estimates.
 
 ## Implementation Notes
 
