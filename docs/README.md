@@ -34,7 +34,7 @@
 
 ## Current Infrastructure
 
-- [GRF on JZ setup](2026-07-02-grf-jz-setup.md): login-node preparation path is ready; rollout completion remains the active experiment gate.
+- [GRF on JZ setup](2026-07-02-grf-jz-setup.md): login-node preparation path is ready; JZ rollout statistics run now completes.
 
 ## Active Questions
 
