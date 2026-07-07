@@ -3,6 +3,8 @@
 ## Status
 
 Completed JZ small run. Job `1398530` completed successfully on 2026-07-06 with exit code `0:0`.
+Rerun job `1462029` completed successfully on 2026-07-07 with exit code `0:0` after installing `tdhook`
+in the JZ environment.
 
 ## Question
 
@@ -41,8 +43,10 @@ normal positional/index channels.
 - Launch artifact:
   [`archived/2026-07-06-internal-representation-geometry-v100.sh`](archived/2026-07-06-internal-representation-geometry-v100.sh)
 - Results: [`../../results/experiments/2026-07-06-internal-representation-geometry/`](../../results/experiments/2026-07-06-internal-representation-geometry/)
-- Slurm logs: `../../results/slurm/repr-geometry-1398530.out` and
-  `../../results/slurm/repr-geometry-1398530.err`
+- Slurm logs: `../../results/slurm/repr-geometry-1398530.out`,
+  `../../results/slurm/repr-geometry-1398530.err`,
+  `../../results/slurm/repr-geometry-1462029.out`, and
+  `../../results/slurm/repr-geometry-1462029.err`
 
 ## Measures
 
@@ -107,9 +111,10 @@ are directionally imbalanced, identify which environment's representation basis 
 
 ## Result
 
-The run used 480 natural activation examples from eight batches and wrote the expected proximity, separation,
-asymmetric containment, CKA, natural-behavior, dataset-inspection, and summary artifacts. `tdhook` was not available in
-the JZ environment, so the run used the built-in PCA subspace-containment baseline rather than the library method.
+The rerun used 480 natural activation examples from eight batches and wrote the expected proximity, separation,
+asymmetric containment, CKA, natural-behavior, dataset-inspection, and summary artifacts. `tdhook` is now available in
+the JZ environment and recorded as `available: true` in `summary.json`. The current script still records `used: false`
+because it uses the built-in PCA subspace-containment baseline rather than a `tdhook` method.
 
 The strongest result is that environments are internally coherent enough for low CKA to be meaningful. Every
 environment pair has same-environment nearest-neighbor fraction `1.0` across all analyzed features. Median
