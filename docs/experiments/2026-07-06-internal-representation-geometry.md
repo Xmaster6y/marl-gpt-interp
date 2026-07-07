@@ -77,6 +77,21 @@ For each environment pair, layer, and pooled token group:
 
 Output: `representation_separation.csv`.
 
+### Activation Cosine Analyses
+
+For each environment, layer, and pooled token group, also compute cosine-based activation comparisons using the same
+within-vs-cross matrix convention as CKA:
+
+- centroid cosine similarity: diagonal entries are self-similarity of the environment centroid (`1.0`), and
+  off-diagonal entries compare environment mean activation directions;
+- pairwise cosine distance: diagonal entries are within-environment example-pair distances, and off-diagonal entries
+  are cross-environment example-pair distances.
+
+Outputs:
+
+- `activation_centroid_cosine_similarity.csv`;
+- `activation_pairwise_cosine_distance.csv`.
+
 ### Asymmetric Representation Analysis
 
 For each directed source-target environment pair:
@@ -115,6 +130,14 @@ layer and actor/critic final-state features, mean even/odd self-CKA is `0.0360` 
 `0.0241` for POGEMA-GRF. This makes the CKA evidence more homogeneous, but it also weakens any overly broad statement
 that all cross-environment CKA is far below internal reliability: POGEMA has the clearest self-vs-cross gap, while
 SMAC and GRF self-CKA are only modestly above or near cross-CKA.
+
+Activation-cosine update, 2026-07-07: the local CPU rerun now writes `activation_centroid_cosine_similarity.csv` and
+`activation_pairwise_cosine_distance.csv`, each with 120 rows. Mean centroid cosine similarity is `0.588` for
+SMAC-POGEMA, `0.664` for SMAC-GRF, and `0.811` for POGEMA-GRF across layer and actor/critic final-state features. Mean
+pairwise cosine distance is low within environments (`0.097` SMAC, `0.037` POGEMA, `0.004` GRF) and larger across
+environments (`0.477` SMAC-POGEMA, `0.386` SMAC-GRF, `0.205` POGEMA-GRF). This supports the separated-cluster story
+using a cosine metric, while also showing that POGEMA-GRF is the closest cross-environment pair by both centroid
+direction and example-level cosine distance.
 
 ## Decision Rule
 

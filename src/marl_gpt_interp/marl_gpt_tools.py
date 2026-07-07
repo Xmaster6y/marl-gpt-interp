@@ -922,6 +922,131 @@ def representation_separation_rows(
     return rows
 
 
+def activation_centroid_cosine_similarity_rows(
+    activation_features: dict[str, Any],
+    labels: Any,
+    *,
+    cfg: DictConfig,
+) -> list[dict[str, Any]]:
+    """Compare environment mean activation directions with cosine similarity."""
+
+    if labels is None:
+        return []
+    max_examples = int(OmegaConf.select(cfg, "max_pairwise_examples_per_env", default=256))
+    rows = []
+    env_ids = sorted(int(label) for label in labels.unique().tolist())
+    for feature_name, features in activation_features.items():
+        env_features = {
+            env_id: _limited_examples(features[labels == env_id].float(), max_examples) for env_id in env_ids
+        }
+        centroids = {
+            env_id: values.mean(dim=0) for env_id, values in env_features.items() if int(values.shape[0]) >= 2
+        }
+        for env_id in env_ids:
+            if env_id not in centroids:
+                continue
+            rows.append(
+                {
+                    "feature": feature_name,
+                    "comparison_type": "self",
+                    "env": ID_TO_ENV.get(env_id, str(env_id)),
+                    "env_id": env_id,
+                    "n_examples": int(env_features[env_id].shape[0]),
+                    "cosine_similarity": 1.0,
+                }
+            )
+        for left_index, left_env in enumerate(env_ids):
+            if left_env not in centroids:
+                continue
+            for right_env in env_ids[left_index + 1 :]:
+                if right_env not in centroids:
+                    continue
+                rows.append(
+                    {
+                        "feature": feature_name,
+                        "comparison_type": "cross_env",
+                        "env_pair": f"{ID_TO_ENV.get(left_env, left_env)}_vs_{ID_TO_ENV.get(right_env, right_env)}",
+                        "left_env_id": left_env,
+                        "right_env_id": right_env,
+                        "n_left": int(env_features[left_env].shape[0]),
+                        "n_right": int(env_features[right_env].shape[0]),
+                        "cosine_similarity": cosine(centroids[left_env], centroids[right_env]),
+                    }
+                )
+    return rows
+
+
+def activation_pairwise_cosine_distance_rows(
+    activation_features: dict[str, Any],
+    labels: Any,
+    *,
+    cfg: DictConfig,
+) -> list[dict[str, Any]]:
+    """Compare within- and cross-environment activation cosine distances."""
+
+    torch = load_torch()
+    if labels is None:
+        return []
+    max_examples = int(OmegaConf.select(cfg, "max_pairwise_examples_per_env", default=256))
+    rows = []
+    env_ids = sorted(int(label) for label in labels.unique().tolist())
+    for feature_name, features in activation_features.items():
+        env_features = {
+            env_id: _limited_examples(features[labels == env_id].float(), max_examples) for env_id in env_ids
+        }
+        normalized = {
+            env_id: torch.nn.functional.normalize(values, dim=1, eps=1e-12)
+            for env_id, values in env_features.items()
+            if int(values.shape[0]) >= 2
+        }
+        for env_id in env_ids:
+            if env_id not in normalized:
+                continue
+            values = normalized[env_id]
+            cosine_matrix = values @ values.T
+            distances = 1 - _upper_triangle_values(cosine_matrix)
+            if distances.numel() == 0:
+                continue
+            rows.append(
+                {
+                    "feature": feature_name,
+                    "comparison_type": "within_env",
+                    "env": ID_TO_ENV.get(env_id, str(env_id)),
+                    "env_id": env_id,
+                    "n_examples": int(values.shape[0]),
+                    "n_pairs": int(distances.numel()),
+                    "mean_cosine_distance": float(distances.mean().item()),
+                    "std_cosine_distance": float(distances.std(unbiased=False).item()),
+                    "median_cosine_distance": float(distances.median().item()),
+                }
+            )
+        for left_index, left_env in enumerate(env_ids):
+            if left_env not in normalized:
+                continue
+            left = normalized[left_env]
+            for right_env in env_ids[left_index + 1 :]:
+                if right_env not in normalized:
+                    continue
+                right = normalized[right_env]
+                distances = 1 - (left @ right.T).reshape(-1)
+                rows.append(
+                    {
+                        "feature": feature_name,
+                        "comparison_type": "cross_env",
+                        "env_pair": f"{ID_TO_ENV.get(left_env, left_env)}_vs_{ID_TO_ENV.get(right_env, right_env)}",
+                        "left_env_id": left_env,
+                        "right_env_id": right_env,
+                        "n_left": int(left.shape[0]),
+                        "n_right": int(right.shape[0]),
+                        "n_pairs": int(distances.numel()),
+                        "mean_cosine_distance": float(distances.mean().item()),
+                        "std_cosine_distance": float(distances.std(unbiased=False).item()),
+                        "median_cosine_distance": float(distances.median().item()),
+                    }
+                )
+    return rows
+
+
 def asymmetric_subspace_rows(
     activation_features: dict[str, Any],
     labels: Any,

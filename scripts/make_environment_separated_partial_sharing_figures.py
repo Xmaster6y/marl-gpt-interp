@@ -115,12 +115,16 @@ def matrix_plot(
 ) -> None:
     fig, ax = plt.subplots(figsize=(3.6, 3.2))
     image = ax.imshow(matrix, vmin=vmin, vmax=vmax, cmap=cmap)
+    colormap = plt.get_cmap(cmap)
     ax.set_xticks(range(len(ENV_ORDER)), [ENV_LABELS[env] for env in ENV_ORDER])
     ax.set_yticks(range(len(ENV_ORDER)), [ENV_LABELS[env] for env in ENV_ORDER])
     ax.set_title(title)
     for i, row in enumerate(matrix):
         for j, value in enumerate(row):
-            color = "white" if value > (vmin + vmax) / 2 else "#111827"
+            scaled = min(max((value - vmin) / (vmax - vmin), 0.0), 1.0)
+            red, green, blue, _alpha = colormap(scaled)
+            luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+            color = "white" if luminance < 0.45 else "#111827"
             ax.text(j, i, f"{value:.2f}", ha="center", va="center", color=color, fontsize=8)
     fig.colorbar(image, ax=ax, fraction=0.046, pad=0.04, label=colorbar_label)
     save_figure(fig, stem)
@@ -243,6 +247,40 @@ def plot_activation_cka_matrix_if_available() -> None:
     )
 
 
+def plot_activation_centroid_cosine_matrix_if_available() -> None:
+    path = GEOMETRY_DIR / "activation_centroid_cosine_similarity.csv"
+    if not path.exists():
+        return
+    rows = read_csv(path)
+    self_by_env = defaultdict(list)
+    cross_by_pair = defaultdict(list)
+    for row in rows:
+        if not (row["feature"].startswith("layer_") or row["feature"] in {"actor_layer:final", "critic_layer:final"}):
+            continue
+        if row["comparison_type"] == "self":
+            self_by_env[row["env"]].append(float(row["cosine_similarity"]))
+        elif row["comparison_type"] == "cross_env":
+            cross_by_pair[row["env_pair"]].append(float(row["cosine_similarity"]))
+    matrix = []
+    for left_env in ENV_ORDER:
+        row_values = []
+        for right_env in ENV_ORDER:
+            if left_env == right_env:
+                row_values.append(mean(self_by_env[left_env]))
+            else:
+                row_values.append(mean(cross_by_pair[env_pair(left_env, right_env)]))
+        matrix.append(row_values)
+    matrix_plot(
+        matrix,
+        title="Activation centroid cosine similarity",
+        colorbar_label="Cosine similarity",
+        stem="activation_centroid_cosine_matrix",
+        vmin=-1,
+        vmax=1,
+        cmap="coolwarm",
+    )
+
+
 def plot_activation_separation_layers() -> None:
     rows = read_csv(GEOMETRY_DIR / "representation_separation.csv")
     fig, axes = plt.subplots(1, 2, figsize=(7.4, 3.15), sharey=True)
@@ -258,6 +296,40 @@ def plot_activation_separation_layers() -> None:
     axes[0].legend(ncol=1, frameon=False, loc="upper left")
     fig.suptitle("Layerwise representations remain environment-separated", y=1.03, fontsize=9)
     save_figure(fig, "activation_normalized_separation_layers")
+
+
+def plot_activation_pairwise_cosine_distance_matrix_if_available() -> None:
+    path = GEOMETRY_DIR / "activation_pairwise_cosine_distance.csv"
+    if not path.exists():
+        return
+    rows = read_csv(path)
+    within_by_env = defaultdict(list)
+    cross_by_pair = defaultdict(list)
+    for row in rows:
+        if not (row["feature"].startswith("layer_") or row["feature"] in {"actor_layer:final", "critic_layer:final"}):
+            continue
+        if row["comparison_type"] == "within_env":
+            within_by_env[row["env"]].append(float(row["mean_cosine_distance"]))
+        elif row["comparison_type"] == "cross_env":
+            cross_by_pair[row["env_pair"]].append(float(row["mean_cosine_distance"]))
+    matrix = []
+    for left_env in ENV_ORDER:
+        row_values = []
+        for right_env in ENV_ORDER:
+            if left_env == right_env:
+                row_values.append(mean(within_by_env[left_env]))
+            else:
+                row_values.append(mean(cross_by_pair[env_pair(left_env, right_env)]))
+        matrix.append(row_values)
+    matrix_plot(
+        matrix,
+        title="Within- vs cross-environment activation cosine distance",
+        colorbar_label="Mean cosine distance",
+        stem="activation_pairwise_cosine_distance_matrix",
+        vmin=0,
+        vmax=1.2,
+        cmap="magma",
+    )
 
 
 def plot_gradient_similarity_matrix_if_available() -> None:
@@ -368,7 +440,9 @@ def main() -> None:
     plot_gradient_similarity_matrix_if_available()
     plot_activation_cka_layers()
     plot_activation_cka_matrix_if_available()
+    plot_activation_centroid_cosine_matrix_if_available()
     plot_activation_separation_layers()
+    plot_activation_pairwise_cosine_distance_matrix_if_available()
     plot_activation_containment_rank16()
     plot_activation_compactness()
     print(f"Wrote paper-ready figures to {OUT_DIR}")
