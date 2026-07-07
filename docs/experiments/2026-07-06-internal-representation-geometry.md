@@ -109,6 +109,13 @@ The improved homogeneous readout should report an environment-by-environment CKA
 within-environment self-CKA and off-diagonal entries are cross-environment CKA. This avoids mixing CKA against
 distance-based compactness as the main baseline.
 
+Local rerun update, 2026-07-07: the CPU rerun completed and wrote `self_subspace_similarity.csv` with 60 rows. Across
+layer and actor/critic final-state features, mean even/odd self-CKA is `0.0360` for SMAC, `0.0860` for POGEMA, and
+`0.0354` for GRF. Comparable cross-environment CKA means are `0.0260` for SMAC-POGEMA, `0.0175` for SMAC-GRF, and
+`0.0241` for POGEMA-GRF. This makes the CKA evidence more homogeneous, but it also weakens any overly broad statement
+that all cross-environment CKA is far below internal reliability: POGEMA has the clearest self-vs-cross gap, while
+SMAC and GRF self-CKA are only modestly above or near cross-CKA.
+
 ## Decision Rule
 
 If within-environment spread is low and between-environment separation is high, treat low CKA as evidence of
