@@ -318,6 +318,39 @@ def plot_activation_pairwise_cosine_similarity_layers_if_available() -> None:
     save_figure(fig, "activation_pairwise_cosine_similarity_layers")
 
 
+def plot_activation_pairwise_cosine_similarity_matrix_if_available() -> None:
+    path = GEOMETRY_DIR / "activation_pairwise_cosine_similarity.csv"
+    if not path.exists():
+        return
+    rows = read_csv(path)
+    within_by_env = defaultdict(list)
+    cross_by_pair = defaultdict(list)
+    for row in rows:
+        if not (row["feature"].startswith("layer_") or row["feature"] in {"actor_layer:final", "critic_layer:final"}):
+            continue
+        if row["comparison_type"] == "within_env":
+            within_by_env[row["env"]].append(float(row["mean_cosine_similarity"]))
+        elif row["comparison_type"] == "cross_env":
+            cross_by_pair[row["env_pair"]].append(float(row["mean_cosine_similarity"]))
+    matrix = []
+    for left_env in ENV_ORDER:
+        row_values = []
+        for right_env in ENV_ORDER:
+            if left_env == right_env:
+                row_values.append(mean(within_by_env[left_env]))
+            else:
+                row_values.append(mean(cross_by_pair[env_pair(left_env, right_env)]))
+        matrix.append(row_values)
+    matrix_plot(
+        matrix,
+        title="Pairwise activation cosine similarity",
+        colorbar_label="Mean example-pair cosine similarity",
+        stem="activation_pairwise_cosine_similarity_matrix",
+        vmin=0,
+        vmax=1,
+    )
+
+
 def plot_gradient_similarity_matrix_if_available() -> None:
     self_path = CROSS_ENV_DIR / "parameter_gradient_self_similarity.csv"
     cross_path = CROSS_ENV_DIR / "parameter_gradient_overlap.csv"
@@ -429,6 +462,7 @@ def main() -> None:
     plot_activation_centroid_cosine_similarity_matrix_if_available()
     plot_activation_separation_layers()
     plot_activation_pairwise_cosine_similarity_layers_if_available()
+    plot_activation_pairwise_cosine_similarity_matrix_if_available()
     plot_activation_containment_rank16()
     plot_activation_compactness()
     print(f"Wrote paper-ready figures to {OUT_DIR}")
