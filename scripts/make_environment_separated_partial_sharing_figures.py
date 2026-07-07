@@ -81,10 +81,7 @@ def configure_style() -> None:
             "legend.fontsize": 7,
             "axes.spines.top": False,
             "axes.spines.right": False,
-            "axes.grid": True,
-            "grid.color": "#E5E7EB",
-            "grid.linewidth": 0.7,
-            "grid.alpha": 1.0,
+            "axes.grid": False,
             "pdf.fonttype": 42,
             "ps.fonttype": 42,
         }
