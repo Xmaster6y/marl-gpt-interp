@@ -12,6 +12,7 @@ dependencies = [
     "hydra-core",
     "ipykernel",
     "loguru",
+    "matplotlib>=3.11.0",
     "wandb",
 ]
 
@@ -20,6 +21,7 @@ dev = [
     "pre-commit",
     "pytest",
     "pytest-cov",
+    "ruff>=0.15.20",
 ]
 grf = [
     "gfootball @ git+https://github.com/Xmaster6y/football.git@55b84ba",

@@ -24,6 +24,7 @@ from marl_gpt_interp.marl_gpt_tools import (
     load_torch,
     marl_gpt_cwd,
     parameter_gradient_cosine_rows,
+    parameter_gradient_self_similarity_rows,
     pooled_activations,
     repo_root,
     resolve_dataset_config,
@@ -48,6 +49,7 @@ def collect_natural_batches(root: Path, dataset_config: dict[str, Any], cfg: Dic
     parameter_rows = []
     gradient_sums: dict[str, dict[int, Any]] = defaultdict(dict)
     gradient_counts: dict[str, dict[int, int]] = defaultdict(lambda: defaultdict(int))
+    gradient_vectors: dict[str, dict[int, list[Any]]] = defaultdict(lambda: defaultdict(list))
 
     with marl_gpt_cwd(root):
         model, _model_config = load_model(root, cfg)
@@ -105,6 +107,7 @@ def collect_natural_batches(root: Path, dataset_config: dict[str, Any], cfg: Dic
                     parameter_rows=parameter_rows,
                     gradient_sums=gradient_sums,
                     gradient_counts=gradient_counts,
+                    gradient_vectors=gradient_vectors,
                 )
 
             logger.info(f"Collected natural batch {batch_index + 1}/{int(cfg.num_batches)}")
@@ -121,6 +124,7 @@ def collect_natural_batches(root: Path, dataset_config: dict[str, Any], cfg: Dic
         "parameter_rows": parameter_rows,
         "gradient_sums": gradient_sums,
         "gradient_counts": gradient_counts,
+        "gradient_vectors": gradient_vectors,
     }
 
 
@@ -165,6 +169,9 @@ def main(cfg: DictConfig) -> dict[str, Any]:
         collected["gradient_sums"],
         collected["gradient_counts"],
     )
+    parameter_gradient_self_rows = parameter_gradient_self_similarity_rows(
+        collected["gradient_vectors"],
+    )
 
     write_json(output_dir / "input_probe_results.json", probe_rows)
     write_csv(output_dir / "input_probe_results.csv", probe_rows)
@@ -177,6 +184,8 @@ def main(cfg: DictConfig) -> dict[str, Any]:
     write_csv(output_dir / "parameter_gradients.csv", collected["parameter_rows"])
     write_json(output_dir / "parameter_gradient_overlap.json", parameter_gradient_rows)
     write_csv(output_dir / "parameter_gradient_overlap.csv", parameter_gradient_rows)
+    write_json(output_dir / "parameter_gradient_self_similarity.json", parameter_gradient_self_rows)
+    write_csv(output_dir / "parameter_gradient_self_similarity.csv", parameter_gradient_self_rows)
     write_json(
         output_dir / "summary.json",
         {
@@ -193,6 +202,7 @@ def main(cfg: DictConfig) -> dict[str, Any]:
             "behavior_rows": len(collected["behavior_rows"]),
             "parameter_gradient_rows": len(collected["parameter_rows"]),
             "parameter_gradient_overlap_rows": len(parameter_gradient_rows),
+            "parameter_gradient_self_similarity_rows": len(parameter_gradient_self_rows),
             "config": to_plain_config(cfg),
         },
     )
@@ -203,4 +213,5 @@ def main(cfg: DictConfig) -> dict[str, Any]:
         "activation_subspace_similarity_rows": subspace_rows,
         "parameter_gradient_rows": collected["parameter_rows"],
         "parameter_gradient_overlap_rows": parameter_gradient_rows,
+        "parameter_gradient_self_similarity_rows": parameter_gradient_self_rows,
     }

@@ -357,7 +357,6 @@ def train_linear_probe(x: Any, y: Any, cfg: DictConfig) -> dict[str, Any]:
     dataset = split_probe_dataset(x, y, float(OmegaConf.select(cfg, "train_fraction", default=0.7)))
     label_to_index = {label: index for index, label in enumerate(labels)}
     y_train = torch.tensor([label_to_index[int(label)] for label in dataset.y_train.tolist()], device=x.device)
-    y_test = torch.tensor([label_to_index[int(label)] for label in dataset.y_test.tolist()], device=x.device)
 
     model = torch.nn.Linear(dataset.x_train.shape[1], len(labels), device=x.device)
     optimizer = torch.optim.AdamW(
@@ -511,6 +510,7 @@ def collect_parameter_gradients_by_env(
     parameter_rows: list[dict[str, Any]],
     gradient_sums: dict[str, dict[int, Any]],
     gradient_counts: dict[str, dict[int, int]],
+    gradient_vectors: dict[str, dict[int, list[Any]]] | None = None,
 ) -> None:
     torch = load_torch()
     for env_id in sorted(int(label) for label in env_labels.unique().tolist()):
@@ -552,6 +552,8 @@ def collect_parameter_gradients_by_env(
                 existing = gradient_sums[group_name].get(env_id)
                 gradient_sums[group_name][env_id] = gradient.clone() if existing is None else existing + gradient
                 gradient_counts[group_name][env_id] += 1
+                if gradient_vectors is not None:
+                    gradient_vectors[group_name][env_id].append(gradient.clone())
         except Exception as exc:
             parameter_rows.append(
                 {
@@ -589,7 +591,6 @@ def activation_direction_rows(
     conditions: list[str] | None = None,
     requested_conditions: list[str] | None = None,
 ) -> list[dict[str, Any]]:
-    torch = load_torch()
     rows = []
     if labels is None:
         return rows
@@ -690,6 +691,39 @@ def parameter_gradient_cosine_rows(
                         "cosine": cosine(averaged[left_env], averaged[right_env]),
                     }
                 )
+    return rows
+
+
+def parameter_gradient_self_similarity_rows(
+    gradient_vectors: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Estimate same-environment gradient reliability across gradient batches."""
+
+    rows = []
+    for group_name, env_gradients in gradient_vectors.items():
+        for env_id, gradients in env_gradients.items():
+            gradients = list(gradients)
+            if len(gradients) < 2:
+                continue
+            cosines = []
+            for left_index, left in enumerate(gradients):
+                for right in gradients[left_index + 1 :]:
+                    cosines.append(cosine(left, right))
+            if not cosines:
+                continue
+            rows.append(
+                {
+                    "parameter_group": group_name,
+                    "direction_type": "same_env_gradient_cosine",
+                    "env": ID_TO_ENV.get(int(env_id), str(env_id)),
+                    "env_id": int(env_id),
+                    "n_gradients": len(gradients),
+                    "n_pairs": len(cosines),
+                    "mean_cosine": sum(cosines) / len(cosines),
+                    "min_cosine": min(cosines),
+                    "max_cosine": max(cosines),
+                }
+            )
     return rows
 
 
@@ -962,7 +996,7 @@ def asymmetric_subspace_rows(
 
 
 def self_subspace_similarity_rows(activation_features: dict[str, Any], labels: Any) -> list[dict[str, Any]]:
-    """Estimate within-environment CKA by split-half activation similarity."""
+    """Estimate within-environment CKA by interleaved split-half activation similarity."""
 
     if labels is None:
         return []
@@ -975,15 +1009,15 @@ def self_subspace_similarity_rows(activation_features: dict[str, Any], labels: A
             half = n // 2
             if half < 2:
                 continue
-            left = env_features[:half]
-            right = env_features[half : half * 2]
+            left = env_features[0 : half * 2 : 2]
+            right = env_features[1 : half * 2 : 2]
             rows.append(
                 {
                     "feature": feature_name,
                     "env": ID_TO_ENV.get(env_id, str(env_id)),
                     "env_id": env_id,
                     "n_examples_per_split": half,
-                    "split_method": "first_half_vs_second_half",
+                    "split_method": "even_vs_odd",
                     "linear_cka": linear_cka(left, right),
                 }
             )

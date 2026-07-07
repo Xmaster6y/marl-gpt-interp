@@ -43,7 +43,7 @@ env_specific: true
 
 parameter_sensitivity:
   enabled: true
-  max_batches: 2
+  max_batches: 4
 
 max_inspect_files_per_folder: 1
 max_feature_columns: 4096

@@ -91,7 +91,14 @@ Outputs:
 
 - `parameter_gradients.csv`;
 - `parameter_gradient_overlap.csv`;
+- `parameter_gradient_self_similarity.csv`;
 - `parameter_group_summary.json`.
+
+Implementation update: the local script now keeps per-batch gradient vectors and writes
+`parameter_gradient_self_similarity.csv`, a same-environment split-batch gradient-cosine reliability baseline. The JZ
+small config now uses four gradient batches, giving six same-environment gradient-pair comparisons per environment and
+parameter group. This makes the parameter result homogeneous: diagonal entries are same-environment gradient reliability,
+and off-diagonal entries are cross-environment gradient cosine.
 
 ### Abstract Knowledge Transfer
 

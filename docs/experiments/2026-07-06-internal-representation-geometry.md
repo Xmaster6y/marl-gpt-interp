@@ -101,6 +101,14 @@ Future reruns should also write `self_subspace_similarity.csv`, a split-half wit
 baseline for deciding whether low cross-environment CKA is low relative to the model's own within-environment
 activation reliability.
 
+Implementation update: the local script now writes `self_subspace_similarity.csv` using an even/odd split within each
+environment. The completed JZ run documented below predates that output, so any paper claim should wait for a rerun
+before comparing cross-environment CKA against within-environment self-CKA.
+
+The improved homogeneous readout should report an environment-by-environment CKA matrix where diagonal entries are
+within-environment self-CKA and off-diagonal entries are cross-environment CKA. This avoids mixing CKA against
+distance-based compactness as the main baseline.
+
 ## Decision Rule
 
 If within-environment spread is low and between-environment separation is high, treat low CKA as evidence of
