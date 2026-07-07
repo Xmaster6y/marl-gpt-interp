@@ -35,6 +35,7 @@ COLORS = {
     "smac_vs_grf": "#1F7A8C",
     "pogema_vs_grf": "#D1862F",
 }
+MATRIX_CMAP = "viridis"
 PARAM_GROUPS = [
     "token_embeddings",
     "layer_00",
@@ -111,7 +112,7 @@ def matrix_plot(
     stem: str,
     vmin: float,
     vmax: float,
-    cmap: str = "viridis",
+    cmap: str = MATRIX_CMAP,
 ) -> None:
     fig, ax = plt.subplots(figsize=(3.6, 3.2))
     image = ax.imshow(matrix, vmin=vmin, vmax=vmax, cmap=cmap)
@@ -277,7 +278,6 @@ def plot_activation_centroid_cosine_matrix_if_available() -> None:
         stem="activation_centroid_cosine_matrix",
         vmin=-1,
         vmax=1,
-        cmap="coolwarm",
     )
 
 
@@ -328,7 +328,6 @@ def plot_activation_pairwise_cosine_distance_matrix_if_available() -> None:
         stem="activation_pairwise_cosine_distance_matrix",
         vmin=0,
         vmax=1.2,
-        cmap="magma",
     )
 
 
@@ -369,7 +368,6 @@ def plot_gradient_similarity_matrix_if_available() -> None:
         stem="parameter_gradient_self_cross_matrix",
         vmin=-0.1,
         vmax=1,
-        cmap="coolwarm",
     )
 
 
