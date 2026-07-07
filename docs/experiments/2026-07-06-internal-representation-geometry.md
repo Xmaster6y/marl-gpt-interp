@@ -87,6 +87,9 @@ within-vs-cross matrix convention as CKA:
 - pairwise cosine distance: diagonal entries are within-environment example-pair distances, and off-diagonal entries
   are cross-environment example-pair distances.
 
+For paper figures, render the pairwise cosine-distance output as cosine similarity (`1 - cosine_distance`) so all
+cosine-based activation figures use the same direction: higher values mean more similar activation directions.
+
 Outputs:
 
 - `activation_centroid_cosine_similarity.csv`;

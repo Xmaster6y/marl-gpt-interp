@@ -158,8 +158,8 @@ def plot_parameter_gradient_cosines() -> None:
     ax.axhline(0, color="#111827", linewidth=0.8)
     ax.set_xticks(x, [PARAM_LABELS[group] for group in PARAM_GROUPS])
     ax.set_ylim(-0.12, 1.03)
-    ax.set_ylabel("Gradient cosine")
-    ax.set_title("Parameter-gradient alignment by model component")
+    ax.set_ylabel("Gradient-vector cosine similarity")
+    ax.set_title("Cross-environment parameter-gradient cosine similarity")
     ax.legend(ncol=3, frameon=False, loc="upper left")
     save_figure(fig, "parameter_gradient_cosines")
 
@@ -240,7 +240,7 @@ def plot_activation_cka_matrix_if_available() -> None:
         matrix.append(row_values)
     matrix_plot(
         matrix,
-        title="Self-CKA diagonal vs cross-environment CKA",
+        title="Centered linear CKA for activation subspaces",
         colorbar_label="Centered linear CKA",
         stem="activation_cka_self_cross_matrix",
         vmin=0,
@@ -248,7 +248,7 @@ def plot_activation_cka_matrix_if_available() -> None:
     )
 
 
-def plot_activation_centroid_cosine_matrix_if_available() -> None:
+def plot_activation_centroid_cosine_similarity_matrix_if_available() -> None:
     path = GEOMETRY_DIR / "activation_centroid_cosine_similarity.csv"
     if not path.exists():
         return
@@ -273,10 +273,10 @@ def plot_activation_centroid_cosine_matrix_if_available() -> None:
         matrix.append(row_values)
     matrix_plot(
         matrix,
-        title="Activation centroid cosine similarity",
-        colorbar_label="Cosine similarity",
+        title="Activation-centroid cosine similarity",
+        colorbar_label="Mean centroid cosine similarity",
         stem="activation_centroid_cosine_matrix",
-        vmin=-1,
+        vmin=0,
         vmax=1,
     )
 
@@ -298,7 +298,7 @@ def plot_activation_separation_layers() -> None:
     save_figure(fig, "activation_normalized_separation_layers")
 
 
-def plot_activation_pairwise_cosine_distance_matrix_if_available() -> None:
+def plot_activation_pairwise_cosine_similarity_matrix_if_available() -> None:
     path = GEOMETRY_DIR / "activation_pairwise_cosine_distance.csv"
     if not path.exists():
         return
@@ -317,17 +317,17 @@ def plot_activation_pairwise_cosine_distance_matrix_if_available() -> None:
         row_values = []
         for right_env in ENV_ORDER:
             if left_env == right_env:
-                row_values.append(mean(within_by_env[left_env]))
+                row_values.append(1 - mean(within_by_env[left_env]))
             else:
-                row_values.append(mean(cross_by_pair[env_pair(left_env, right_env)]))
+                row_values.append(1 - mean(cross_by_pair[env_pair(left_env, right_env)]))
         matrix.append(row_values)
     matrix_plot(
         matrix,
-        title="Within- vs cross-environment activation cosine distance",
-        colorbar_label="Mean cosine distance",
-        stem="activation_pairwise_cosine_distance_matrix",
+        title="Pairwise activation cosine similarity",
+        colorbar_label="Mean pairwise cosine similarity",
+        stem="activation_pairwise_cosine_similarity_matrix",
         vmin=0,
-        vmax=1.2,
+        vmax=1,
     )
 
 
@@ -363,8 +363,8 @@ def plot_gradient_similarity_matrix_if_available() -> None:
         matrix.append(row_values)
     matrix_plot(
         matrix,
-        title="Same-env gradient reliability vs cross-env gradients",
-        colorbar_label="Gradient cosine",
+        title="Parameter-gradient cosine similarity",
+        colorbar_label="Mean gradient-vector cosine similarity",
         stem="parameter_gradient_self_cross_matrix",
         vmin=-0.1,
         vmax=1,
@@ -421,13 +421,14 @@ def plot_activation_compactness() -> None:
     grouped: dict[str, list[float]] = defaultdict(list)
     for row in rows:
         if float(row["mean_pairwise_l2"]) > 1e-6:
-            grouped[row["env"]].append(float(row["mean_pairwise_cosine_distance"]))
+            grouped[row["env"]].append(1 - float(row["mean_pairwise_cosine_distance"]))
 
     values = [sorted(grouped[env])[len(grouped[env]) // 2] for env in ENV_ORDER]
     fig, ax = plt.subplots(figsize=(4.2, 3.0))
     ax.bar([ENV_LABELS[env] for env in ENV_ORDER], values, color=[COLORS[env] for env in ENV_ORDER])
-    ax.set_ylabel("Median pairwise cosine distance")
-    ax.set_title("Within-environment activation compactness")
+    ax.set_ylim(0, 1)
+    ax.set_ylabel("Median pairwise cosine similarity")
+    ax.set_title("Within-environment pairwise activation similarity")
     save_figure(fig, "activation_internal_compactness")
 
 
@@ -438,9 +439,9 @@ def main() -> None:
     plot_gradient_similarity_matrix_if_available()
     plot_activation_cka_layers()
     plot_activation_cka_matrix_if_available()
-    plot_activation_centroid_cosine_matrix_if_available()
+    plot_activation_centroid_cosine_similarity_matrix_if_available()
     plot_activation_separation_layers()
-    plot_activation_pairwise_cosine_distance_matrix_if_available()
+    plot_activation_pairwise_cosine_similarity_matrix_if_available()
     plot_activation_containment_rank16()
     plot_activation_compactness()
     print(f"Wrote paper-ready figures to {OUT_DIR}")

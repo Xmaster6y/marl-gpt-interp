@@ -95,17 +95,17 @@ Outputs:
 - `parameter_group_summary.json`.
 
 Implementation update: the local script now keeps per-batch gradient vectors and writes
-`parameter_gradient_self_similarity.csv`, a same-environment split-batch gradient-cosine reliability baseline. The JZ
+`parameter_gradient_self_similarity.csv`, a same-environment split-batch gradient-vector cosine-similarity baseline. The JZ
 small config now uses four gradient batches, giving six same-environment gradient-pair comparisons per environment and
-parameter group. This makes the parameter result homogeneous: diagonal entries are same-environment gradient reliability,
-and off-diagonal entries are cross-environment gradient cosine.
+parameter group. This makes the parameter result homogeneous: diagonal entries are same-environment split-batch
+gradient-vector cosine similarity, and off-diagonal entries are cross-environment gradient-vector cosine similarity.
 
 Local rerun update, 2026-07-07: the CPU rerun completed with four gradient batches and wrote
 `parameter_gradient_self_similarity.csv` with 33 rows. Across the main parameter groups, same-environment gradient
-reliability is `0.719` for SMAC, `0.977` for POGEMA, and `0.991` for GRF. Cross-environment gradient cosine remains
-low for SMAC-POGEMA (`0.089`) and SMAC-GRF (`0.091`), while POGEMA-GRF remains high (`0.802`). This is now the cleanest
-homogeneous evidence for partial POGEMA-GRF effective-computation sharing: the POGEMA-GRF off-diagonal is much closer
-to same-environment reliability than either SMAC pair is.
+cosine similarity is `0.719` for SMAC, `0.977` for POGEMA, and `0.991` for GRF. Cross-environment gradient-vector
+cosine similarity remains low for SMAC-POGEMA (`0.089`) and SMAC-GRF (`0.091`), while POGEMA-GRF remains high
+(`0.802`). This is now the cleanest homogeneous evidence for partial POGEMA-GRF effective-computation sharing: the
+POGEMA-GRF off-diagonal is much closer to the same-environment diagonal values than either SMAC pair is.
 
 ### Abstract Knowledge Transfer
 
