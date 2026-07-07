@@ -298,37 +298,24 @@ def plot_activation_separation_layers() -> None:
     save_figure(fig, "activation_normalized_separation_layers")
 
 
-def plot_activation_pairwise_cosine_similarity_matrix_if_available() -> None:
-    path = GEOMETRY_DIR / "activation_pairwise_cosine_distance.csv"
+def plot_activation_pairwise_cosine_similarity_layers_if_available() -> None:
+    path = GEOMETRY_DIR / "activation_pairwise_cosine_similarity.csv"
     if not path.exists():
         return
     rows = read_csv(path)
-    within_by_env = defaultdict(list)
-    cross_by_pair = defaultdict(list)
-    for row in rows:
-        if not (row["feature"].startswith("layer_") or row["feature"] in {"actor_layer:final", "critic_layer:final"}):
-            continue
-        if row["comparison_type"] == "within_env":
-            within_by_env[row["env"]].append(float(row["mean_cosine_distance"]))
-        elif row["comparison_type"] == "cross_env":
-            cross_by_pair[row["env_pair"]].append(float(row["mean_cosine_distance"]))
-    matrix = []
-    for left_env in ENV_ORDER:
-        row_values = []
-        for right_env in ENV_ORDER:
-            if left_env == right_env:
-                row_values.append(1 - mean(within_by_env[left_env]))
-            else:
-                row_values.append(1 - mean(cross_by_pair[env_pair(left_env, right_env)]))
-        matrix.append(row_values)
-    matrix_plot(
-        matrix,
-        title="Pairwise activation cosine similarity",
-        colorbar_label="Mean pairwise cosine similarity",
-        stem="activation_pairwise_cosine_similarity_matrix",
-        vmin=0,
-        vmax=1,
-    )
+    fig, axes = plt.subplots(1, 2, figsize=(7.4, 3.15), sharey=True)
+    for ax, pool in zip(axes, ["mean", "final"], strict=True):
+        for pair in PAIR_ORDER:
+            values = [activation_value(rows, pair, layer, pool, "mean_cosine_similarity") for layer in LAYERS]
+            line_for_pair(ax, LAYERS, values, pair, label=(pool == "mean"))
+        ax.set_title(f"{pool}-pooled states")
+        ax.set_xlabel("Transformer layer")
+        ax.set_xticks(LAYERS)
+        ax.set_ylim(0, 1)
+    axes[0].set_ylabel("Mean pairwise cosine similarity")
+    axes[0].legend(ncol=1, frameon=False, loc="lower left")
+    fig.suptitle("Cross-environment activation cosine similarity by layer", y=1.03, fontsize=9)
+    save_figure(fig, "activation_pairwise_cosine_similarity_layers")
 
 
 def plot_gradient_similarity_matrix_if_available() -> None:
@@ -421,7 +408,7 @@ def plot_activation_compactness() -> None:
     grouped: dict[str, list[float]] = defaultdict(list)
     for row in rows:
         if float(row["mean_pairwise_l2"]) > 1e-6:
-            grouped[row["env"]].append(1 - float(row["mean_pairwise_cosine_distance"]))
+            grouped[row["env"]].append(float(row["mean_pairwise_cosine_similarity"]))
 
     values = [sorted(grouped[env])[len(grouped[env]) // 2] for env in ENV_ORDER]
     fig, ax = plt.subplots(figsize=(4.2, 3.0))
@@ -441,7 +428,7 @@ def main() -> None:
     plot_activation_cka_matrix_if_available()
     plot_activation_centroid_cosine_similarity_matrix_if_available()
     plot_activation_separation_layers()
-    plot_activation_pairwise_cosine_similarity_matrix_if_available()
+    plot_activation_pairwise_cosine_similarity_layers_if_available()
     plot_activation_containment_rank16()
     plot_activation_compactness()
     print(f"Wrote paper-ready figures to {OUT_DIR}")

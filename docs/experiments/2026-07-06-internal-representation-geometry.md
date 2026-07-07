@@ -57,7 +57,7 @@ For each environment, layer, and pooled token group:
 - centroid norm;
 - mean, standard deviation, and maximum L2 distance to the environment centroid;
 - mean and standard deviation of pairwise L2 distance;
-- mean and standard deviation of pairwise cosine distance;
+- mean, standard deviation, and median pairwise cosine similarity;
 - mean cosine to centroid;
 - PCA variance concentration, components required for 90% variance, participation ratio, and effective rank.
 
@@ -84,16 +84,13 @@ within-vs-cross matrix convention as CKA:
 
 - centroid cosine similarity: diagonal entries are self-similarity of the environment centroid (`1.0`), and
   off-diagonal entries compare environment mean activation directions;
-- pairwise cosine distance: diagonal entries are within-environment example-pair distances, and off-diagonal entries
-  are cross-environment example-pair distances.
-
-For paper figures, render the pairwise cosine-distance output as cosine similarity (`1 - cosine_distance`) so all
-cosine-based activation figures use the same direction: higher values mean more similar activation directions.
+- pairwise cosine similarity: diagonal entries are within-environment example-pair similarities, and off-diagonal
+  entries are cross-environment example-pair similarities.
 
 Outputs:
 
 - `activation_centroid_cosine_similarity.csv`;
-- `activation_pairwise_cosine_distance.csv`.
+- `activation_pairwise_cosine_similarity.csv`.
 
 ### Asymmetric Representation Analysis
 
@@ -135,12 +132,12 @@ that all cross-environment CKA is far below internal reliability: POGEMA has the
 SMAC and GRF self-CKA are only modestly above or near cross-CKA.
 
 Activation-cosine update, 2026-07-07: the local CPU rerun now writes `activation_centroid_cosine_similarity.csv` and
-`activation_pairwise_cosine_distance.csv`, each with 120 rows. Mean centroid cosine similarity is `0.588` for
+`activation_pairwise_cosine_similarity.csv`, each with 120 rows. Mean centroid cosine similarity is `0.588` for
 SMAC-POGEMA, `0.664` for SMAC-GRF, and `0.811` for POGEMA-GRF across layer and actor/critic final-state features. Mean
-pairwise cosine distance is low within environments (`0.097` SMAC, `0.037` POGEMA, `0.004` GRF) and larger across
-environments (`0.477` SMAC-POGEMA, `0.386` SMAC-GRF, `0.205` POGEMA-GRF). This supports the separated-cluster story
+pairwise cosine similarity is high within environments (`0.903` SMAC, `0.963` POGEMA, `0.996` GRF) and lower across
+environments (`0.523` SMAC-POGEMA, `0.614` SMAC-GRF, `0.795` POGEMA-GRF). This supports the separated-cluster story
 using a cosine metric, while also showing that POGEMA-GRF is the closest cross-environment pair by both centroid
-direction and example-level cosine distance.
+direction and example-level cosine similarity.
 
 ## Decision Rule
 
@@ -160,9 +157,9 @@ because it uses the built-in PCA subspace-containment baseline rather than a `td
 The strongest result is that environments are internally coherent enough for low CKA to be meaningful. Every
 environment pair has same-environment nearest-neighbor fraction `1.0` across all analyzed features. Median
 within-environment pairwise L2 is smallest for GRF (`1.54`), larger for POGEMA (`2.37`), and largest for SMAC (`3.22`).
-Median pairwise cosine distance follows the same order: GRF `0.0004`, POGEMA `0.0041`, SMAC `0.0754`. SMAC therefore
-appears more internally diffuse, especially in final-token transformer states, but not so diffuse that cross-env
-separation becomes uninterpretable.
+Median pairwise cosine similarity follows the same order: GRF `0.9996`, POGEMA `0.9959`, SMAC `0.9246`. SMAC
+therefore appears more internally diffuse, especially in final-token transformer states, but not so diffuse that
+cross-env separation becomes uninterpretable.
 
 CKA remains low, consistent with the earlier compute-sharing run. Mean linear CKA is `0.0231` for SMAC-POGEMA,
 `0.0162` for SMAC-GRF, and `0.0217` for POGEMA-GRF, with no pair exceeding `0.0512`.

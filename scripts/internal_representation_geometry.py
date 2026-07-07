@@ -12,7 +12,7 @@ from omegaconf import DictConfig, OmegaConf
 
 from marl_gpt_interp.marl_gpt_tools import (
     activation_centroid_cosine_similarity_rows,
-    activation_pairwise_cosine_distance_rows,
+    activation_pairwise_cosine_similarity_rows,
     activation_hooks,
     activation_subspace_similarity_rows,
     asymmetric_subspace_rows,
@@ -132,7 +132,7 @@ def main(cfg: DictConfig) -> dict[str, Any]:
         collected["activation_labels"],
         cfg=script_cfg,
     )
-    pairwise_cosine_rows = activation_pairwise_cosine_distance_rows(
+    pairwise_cosine_rows = activation_pairwise_cosine_similarity_rows(
         collected["activation_features"],
         collected["activation_labels"],
         cfg=script_cfg,
@@ -158,8 +158,8 @@ def main(cfg: DictConfig) -> dict[str, Any]:
     write_csv(output_dir / "representation_separation.csv", separation_rows)
     write_json(output_dir / "activation_centroid_cosine_similarity.json", centroid_cosine_rows)
     write_csv(output_dir / "activation_centroid_cosine_similarity.csv", centroid_cosine_rows)
-    write_json(output_dir / "activation_pairwise_cosine_distance.json", pairwise_cosine_rows)
-    write_csv(output_dir / "activation_pairwise_cosine_distance.csv", pairwise_cosine_rows)
+    write_json(output_dir / "activation_pairwise_cosine_similarity.json", pairwise_cosine_rows)
+    write_csv(output_dir / "activation_pairwise_cosine_similarity.csv", pairwise_cosine_rows)
     write_json(output_dir / "asymmetric_representation_analysis.json", asymmetric_rows)
     write_csv(output_dir / "asymmetric_representation_analysis.csv", asymmetric_rows)
     write_json(output_dir / "activation_subspace_similarity.json", cka_rows)

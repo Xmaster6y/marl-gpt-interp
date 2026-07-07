@@ -815,7 +815,7 @@ def representation_proximity_rows(
             l2_to_centroid = centered.norm(dim=1)
             pairwise_l2 = torch.pdist(env_features, p=2)
             normalized = torch.nn.functional.normalize(env_features, dim=1, eps=1e-12)
-            pairwise_cosine_distance = 1 - _upper_triangle_values(normalized @ normalized.T)
+            pairwise_cosine_similarity = _upper_triangle_values(normalized @ normalized.T)
             centroid_cosine = torch.nn.functional.cosine_similarity(
                 env_features,
                 centroid.unsqueeze(0),
@@ -834,8 +834,9 @@ def representation_proximity_rows(
                 "max_l2_to_centroid": float(l2_to_centroid.max().item()),
                 "mean_pairwise_l2": float(pairwise_l2.mean().item()),
                 "std_pairwise_l2": float(pairwise_l2.std(unbiased=False).item()),
-                "mean_pairwise_cosine_distance": float(pairwise_cosine_distance.mean().item()),
-                "std_pairwise_cosine_distance": float(pairwise_cosine_distance.std(unbiased=False).item()),
+                "mean_pairwise_cosine_similarity": float(pairwise_cosine_similarity.mean().item()),
+                "std_pairwise_cosine_similarity": float(pairwise_cosine_similarity.std(unbiased=False).item()),
+                "median_pairwise_cosine_similarity": float(pairwise_cosine_similarity.median().item()),
                 "mean_cosine_to_centroid": float(centroid_cosine.mean().item()),
                 "std_cosine_to_centroid": float(centroid_cosine.std(unbiased=False).item()),
             }
@@ -976,13 +977,13 @@ def activation_centroid_cosine_similarity_rows(
     return rows
 
 
-def activation_pairwise_cosine_distance_rows(
+def activation_pairwise_cosine_similarity_rows(
     activation_features: dict[str, Any],
     labels: Any,
     *,
     cfg: DictConfig,
 ) -> list[dict[str, Any]]:
-    """Compare within- and cross-environment activation cosine distances."""
+    """Compare within- and cross-environment activation cosine similarities."""
 
     torch = load_torch()
     if labels is None:
@@ -1004,8 +1005,8 @@ def activation_pairwise_cosine_distance_rows(
                 continue
             values = normalized[env_id]
             cosine_matrix = values @ values.T
-            distances = 1 - _upper_triangle_values(cosine_matrix)
-            if distances.numel() == 0:
+            similarities = _upper_triangle_values(cosine_matrix)
+            if similarities.numel() == 0:
                 continue
             rows.append(
                 {
@@ -1014,10 +1015,10 @@ def activation_pairwise_cosine_distance_rows(
                     "env": ID_TO_ENV.get(env_id, str(env_id)),
                     "env_id": env_id,
                     "n_examples": int(values.shape[0]),
-                    "n_pairs": int(distances.numel()),
-                    "mean_cosine_distance": float(distances.mean().item()),
-                    "std_cosine_distance": float(distances.std(unbiased=False).item()),
-                    "median_cosine_distance": float(distances.median().item()),
+                    "n_pairs": int(similarities.numel()),
+                    "mean_cosine_similarity": float(similarities.mean().item()),
+                    "std_cosine_similarity": float(similarities.std(unbiased=False).item()),
+                    "median_cosine_similarity": float(similarities.median().item()),
                 }
             )
         for left_index, left_env in enumerate(env_ids):
@@ -1028,7 +1029,7 @@ def activation_pairwise_cosine_distance_rows(
                 if right_env not in normalized:
                     continue
                 right = normalized[right_env]
-                distances = 1 - (left @ right.T).reshape(-1)
+                similarities = (left @ right.T).reshape(-1)
                 rows.append(
                     {
                         "feature": feature_name,
@@ -1038,10 +1039,10 @@ def activation_pairwise_cosine_distance_rows(
                         "right_env_id": right_env,
                         "n_left": int(left.shape[0]),
                         "n_right": int(right.shape[0]),
-                        "n_pairs": int(distances.numel()),
-                        "mean_cosine_distance": float(distances.mean().item()),
-                        "std_cosine_distance": float(distances.std(unbiased=False).item()),
-                        "median_cosine_distance": float(distances.median().item()),
+                        "n_pairs": int(similarities.numel()),
+                        "mean_cosine_similarity": float(similarities.mean().item()),
+                        "std_cosine_similarity": float(similarities.std(unbiased=False).item()),
+                        "median_cosine_similarity": float(similarities.median().item()),
                     }
                 )
     return rows
