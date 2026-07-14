@@ -29,6 +29,8 @@ SCRIPTS = {
     "internal_representation_geometry": "scripts.internal_representation_geometry:main",
     "normalize_soccer_data": "scripts.normalize_soccer_data:main",
     "compare_soccer_stats": "scripts.compare_soccer_stats:main",
+    "analyze_fuji_soccer_samples": "scripts.analyze_fuji_soccer_samples:main",
+    "download_stp_tracking_sample": "scripts.download_stp_tracking_sample:main",
 }
 
 

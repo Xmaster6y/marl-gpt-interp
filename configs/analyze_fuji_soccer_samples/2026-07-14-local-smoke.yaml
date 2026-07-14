@@ -1,0 +1,15 @@
+defaults:
+  - _self_
+
+laliga_arrow_path: results/raw/human/fuji-schema-smoke/mini/data-00000-of-00001.arrow
+
+robocup_pairs:
+  - left: results/raw/robocup2d/fuji-schema-smoke/0802-2032-helios2024-cyrus2024-0040-sim30.left.state.npy
+    right: results/raw/robocup2d/fuji-schema-smoke/0802-2032-helios2024-cyrus2024-0040-sim30.right.state.npy
+  - left: results/raw/robocup2d/fuji-schema-smoke/1220-1011-helios2022-oxsy2024-0001-sim01.left.state.npy
+    right: results/raw/robocup2d/fuji-schema-smoke/1220-1011-helios2022-oxsy2024-0001-sim01.right.state.npy
+
+stp_raw_tracking_path: results/raw/robocup2d/stp-raw-smoke/0802-2032-helios2024-cyrus2024-0040-sim30.tracking.csv
+stp_derived_left_path: results/raw/robocup2d/fuji-schema-smoke/0802-2032-helios2024-cyrus2024-0040-sim30.left.state.npy
+
+output_path: results/analysis/2026-07-14-fuji-soccer-schema-smoke/diagnostics.json

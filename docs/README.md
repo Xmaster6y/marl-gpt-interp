@@ -47,6 +47,7 @@
 
 ## Recent Experiments
 
+- [Fuji soccer data schema inspection and tiny sample](experiments/2026-07-14-fuji-soccer-data-schema-and-sample.md): La Liga and raw STP samples are ready for adapter development; the Fuji RoboCup extractor bug is identified exactly.
 - [Pretrained weights smoke test](experiments/2026-06-30-pretrained-weights-smoke-test.md): checkpoint loads and runs a short GRF rollout locally; activation capture pending.
 
 ## Planned Analyses

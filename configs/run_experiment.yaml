@@ -5,6 +5,8 @@ defaults:
   - optional internal_representation_geometry: null
   - optional normalize_soccer_data: null
   - optional compare_soccer_stats: null
+  - optional analyze_fuji_soccer_samples: null
+  - optional download_stp_tracking_sample: null
   - _self_
 
 hydra:

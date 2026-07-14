@@ -1,0 +1,8 @@
+defaults:
+  - _self_
+
+archive_url: https://alab.idsci.nagasaki-u.ac.jp/robocupdata/rc2024-roundrobin/helios2024-cyrus2024_csv.zip
+member_name: 0802-2032-helios2024-cyrus2024-0040-sim30.tracking.csv
+max_data_rows: 300
+range_block_bytes: 4194304
+output_path: results/raw/robocup2d/stp-raw-smoke/0802-2032-helios2024-cyrus2024-0040-sim30.tracking.csv
