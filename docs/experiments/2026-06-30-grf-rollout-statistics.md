@@ -21,13 +21,13 @@ Local smoke:
 
 ```bash
 just grf-install
-uv run -m scripts.run_experiment grf_rollout_stats=2026-06-30-smoke
+uv run -m scripts.grf_rollout_stats --config-name 2026-06-30-smoke
 ```
 
 JZ small run:
 
 ```bash
-just run grf_rollout_stats=2026-06-30-v100-small
+just run grf_rollout_stats 2026-06-30-v100-small
 ```
 
 Launch artifact:

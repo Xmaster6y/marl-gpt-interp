@@ -166,9 +166,7 @@ def plot_parameter_gradient_cosines() -> None:
 
 def plot_parameter_gradient_norms() -> None:
     rows = [
-        row
-        for row in read_csv(CROSS_ENV_DIR / "parameter_gradients.csv")
-        if row["parameter_group"] in PARAM_GROUPS
+        row for row in read_csv(CROSS_ENV_DIR / "parameter_gradients.csv") if row["parameter_group"] in PARAM_GROUPS
     ]
     grouped: dict[tuple[str, str], list[float]] = defaultdict(list)
     for row in rows:

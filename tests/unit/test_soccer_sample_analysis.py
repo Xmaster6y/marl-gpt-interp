@@ -27,7 +27,18 @@ def test_robocup_pair_detects_documented_block_swap(tmp_path):
 
 
 def test_stp_tracking_audit_detects_obsolete_player_stride(tmp_path):
-    metadata = ["#", "cycle", "stopped", "playmode", "l_name", "l_score", "l_pen_score", "r_name", "r_score", "r_pen_score"]
+    metadata = [
+        "#",
+        "cycle",
+        "stopped",
+        "playmode",
+        "l_name",
+        "l_score",
+        "l_pen_score",
+        "r_name",
+        "r_score",
+        "r_pen_score",
+    ]
     columns = [*metadata, "b_x", "b_y", "b_vx", "b_vy"]
     for side in ("l", "r"):
         for player in range(1, 12):
@@ -48,7 +59,9 @@ def test_stp_tracking_audit_detects_obsolete_player_stride(tmp_path):
     for player_index in range(22):
         obsolete_indices.extend(range(15 + 8 * player_index, 19 + 8 * player_index))
     derived_path = tmp_path / "sample.left.state.npy"
-    np.save(derived_path, np.asarray([[float(numeric[columns[index]]) for index in obsolete_indices]], dtype=np.float32))
+    np.save(
+        derived_path, np.asarray([[float(numeric[columns[index]]) for index in obsolete_indices]], dtype=np.float32)
+    )
 
     result = analyze_stp_tracking_csv(csv_path, derived_path)
 

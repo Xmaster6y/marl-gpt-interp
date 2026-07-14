@@ -6,3 +6,9 @@ member_name: 0802-2032-helios2024-cyrus2024-0040-sim30.tracking.csv
 max_data_rows: 300
 range_block_bytes: 4194304
 output_path: results/raw/robocup2d/stp-raw-smoke/0802-2032-helios2024-cyrus2024-0040-sim30.tracking.csv
+
+hydra:
+  run:
+    dir: results/hydra/download_stp_tracking_sample/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: results/hydra/download_stp_tracking_sample_sweep/${now:%Y-%m-%d_%H-%M-%S}

@@ -6,6 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+import hydra
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 
@@ -84,9 +85,7 @@ def collect_natural_batches(root: Path, dataset_config: dict[str, Any], cfg: Dic
                 {
                     "batch": batch_index,
                     "condition": "natural",
-                    "mean_entropy": float(
-                        torch.distributions.Categorical(logits=act_logits).entropy().mean().item()
-                    ),
+                    "mean_entropy": float(torch.distributions.Categorical(logits=act_logits).entropy().mean().item()),
                     "mean_value_logit": float(val_logits.detach().float().mean().item()),
                 }
             )
@@ -140,8 +139,9 @@ def input_probe_rows(collected: dict[str, Any], cfg: DictConfig) -> list[dict[st
     return rows
 
 
+@hydra.main(config_path="../configs/cross_env_compute_sharing", version_base=None)
 def main(cfg: DictConfig) -> dict[str, Any]:
-    script_cfg = cfg.cross_env_compute_sharing
+    script_cfg = cfg
     root = repo_root()
     output_dir = as_path(root, str(script_cfg.output_dir))
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -215,3 +215,7 @@ def main(cfg: DictConfig) -> dict[str, Any]:
         "parameter_gradient_overlap_rows": parameter_gradient_rows,
         "parameter_gradient_self_similarity_rows": parameter_gradient_self_rows,
     }
+
+
+if __name__ == "__main__":
+    main()

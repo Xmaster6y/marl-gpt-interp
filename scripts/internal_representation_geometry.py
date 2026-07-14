@@ -7,6 +7,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+import hydra
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 
@@ -75,9 +76,7 @@ def collect_natural_activations(root: Path, dataset_config: dict[str, Any], cfg:
                 {
                     "batch": batch_index,
                     "condition": "natural",
-                    "mean_entropy": float(
-                        torch.distributions.Categorical(logits=act_logits).entropy().mean().item()
-                    ),
+                    "mean_entropy": float(torch.distributions.Categorical(logits=act_logits).entropy().mean().item()),
                     "mean_value_logit": float(val_logits.detach().float().mean().item()),
                 }
             )
@@ -102,8 +101,9 @@ def tdhook_status() -> dict[str, Any]:
     }
 
 
+@hydra.main(config_path="../configs/internal_representation_geometry", version_base=None)
 def main(cfg: DictConfig) -> dict[str, Any]:
-    script_cfg = cfg.internal_representation_geometry
+    script_cfg = cfg
     root = repo_root()
     output_dir = as_path(root, str(script_cfg.output_dir))
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -196,3 +196,7 @@ def main(cfg: DictConfig) -> dict[str, Any]:
         "cka_rows": cka_rows,
         "self_cka_rows": self_cka_rows,
     }
+
+
+if __name__ == "__main__":
+    main()

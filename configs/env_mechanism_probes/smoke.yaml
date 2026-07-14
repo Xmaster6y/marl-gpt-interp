@@ -38,3 +38,9 @@ train_fraction: 0.7
 probe_steps: 10
 probe_lr: 0.03
 probe_weight_decay: 0.01
+
+hydra:
+  run:
+    dir: results/hydra/env_mechanism_probes/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: results/hydra/env_mechanism_probes_sweep/${now:%Y-%m-%d_%H-%M-%S}

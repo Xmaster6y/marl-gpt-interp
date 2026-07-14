@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import hydra
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 
@@ -50,7 +51,12 @@ def _normalize_source(root: Path, source: DictConfig) -> dict[str, Any]:
     }
 
 
+@hydra.main(config_path="../configs/normalize_soccer_data", version_base=None)
 def main(cfg: DictConfig) -> list[dict[str, Any]]:
-    script_cfg = cfg.normalize_soccer_data
+    script_cfg = cfg
     root = _repo_root()
     return [_normalize_source(root, source) for source in script_cfg.sources]
+
+
+if __name__ == "__main__":
+    main()

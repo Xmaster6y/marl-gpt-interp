@@ -271,7 +271,7 @@ uses non-physical player features.
 The config-driven diagnostic command is:
 
 ```bash
-uv run --group grf -m scripts.run_experiment analyze_fuji_soccer_samples=2026-07-14-local-smoke
+uv run --group grf -m scripts.analyze_fuji_soccer_samples --config-name 2026-07-14-local-smoke
 ```
 
 Config: [`../../configs/analyze_fuji_soccer_samples/2026-07-14-local-smoke.yaml`](../../configs/analyze_fuji_soccer_samples/2026-07-14-local-smoke.yaml)
@@ -298,7 +298,7 @@ selected correctly while the 44-column team blocks were not.
 A bounded downloader was added and run as:
 
 ```bash
-uv run -m scripts.run_experiment download_stp_tracking_sample=2026-07-14-helios-cyrus-smoke
+uv run -m scripts.download_stp_tracking_sample --config-name 2026-07-14-helios-cyrus-smoke
 ```
 
 Config: [`../../configs/download_stp_tracking_sample/2026-07-14-helios-cyrus-smoke.yaml`](../../configs/download_stp_tracking_sample/2026-07-14-helios-cyrus-smoke.yaml)

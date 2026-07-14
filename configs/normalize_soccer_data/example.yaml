@@ -99,3 +99,9 @@ sources:
       vx: vx
       vy: vy
       is_ball: is_ball
+
+hydra:
+  run:
+    dir: results/hydra/normalize_soccer_data/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: results/hydra/normalize_soccer_data_sweep/${now:%Y-%m-%d_%H-%M-%S}

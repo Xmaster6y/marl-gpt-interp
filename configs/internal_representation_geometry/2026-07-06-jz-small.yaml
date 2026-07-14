@@ -53,3 +53,9 @@ asymmetric_top_ks:
   - 32
   - 64
   - 128
+
+hydra:
+  run:
+    dir: results/hydra/internal_representation_geometry/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: results/hydra/internal_representation_geometry_sweep/${now:%Y-%m-%d_%H-%M-%S}

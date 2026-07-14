@@ -53,3 +53,9 @@ sources:
       y: y
       end_x: target_x
       end_y: target_y
+
+hydra:
+  run:
+    dir: results/hydra/normalize_soccer_data/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: results/hydra/normalize_soccer_data_sweep/${now:%Y-%m-%d_%H-%M-%S}

@@ -115,9 +115,7 @@ def _existing_data_path(root: Path, value: str | PathLike[str]) -> str:
 def with_absolute_dataset_paths(root: Path, dataset_config: dict[str, Any]) -> dict[str, Any]:
     resolved = deepcopy(dataset_config)
     for env_cfg in resolved.values():
-        env_cfg["folder_paths"] = [
-            _existing_data_path(root, folder) for folder in env_cfg.get("folder_paths", [])
-        ]
+        env_cfg["folder_paths"] = [_existing_data_path(root, folder) for folder in env_cfg.get("folder_paths", [])]
     return resolved
 
 
@@ -383,9 +381,7 @@ def train_linear_probe(x: Any, y: Any, cfg: DictConfig) -> dict[str, Any]:
 
     with torch.no_grad():
         weights = model.weight.detach().cpu()
-        class_weight_norms = {
-            str(label): float(weights[index].norm().item()) for index, label in enumerate(labels)
-        }
+        class_weight_norms = {str(label): float(weights[index].norm().item()) for index, label in enumerate(labels)}
         pairwise_weight_cosine = {}
         for left_index, left_label in enumerate(labels):
             for right_index, right_label in enumerate(labels[left_index + 1 :], start=left_index + 1):
@@ -1107,8 +1103,7 @@ def asymmetric_subspace_rows(
                             "source_env_id": source_env,
                             "target_env_id": target_env,
                             "direction": (
-                                f"{ID_TO_ENV.get(source_env, source_env)}_to_"
-                                f"{ID_TO_ENV.get(target_env, target_env)}"
+                                f"{ID_TO_ENV.get(source_env, source_env)}_to_{ID_TO_ENV.get(target_env, target_env)}"
                             ),
                             "method": "pca_subspace_containment",
                             "requested_rank": requested_k,

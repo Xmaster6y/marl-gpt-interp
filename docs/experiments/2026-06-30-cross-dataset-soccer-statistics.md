@@ -17,13 +17,13 @@ The first useful comparison should avoid brittle provider-specific action semant
 Normalize raw provider exports:
 
 ```bash
-just run normalize_soccer_data=template
+just run normalize_soccer_data template
 ```
 
 Compare normalized datasets:
 
 ```bash
-just run compare_soccer_stats=template
+just run compare_soccer_stats template
 ```
 
 Default config templates:

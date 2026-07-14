@@ -12,9 +12,9 @@ Research code and project memory for interpreting MARL-GPT football behavior in 
 ## Layout
 
 - `src/` contains reusable Python package code.
-- `scripts/` contains experiment entrypoints.
-- `configs/` contains experiment configs.
-- `docs/` contains project status, questions, claims, decisions, reviews, literature, experiment conclusions, and Slurm launch artifacts.
+- `scripts/` contains independent experiment entrypoints.
+- `configs/` contains one config folder per script.
+- `docs/` contains project status, questions, claims, decisions, reviews, literature, experiment conclusions, presentations, and Slurm launch artifacts.
 - `latex/` contains the paper.
 - `results/` is untracked scratch space for logs, outputs, checkpoints, and generated artifacts.
 - `AGENTS.md` contains the operational guidelines.
@@ -27,7 +27,7 @@ Python environment and package commands:
 uv sync
 just grf-install
 uv add <package>
-uv run -m scripts.run_experiment grf_rollout_stats=2026-06-30-smoke
+uv run -m scripts.grf_rollout_stats --config-name 2026-06-30-smoke
 ```
 
 Reusable recipes:
@@ -38,11 +38,11 @@ just install
 just grf-install
 just checks
 just tests
-just run grf_rollout_stats=2026-06-30-smoke
+just run grf_rollout_stats 2026-06-30-smoke
 ```
 
 The first GRF experiment expects the MARL-GPT checkpoint at `results/marl-gpt-main.pt`.
-The checkpoint is untracked; put it there manually or set `grf_rollout_stats.download_checkpoint=true`.
+The checkpoint is untracked; put it there manually or pass `download_checkpoint=true` to the GRF rollout script.
 Installing `gfootball` requires system CMake and native GRF engine libraries in addition to Python packages.
 Use `just grf-install` after loading CMake and native GRF build dependencies; it uses uv-managed Python and passes that interpreter into the GRF CMake build.
 The current JZ setup path is documented in `docs/2026-07-02-grf-jz-setup.md`.

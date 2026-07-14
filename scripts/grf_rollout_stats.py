@@ -9,6 +9,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+import hydra
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 
@@ -33,8 +34,7 @@ def _ensure_checkpoint(path: Path, url: str, download: bool) -> None:
     if not download:
         raise SystemExit(
             f"Checkpoint not found at {path}. Put the MARL-GPT checkpoint there, "
-            "set grf_rollout_stats.checkpoint, or rerun with "
-            "grf_rollout_stats.download_checkpoint=true."
+            "set checkpoint, or rerun with download_checkpoint=true."
         )
     path.parent.mkdir(parents=True, exist_ok=True)
     logger.info(f"Downloading checkpoint to {path}")
@@ -237,8 +237,9 @@ def _aggregate(episode_rows: list[dict[str, Any]], action_size: int) -> dict[str
     }
 
 
+@hydra.main(config_path="../configs/grf_rollout_stats", version_base=None)
 def main(cfg: DictConfig) -> dict[str, Any]:
-    script_cfg = cfg.grf_rollout_stats
+    script_cfg = cfg
     root = _repo_root()
     checkpoint = Path(script_cfg.checkpoint)
     if not checkpoint.is_absolute():
@@ -342,3 +343,7 @@ def main(cfg: DictConfig) -> dict[str, Any]:
 
     logger.info(f"Wrote GRF rollout statistics to {output_dir}")
     return aggregate
+
+
+if __name__ == "__main__":
+    main()

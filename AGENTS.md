@@ -12,7 +12,7 @@
 - `src/` contains reusable package code.
 - `scripts/` contains runnable experiment entrypoints.
 - `configs/` contains reproducible experiment configuration.
-- `docs/` contains project memory: status, questions, claims, decisions, reviews, literature, and experiment conclusions.
+- `docs/` contains project memory: status, questions, claims, decisions, reviews, literature, experiment conclusions, and presentations.
 - `latex/` contains the paper and bibliography.
 - `results/` is untracked scratch space for raw logs, outputs, checkpoints, generated artifacts, and bulky run data.
 - `notebooks/` is for exploration; move reusable logic to `src/` and reproducible runs to `scripts/` plus `configs/`.
@@ -26,6 +26,7 @@
 - Research questions should converge to a claim, a decision to defer or cancel, or an experiment that can answer them.
 - Claims should link to evidence and limitations; decisions should record research trade-offs that affect direction, validity, scope, experiments, or paper text.
 - Experiments should record conclusions after they run; raw outputs stay in `results/`.
+- Presentations should use committed markdown sources when possible and link back to the docs, configs, results, and paper sections they summarize.
 - Link docs, configs, scripts, results, and paper sections when the link improves traceability.
 
 ## Ideation And Experiments
@@ -37,8 +38,8 @@
 - Prefer defining an experiment before coding: hypothesis, config, metric, baseline or comparison, expected result, and what outcome would change the project direction.
 - Do not run experiments unless explicitly asked; tests and minimal local debug or smoke runs are allowed, but cluster jobs are not.
 - Implement only the code needed to answer the current question.
-- Keep scripts thin and config-driven so the same entrypoint can run locally and inside Slurm jobs.
-- Store experiment configs under `configs/` with names that identify the run without opening raw logs; use date-based names for run-specific configs.
+- Keep scripts thin, independent, and config-driven so the same script can run locally and inside Slurm jobs.
+- Prefer one runnable workflow per file in `scripts/`; store its configs under the matching `configs/<script-name>/` folder with names that identify the run without opening raw logs.
 - Store cluster launch definitions as date-based experiment artifacts under `docs/experiments/to-launch/`, then move them to `docs/experiments/archived/` after results are documented.
 - After a run, update the experiment note with actual results, result location, conclusion, and any resulting claim or decision.
 
@@ -46,8 +47,8 @@
 
 - Use `uv` for Python work: `uv sync` for installation, `uv add <package>` for dependencies, and `uv run ...` for commands.
 - Do not rely on manual virtualenv activation or `pip install` by default.
-- Run scripts with `uv run`, for example `uv run -m scripts.run_experiment grf_rollout_stats=2026-06-30-smoke`.
-- Prefer reusable `just` recipes for common commands: `just checks`, `just tests`, `just run grf_rollout_stats=2026-06-30-smoke`, and `just launch-all --dry-run`.
+- Run scripts with `uv run`, for example `uv run -m scripts.grf_rollout_stats --config-name 2026-06-30-smoke`.
+- Prefer reusable `just` recipes for common commands: `just checks`, `just tests`, `just run grf_rollout_stats 2026-06-30-smoke`, and `just launch-all --dry-run`.
 - Put stable reusable logic in `src/`; test stable, reusable, or high-risk package logic with `uv run pytest`.
 
 ## Paper

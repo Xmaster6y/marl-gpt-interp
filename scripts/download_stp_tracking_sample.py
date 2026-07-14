@@ -9,6 +9,7 @@ import urllib.request
 import zipfile
 from pathlib import Path, PurePosixPath
 
+import hydra
 from loguru import logger
 from omegaconf import DictConfig
 
@@ -89,8 +90,9 @@ def _resolve(root: Path, path: str) -> Path:
     return candidate if candidate.is_absolute() else root / candidate
 
 
+@hydra.main(config_path="../configs/download_stp_tracking_sample", version_base=None)
 def main(cfg: DictConfig) -> dict:
-    script_cfg = cfg.download_stp_tracking_sample
+    script_cfg = cfg
     url = str(script_cfg.archive_url)
     member_name = str(script_cfg.member_name)
     max_data_rows = int(script_cfg.max_data_rows)
@@ -131,3 +133,7 @@ def main(cfg: DictConfig) -> dict:
         json.dump(manifest, handle, indent=2, sort_keys=True)
     logger.info(f"Wrote {rows_written} lines from {info.filename} to {output_path}")
     return manifest
+
+
+if __name__ == "__main__":
+    main()

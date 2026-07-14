@@ -107,9 +107,7 @@ def analyze_laliga_arrow(path: Path) -> dict[str, Any]:
             "tracks": len(items),
             "pairs": sum(item["pairs"] for item in items),
             "mean_rmse": np.mean([item["rmse"] for item in items], axis=0).tolist(),
-            "median_absolute_error": np.median(
-                [item["median_absolute_error"] for item in items], axis=0
-            ).tolist(),
+            "median_absolute_error": np.median([item["median_absolute_error"] for item in items], axis=0).tolist(),
             "mean_correlation": np.nanmean(
                 [[np.nan if value is None else value for value in item["correlation"]] for item in items], axis=0
             ).tolist(),
@@ -206,8 +204,7 @@ def analyze_robocup_pair(left_path: Path, right_path: Path) -> dict[str, Any]:
         "finite": bool(np.isfinite(left).all() and np.isfinite(right).all()),
         "ball_blocks_equal": bool(np.array_equal(left[:, :4], right[:, :4])),
         "team_blocks_swap": bool(
-            np.array_equal(left[:, 4:48], right[:, 48:92])
-            and np.array_equal(left[:, 48:92], right[:, 4:48])
+            np.array_equal(left[:, 4:48], right[:, 48:92]) and np.array_equal(left[:, 48:92], right[:, 4:48])
         ),
         "exact_8000_values": int(np.count_nonzero(left[:, 4:] == 8000)),
         "interleaved_physical_fraction": float(interleaved_mask.mean()),
@@ -269,9 +266,7 @@ def analyze_stp_tracking_csv(path: Path, derived_left_path: Path | None = None) 
         obsolete_selection = np.asarray(
             [[float(row[column]) for column in obsolete_columns] for row in rows], dtype=np.float32
         )
-        nonphysical = [
-            column for column in obsolete_columns[4:] if column.rsplit("_", maxsplit=1)[-1] not in features
-        ]
+        nonphysical = [column for column in obsolete_columns[4:] if column.rsplit("_", maxsplit=1)[-1] not in features]
         result["derived_audit"] = {
             "path": str(derived_left_path),
             "matches_named_physical_state": bool(np.array_equal(derived, physical)),

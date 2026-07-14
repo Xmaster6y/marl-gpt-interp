@@ -168,7 +168,7 @@ The full-input baseline will probably classify environments well because GRF, SM
 Initial JZ run:
 
 ```bash
-uv run -m scripts.run_experiment env_mechanism_probes=2026-07-06-jz-small
+uv run -m scripts.env_mechanism_probes --config-name 2026-07-06-jz-small
 ```
 
 Cluster launch artifact:

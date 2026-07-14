@@ -43,6 +43,6 @@ export PATH="/usr/bin:/bin:${PATH}"
 
 echo "Using native prefix: $PREFIX"
 
-uv run --no-sync --python 3.12.11 --group grf -m scripts.run_experiment \
-    grf_rollout_stats=2026-06-30-v100-small \
+uv run --no-sync --python 3.12.11 --group grf -m scripts.grf_rollout_stats \
+    --config-name 2026-06-30-v100-small \
     hydra.run.dir="results/hydra/2026-06-30-grf-rollout-statistics/${SLURM_JOB_ID}"

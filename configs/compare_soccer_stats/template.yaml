@@ -16,3 +16,9 @@ tracking_paths:
 pitch_control:
   grid_x: 12
   grid_y: 8
+
+hydra:
+  run:
+    dir: results/hydra/compare_soccer_stats/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: results/hydra/compare_soccer_stats_sweep/${now:%Y-%m-%d_%H-%M-%S}

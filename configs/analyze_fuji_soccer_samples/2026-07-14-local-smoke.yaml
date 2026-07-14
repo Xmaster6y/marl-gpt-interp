@@ -13,3 +13,9 @@ stp_raw_tracking_path: results/raw/robocup2d/stp-raw-smoke/0802-2032-helios2024-
 stp_derived_left_path: results/raw/robocup2d/fuji-schema-smoke/0802-2032-helios2024-cyrus2024-0040-sim30.left.state.npy
 
 output_path: results/analysis/2026-07-14-fuji-soccer-schema-smoke/diagnostics.json
+
+hydra:
+  run:
+    dir: results/hydra/analyze_fuji_soccer_samples/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: results/hydra/analyze_fuji_soccer_samples_sweep/${now:%Y-%m-%d_%H-%M-%S}

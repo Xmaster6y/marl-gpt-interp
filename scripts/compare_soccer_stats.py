@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+import hydra
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 
@@ -33,8 +34,9 @@ def _json_default(value: Any) -> Any:
     return value if value is None or isinstance(value, (str, int, float, bool, list, dict)) else str(value)
 
 
+@hydra.main(config_path="../configs/compare_soccer_stats", version_base=None)
 def main(cfg: DictConfig) -> list[dict[str, Any]]:
-    script_cfg = cfg.compare_soccer_stats
+    script_cfg = cfg
     root = _repo_root()
     event_paths = list(OmegaConf.select(script_cfg, "event_paths", default=[]))
     tracking_paths = list(OmegaConf.select(script_cfg, "tracking_paths", default=[]))
@@ -53,3 +55,7 @@ def main(cfg: DictConfig) -> list[dict[str, Any]]:
     write_csv(output_dir / "comparison.csv", rows)
     logger.info(f"Wrote soccer statistics comparison for {len(rows)} datasets to {output_dir}")
     return rows
+
+
+if __name__ == "__main__":
+    main()

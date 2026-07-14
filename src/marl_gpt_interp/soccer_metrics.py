@@ -150,11 +150,7 @@ def compare_datasets(
     """Return one flat statistics row per dataset."""
 
     datasets = sorted(
-        {
-            str(row.get("dataset"))
-            for row in [*event_rows, *tracking_rows]
-            if row.get("dataset") not in (None, "")
-        }
+        {str(row.get("dataset")) for row in [*event_rows, *tracking_rows] if row.get("dataset") not in (None, "")}
     )
     comparison = []
     for dataset in datasets:

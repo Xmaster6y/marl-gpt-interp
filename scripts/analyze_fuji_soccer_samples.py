@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import hydra
 from loguru import logger
 from omegaconf import DictConfig
 
@@ -24,8 +25,9 @@ def _resolve(root: Path, path: str) -> Path:
     return candidate if candidate.is_absolute() else root / candidate
 
 
+@hydra.main(config_path="../configs/analyze_fuji_soccer_samples", version_base=None)
 def main(cfg: DictConfig) -> dict:
-    script_cfg = cfg.analyze_fuji_soccer_samples
+    script_cfg = cfg
     root = _repo_root()
     output_path = _resolve(root, str(script_cfg.output_path))
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -45,3 +47,7 @@ def main(cfg: DictConfig) -> dict:
         json.dump(result, handle, indent=2, sort_keys=True)
     logger.info(f"Wrote Fuji soccer sample diagnostics to {output_path}")
     return result
+
+
+if __name__ == "__main__":
+    main()

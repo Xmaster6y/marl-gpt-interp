@@ -7,11 +7,11 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+import hydra
 from loguru import logger
 from omegaconf import DictConfig, OmegaConf
 
 from marl_gpt_interp.marl_gpt_tools import (
-    ENV_TO_ID,
     activation_direction_rows,
     activation_hooks,
     as_path,
@@ -206,8 +206,9 @@ def run_probes(collected: dict[str, Any], cfg: DictConfig) -> list[dict[str, Any
     return rows
 
 
+@hydra.main(config_path="../configs/env_mechanism_probes", version_base=None)
 def main(cfg: DictConfig) -> dict[str, Any]:
-    script_cfg = cfg.env_mechanism_probes
+    script_cfg = cfg
     root = repo_root()
     output_dir = as_path(root, str(script_cfg.output_dir))
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -272,3 +273,7 @@ def main(cfg: DictConfig) -> dict[str, Any]:
         "parameter_rows": collected["parameter_rows"],
         "parameter_gradient_rows": parameter_gradient_rows,
     }
+
+
+if __name__ == "__main__":
+    main()

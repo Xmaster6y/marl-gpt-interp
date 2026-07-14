@@ -19,3 +19,9 @@ seeds:
   - 0
 episodes_per_seed: 1
 max_steps: 20
+
+hydra:
+  run:
+    dir: results/hydra/grf_rollout_stats/${now:%Y-%m-%d_%H-%M-%S}
+  sweep:
+    dir: results/hydra/grf_rollout_stats_sweep/${now:%Y-%m-%d_%H-%M-%S}

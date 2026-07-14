@@ -43,6 +43,6 @@ export PATH="/usr/bin:/bin:${PATH}"
 
 echo "Using native prefix: $PREFIX"
 
-uv run --no-sync --python 3.12.11 --group grf -m scripts.run_experiment \
-    cross_env_compute_sharing=2026-07-06-jz-small \
+uv run --no-sync --python 3.12.11 --group grf -m scripts.cross_env_compute_sharing \
+    --config-name 2026-07-06-jz-small \
     hydra.run.dir="results/hydra/2026-07-06-cross-env-compute-sharing/${SLURM_JOB_ID}"
