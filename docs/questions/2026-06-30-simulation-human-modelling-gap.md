@@ -40,3 +40,4 @@ If the largest gaps are visible at concept or representation level, the project 
 
 - [Adaptive Action Supervision](../literature/2026-06-30-adaptive-action-supervision.md)
 - [GRF-human gap analysis](../experiments/2026-06-30-grf-human-gap-analysis.md)
+- [Causal cross-football pressure transfer](../experiments/2026-07-15-causal-cross-football-pressure-transfer.md)

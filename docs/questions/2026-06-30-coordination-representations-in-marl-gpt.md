@@ -39,3 +39,4 @@ If football concepts are predictable and causally affect action selection, the p
 
 - [MARL-GPT](../literature/2026-06-30-marl-gpt.md)
 - [GRF representation probes](../experiments/2026-06-30-grf-representation-probes.md)
+- [Causal cross-football pressure transfer](../experiments/2026-07-15-causal-cross-football-pressure-transfer.md)

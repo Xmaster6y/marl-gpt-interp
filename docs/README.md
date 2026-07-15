@@ -3,8 +3,8 @@
 ## Snapshot
 
 - Project: `marl-gpt-interp`
-- Phase: cross-domain football encoding and representation controls
-- Status: random-frame controls invalidate the initial shared-geometry interpretation; raw cosine is anisotropy-dominated and CKA requires matched frames, so no cross-football transfer claim is currently supported
+- Phase: causal cross-football concept transfer
+- Status: the next claim-bearing track will test whether a GRF pressure readout transfers to La Liga and RoboCup and causally affects native-GRF behavior; no cross-football transfer claim is currently supported
 - Paper: [`../latex/`](../latex/)
 - Project brief: [`2026-06-30-project-brief.md`](2026-06-30-project-brief.md)
 - Setup notes: [`2026-07-02-grf-jz-setup.md`](2026-07-02-grf-jz-setup.md)
@@ -27,6 +27,7 @@
 
 ## Current Decisions
 
+- [Prioritize causal cross-football concept transfer](decisions/2026-07-15-prioritize-causal-cross-football-concept-transfer.md): use defender pressure as the primary concept and require held-out transfer plus native-GRF causal intervention before making a functional-representation claim.
 - [Start with GRF rollout statistics](decisions/2026-06-30-start-with-grf-rollout-statistics.md): use simple GRF statistics as the first reproducible gate before probes, steering, or flank-pass comparison.
 - [Stage work from GRF to human gap](decisions/2026-06-30-stage-work-from-grf-to-human-gap.md): run and instrument GRF before human-football modelling-gap claims.
 - Treat R2DRL as a later online-bridge candidate, not the first environment target.
@@ -58,6 +59,7 @@
 
 ## Planned Analyses
 
+- [Causal cross-football pressure transfer](experiments/2026-07-15-causal-cross-football-pressure-transfer.md)
 - [Environment mechanism probes](experiments/2026-07-06-environment-mechanism-probes.md)
 - [Cross-environment compute sharing](experiments/2026-07-06-cross-env-compute-sharing.md)
 - [GRF rollout statistics](experiments/2026-06-30-grf-rollout-statistics.md)

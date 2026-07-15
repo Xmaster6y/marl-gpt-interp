@@ -6,6 +6,7 @@
 
 ## Planned Analyses
 
+- [Causal cross-football pressure transfer](2026-07-15-causal-cross-football-pressure-transfer.md): Planned as the next claim-bearing track; test held-out GRF decoding, frozen readout transfer to La Liga and RoboCup, and native-GRF causal intervention without launching a run yet.
 - [Random frame sampling control](2026-07-15-random-frame-sampling-control.md): Completed; random spaced frames collapse the contiguous CKA result while raw cosine remains near one, identifying temporal ordering and anisotropy as separate confounds.
 - [Final-token-excluded pooling control](2026-07-15-final-token-excluded-pooling-control.md): Completed; removing the environment-token position from mean pooling barely changes football cosine and does not deconfound non-causal transformer states.
 - [Cross-football representation geometry](2026-07-15-cross-football-representation-geometry.md): Superseded; its high CKA depended on contiguous index ordering, while strong source separation remains.

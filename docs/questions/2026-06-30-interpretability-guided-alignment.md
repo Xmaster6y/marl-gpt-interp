@@ -40,3 +40,4 @@ If interventions predictably affect behavior and improve human-like metrics, int
 - [MARL-GPT](../literature/2026-06-30-marl-gpt.md)
 - [Adaptive Action Supervision](../literature/2026-06-30-adaptive-action-supervision.md)
 - [Simulation-human modelling gap](2026-06-30-simulation-human-modelling-gap.md)
+- [Causal cross-football pressure transfer](../experiments/2026-07-15-causal-cross-football-pressure-transfer.md)
