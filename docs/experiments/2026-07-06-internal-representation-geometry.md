@@ -192,6 +192,7 @@ stable enough to support later concept-transfer and intervention experiments.
 
 ## Links
 
+- [Final-token-excluded pooling control](2026-07-15-final-token-excluded-pooling-control.md)
 - [Cross-environment compute sharing](2026-07-06-cross-env-compute-sharing.md)
 - [Cross-environment compute sharing in MARL-GPT](../questions/2026-07-06-cross-env-compute-sharing.md)
 

@@ -7,7 +7,7 @@ import json
 import os
 import sys
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from contextlib import contextmanager
 from copy import deepcopy
 from dataclasses import dataclass
@@ -20,6 +20,17 @@ from omegaconf import DictConfig, OmegaConf
 
 ENV_TO_ID = {"smac": 1, "pogema": 2, "grf": 3}
 ID_TO_ENV = {value: key for key, value in ENV_TO_ID.items()}
+
+
+def label_name(label_id: int, label_names: Mapping[int, str] | None = None) -> str:
+    """Resolve a class id while preserving the historical environment names by default."""
+
+    names = ID_TO_ENV if label_names is None else label_names
+    return names.get(int(label_id), str(label_id))
+
+
+def label_pair(left_id: int, right_id: int, label_names: Mapping[int, str] | None = None) -> str:
+    return f"{label_name(left_id, label_names)}_vs_{label_name(right_id, label_names)}"
 
 
 @dataclass(frozen=True)
@@ -450,10 +461,25 @@ def activation_hooks(model: Any, captured: dict[str, Any]):
     return hooks
 
 
-def pooled_activations(captured: dict[str, Any]) -> dict[str, Any]:
+def pooled_activations(
+    captured: dict[str, Any],
+    *,
+    exclude_final_token_from_mean: bool = False,
+) -> dict[str, Any]:
+    """Pool captured token states, optionally excluding the final token from means.
+
+    MARL-GPT places the environment token at the final sequence position. Excluding
+    that position removes its direct contribution to the mean, but transformer
+    states can still contain environment-token information because attention is
+    non-causal.
+    """
+
     pooled = {}
     for name, tensor in captured.items():
-        pooled[f"{name}:mean"] = tensor.mean(dim=1)
+        mean_tokens = tensor[:, :-1, :] if exclude_final_token_from_mean else tensor
+        if int(mean_tokens.shape[1]) == 0:
+            raise ValueError("Cannot mean-pool after excluding the only token")
+        pooled[f"{name}:mean"] = mean_tokens.mean(dim=1)
         pooled[f"{name}:final"] = tensor[:, -1, :]
     return pooled
 
@@ -586,6 +612,7 @@ def activation_direction_rows(
     cfg: DictConfig,
     conditions: list[str] | None = None,
     requested_conditions: list[str] | None = None,
+    label_names: Mapping[int, str] | None = None,
 ) -> list[dict[str, Any]]:
     rows = []
     if labels is None:
@@ -614,7 +641,7 @@ def activation_direction_rows(
                     "feature": feature_name,
                     "condition": condition_label,
                     "direction_type": "class_mean",
-                    "env": ID_TO_ENV.get(env_id, str(env_id)),
+                    "env": label_name(env_id, label_names),
                     "env_id": env_id,
                     "n_examples": int(env_features.shape[0]),
                     "mean_l2": float(means[env_id].norm().item()),
@@ -635,7 +662,7 @@ def activation_direction_rows(
                         "feature": feature_name,
                         "condition": condition_label,
                         "direction_type": "mean_difference",
-                        "env_pair": f"{ID_TO_ENV.get(left_env, left_env)}_vs_{ID_TO_ENV.get(right_env, right_env)}",
+                        "env_pair": label_pair(left_env, right_env, label_names),
                         "left_env_id": left_env,
                         "right_env_id": right_env,
                         "cosine_between_means": cosine(means[left_env], means[right_env]),
@@ -791,6 +818,7 @@ def representation_proximity_rows(
     labels: Any,
     *,
     cfg: DictConfig,
+    label_names: Mapping[int, str] | None = None,
 ) -> list[dict[str, Any]]:
     """Summarize within-environment compactness for each activation feature."""
 
@@ -820,7 +848,7 @@ def representation_proximity_rows(
             )
             row = {
                 "feature": feature_name,
-                "env": ID_TO_ENV.get(env_id, str(env_id)),
+                "env": label_name(env_id, label_names),
                 "env_id": env_id,
                 "n_examples": n_examples,
                 "n_features": int(env_features.shape[1]),
@@ -846,6 +874,7 @@ def representation_separation_rows(
     labels: Any,
     *,
     cfg: DictConfig,
+    label_names: Mapping[int, str] | None = None,
 ) -> list[dict[str, Any]]:
     """Summarize between-environment separation normalized by within-env spread."""
 
@@ -902,7 +931,7 @@ def representation_separation_rows(
                 rows.append(
                     {
                         "feature": feature_name,
-                        "env_pair": f"{ID_TO_ENV.get(left_env, left_env)}_vs_{ID_TO_ENV.get(right_env, right_env)}",
+                        "env_pair": label_pair(left_env, right_env, label_names),
                         "left_env_id": left_env,
                         "right_env_id": right_env,
                         "n_left": int(left.shape[0]),
@@ -924,6 +953,7 @@ def activation_centroid_cosine_similarity_rows(
     labels: Any,
     *,
     cfg: DictConfig,
+    label_names: Mapping[int, str] | None = None,
 ) -> list[dict[str, Any]]:
     """Compare environment mean activation directions with cosine similarity."""
 
@@ -946,7 +976,7 @@ def activation_centroid_cosine_similarity_rows(
                 {
                     "feature": feature_name,
                     "comparison_type": "self",
-                    "env": ID_TO_ENV.get(env_id, str(env_id)),
+                    "env": label_name(env_id, label_names),
                     "env_id": env_id,
                     "n_examples": int(env_features[env_id].shape[0]),
                     "cosine_similarity": 1.0,
@@ -962,7 +992,7 @@ def activation_centroid_cosine_similarity_rows(
                     {
                         "feature": feature_name,
                         "comparison_type": "cross_env",
-                        "env_pair": f"{ID_TO_ENV.get(left_env, left_env)}_vs_{ID_TO_ENV.get(right_env, right_env)}",
+                        "env_pair": label_pair(left_env, right_env, label_names),
                         "left_env_id": left_env,
                         "right_env_id": right_env,
                         "n_left": int(env_features[left_env].shape[0]),
@@ -978,6 +1008,7 @@ def activation_pairwise_cosine_similarity_rows(
     labels: Any,
     *,
     cfg: DictConfig,
+    label_names: Mapping[int, str] | None = None,
 ) -> list[dict[str, Any]]:
     """Compare within- and cross-environment activation cosine similarities."""
 
@@ -1008,7 +1039,7 @@ def activation_pairwise_cosine_similarity_rows(
                 {
                     "feature": feature_name,
                     "comparison_type": "within_env",
-                    "env": ID_TO_ENV.get(env_id, str(env_id)),
+                    "env": label_name(env_id, label_names),
                     "env_id": env_id,
                     "n_examples": int(values.shape[0]),
                     "n_pairs": int(similarities.numel()),
@@ -1030,7 +1061,7 @@ def activation_pairwise_cosine_similarity_rows(
                     {
                         "feature": feature_name,
                         "comparison_type": "cross_env",
-                        "env_pair": f"{ID_TO_ENV.get(left_env, left_env)}_vs_{ID_TO_ENV.get(right_env, right_env)}",
+                        "env_pair": label_pair(left_env, right_env, label_names),
                         "left_env_id": left_env,
                         "right_env_id": right_env,
                         "n_left": int(left.shape[0]),
@@ -1049,6 +1080,7 @@ def asymmetric_subspace_rows(
     labels: Any,
     *,
     cfg: DictConfig,
+    label_names: Mapping[int, str] | None = None,
 ) -> list[dict[str, Any]]:
     """Measure directed PCA subspace containment between environment activations."""
 
@@ -1098,13 +1130,11 @@ def asymmetric_subspace_rows(
                     rows.append(
                         {
                             "feature": feature_name,
-                            "source_env": ID_TO_ENV.get(source_env, str(source_env)),
-                            "target_env": ID_TO_ENV.get(target_env, str(target_env)),
+                            "source_env": label_name(source_env, label_names),
+                            "target_env": label_name(target_env, label_names),
                             "source_env_id": source_env,
                             "target_env_id": target_env,
-                            "direction": (
-                                f"{ID_TO_ENV.get(source_env, source_env)}_to_{ID_TO_ENV.get(target_env, target_env)}"
-                            ),
+                            "direction": f"{label_name(source_env, label_names)}_to_{label_name(target_env, label_names)}",
                             "method": "pca_subspace_containment",
                             "requested_rank": requested_k,
                             "rank": k,
@@ -1116,7 +1146,12 @@ def asymmetric_subspace_rows(
     return rows
 
 
-def self_subspace_similarity_rows(activation_features: dict[str, Any], labels: Any) -> list[dict[str, Any]]:
+def self_subspace_similarity_rows(
+    activation_features: dict[str, Any],
+    labels: Any,
+    *,
+    label_names: Mapping[int, str] | None = None,
+) -> list[dict[str, Any]]:
     """Estimate within-environment CKA by interleaved split-half activation similarity."""
 
     if labels is None:
@@ -1135,7 +1170,7 @@ def self_subspace_similarity_rows(activation_features: dict[str, Any], labels: A
             rows.append(
                 {
                     "feature": feature_name,
-                    "env": ID_TO_ENV.get(env_id, str(env_id)),
+                    "env": label_name(env_id, label_names),
                     "env_id": env_id,
                     "n_examples_per_split": half,
                     "split_method": "even_vs_odd",
@@ -1145,7 +1180,12 @@ def self_subspace_similarity_rows(activation_features: dict[str, Any], labels: A
     return rows
 
 
-def activation_subspace_similarity_rows(activation_features: dict[str, Any], labels: Any) -> list[dict[str, Any]]:
+def activation_subspace_similarity_rows(
+    activation_features: dict[str, Any],
+    labels: Any,
+    *,
+    label_names: Mapping[int, str] | None = None,
+) -> list[dict[str, Any]]:
     rows = []
     if labels is None:
         return rows
@@ -1161,7 +1201,7 @@ def activation_subspace_similarity_rows(activation_features: dict[str, Any], lab
                 rows.append(
                     {
                         "feature": feature_name,
-                        "env_pair": f"{ID_TO_ENV.get(left_env, left_env)}_vs_{ID_TO_ENV.get(right_env, right_env)}",
+                        "env_pair": label_pair(left_env, right_env, label_names),
                         "left_env_id": left_env,
                         "right_env_id": right_env,
                         "n_examples_per_env": n,

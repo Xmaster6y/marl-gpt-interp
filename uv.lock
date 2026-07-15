@@ -883,6 +883,8 @@ dependencies = [
     { name = "ipykernel" },
     { name = "loguru" },
     { name = "matplotlib" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "numpy", version = "2.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "wandb" },
 ]
 
@@ -896,8 +898,6 @@ dev = [
 grf = [
     { name = "gfootball" },
     { name = "gymnasium" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pyarrow" },
     { name = "pydantic" },
     { name = "tdhook" },
@@ -910,6 +910,7 @@ requires-dist = [
     { name = "ipykernel" },
     { name = "loguru" },
     { name = "matplotlib", specifier = ">=3.11.0" },
+    { name = "numpy", specifier = ">=2.2.6" },
     { name = "wandb" },
 ]
 
@@ -923,7 +924,6 @@ dev = [
 grf = [
     { name = "gfootball", git = "https://github.com/Xmaster6y/football.git?rev=55b84ba" },
     { name = "gymnasium", specifier = ">=1.2.0" },
-    { name = "numpy", specifier = ">=2.2.6" },
     { name = "pyarrow", specifier = ">=20.0.0" },
     { name = "pydantic", specifier = ">=2.10" },
     { name = "tdhook", specifier = ">=0.1.3" },

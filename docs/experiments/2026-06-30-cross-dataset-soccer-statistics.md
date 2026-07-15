@@ -2,7 +2,8 @@
 
 ## Status
 
-Scaffolded. Ready for small local normalization and analysis runs once provider exports are placed under `results/raw/`.
+Provider-neutral statistics remain scaffolded. The external-to-GRF encoding gate completed on 2026-07-15 using bounded
+La Liga, raw STP, and native GRF samples.
 
 ## Question
 
@@ -59,5 +60,6 @@ If the same schema supports at least one small sample from each source, extend t
 
 ## Links
 
+- [External soccer GRF encoding](2026-07-15-external-soccer-grf-encoding.md)
 - [GRF-human gap analysis](2026-06-30-grf-human-gap-analysis.md)
 - [Soccer analytics statistics](2026-06-30-soccer-analytics-statistics.md)

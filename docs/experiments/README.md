@@ -6,6 +6,10 @@
 
 ## Planned Analyses
 
+- [Random frame sampling control](2026-07-15-random-frame-sampling-control.md): Completed; random spaced frames collapse the contiguous CKA result while raw cosine remains near one, identifying temporal ordering and anisotropy as separate confounds.
+- [Final-token-excluded pooling control](2026-07-15-final-token-excluded-pooling-control.md): Completed; removing the environment-token position from mean pooling barely changes football cosine and does not deconfound non-causal transformer states.
+- [Cross-football representation geometry](2026-07-15-cross-football-representation-geometry.md): Superseded; its high CKA depended on contiguous index ordering, while strong source separation remains.
+- [External soccer GRF encoding](2026-07-15-external-soccer-grf-encoding.md): Completed; La Liga and raw STP states encode into exact GRF `simple115v2` histories and run through MARL-GPT, but the bounded result is an infrastructure gate rather than transfer evidence.
 - [Fuji soccer data schema inspection and tiny sample](2026-07-14-fuji-soccer-data-schema-and-sample.md): Completed; La Liga and raw STP samples are valid for adapter work, while the Fuji RoboCup arrays exactly reproduce an obsolete eight-field positional stride and must be regenerated from named columns.
 - [Environment mechanism probes](2026-07-06-environment-mechanism-probes.md): JZ subset runs completed; wrong-token activations decode true environment after the first transformer block, and parameter gradients separate SMAC from the more aligned POGEMA/GRF pair.
 - [Cross-environment compute sharing](2026-07-06-cross-env-compute-sharing.md): JZ small run completed; POGEMA-GRF gradients align strongly, while SMAC is near orthogonal to both and activation CKA is low across all pairs.

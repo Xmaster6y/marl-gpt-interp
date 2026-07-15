@@ -69,7 +69,12 @@ def collect_natural_activations(root: Path, dataset_config: dict[str, Any], cfg:
                 active_hook.remove()
             hooks = []
 
-            for name, features in pooled_activations(captured).items():
+            for name, features in pooled_activations(
+                captured,
+                exclude_final_token_from_mean=bool(
+                    OmegaConf.select(cfg, "exclude_final_token_from_mean", default=False)
+                ),
+            ).items():
                 activation_tables[name].append(features.detach().cpu())
             activation_labels.append(env_labels.detach().cpu())
             behavior_rows.append(
@@ -182,6 +187,13 @@ def main(cfg: DictConfig) -> dict[str, Any]:
             "cka_rows": len(cka_rows),
             "self_cka_rows": len(self_cka_rows),
             "behavior_rows": len(collected["behavior_rows"]),
+            "pooling": {
+                "mean_excludes_final_token": bool(
+                    OmegaConf.select(cfg, "exclude_final_token_from_mean", default=False)
+                ),
+                "final_token_retained_as_separate_feature": True,
+                "attention_is_causal": False,
+            },
             "tdhook": status,
             "config": to_plain_config(cfg),
         },

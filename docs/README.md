@@ -3,8 +3,8 @@
 ## Snapshot
 
 - Project: `marl-gpt-interp`
-- Phase: fresh-environment readiness and first GRF statistics analysis
-- Status: MARL-GPT GRF smoke path exists locally; next gate is a self-contained config-driven statistics run before probing or steering
+- Phase: cross-domain football encoding and representation controls
+- Status: random-frame controls invalidate the initial shared-geometry interpretation; raw cosine is anisotropy-dominated and CKA requires matched frames, so no cross-football transfer claim is currently supported
 - Paper: [`../latex/`](../latex/)
 - Project brief: [`2026-06-30-project-brief.md`](2026-06-30-project-brief.md)
 - Setup notes: [`2026-07-02-grf-jz-setup.md`](2026-07-02-grf-jz-setup.md)
@@ -36,6 +36,7 @@
 ## Current Infrastructure
 
 - [GRF on JZ setup](2026-07-02-grf-jz-setup.md): login-node preparation path is ready; JZ rollout statistics run now completes.
+- [External soccer GRF encoding](experiments/2026-07-15-external-soccer-grf-encoding.md): reusable La Liga and raw STP adapters produce audited GRF `simple115v2` histories and finite MARL-GPT outputs.
 
 ## Active Questions
 
@@ -48,6 +49,10 @@
 
 ## Recent Experiments
 
+- [Random frame sampling control](experiments/2026-07-15-random-frame-sampling-control.md): random spaced frames reduce cross-football CKA sharply, while cosine remains near one and is not usable as alignment evidence.
+- [Final-token-excluded pooling control](experiments/2026-07-15-final-token-excluded-pooling-control.md): removing the last token directly from mean pooling changes cross-football cosine by less than `0.00006`; non-causal attention means this is not an environment-token ablation.
+- [Cross-football representation geometry](experiments/2026-07-15-cross-football-representation-geometry.md): superseded by the random-frame control; its contiguous CKA result was an ordering artifact.
+- [External soccer GRF encoding](experiments/2026-07-15-external-soccer-grf-encoding.md): 44 examples per source passed the input and checkpoint smoke; the result is infrastructure evidence only.
 - [Fuji soccer data schema inspection and tiny sample](experiments/2026-07-14-fuji-soccer-data-schema-and-sample.md): La Liga and raw STP samples are ready for adapter development; the Fuji RoboCup extractor bug is identified exactly.
 - [Pretrained weights smoke test](experiments/2026-06-30-pretrained-weights-smoke-test.md): checkpoint loads and runs a short GRF rollout locally; activation capture pending.
 
