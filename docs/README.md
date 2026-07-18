@@ -27,6 +27,7 @@
 
 ## Current Decisions
 
+- [Target the TacSIm benchmark](decisions/2026-07-18-target-tacsim-benchmark.md): the immediate football objective is to beat all reported TacSIm methods on the official benchmark.
 - [Prioritize functional feature accounting](decisions/2026-07-18-prioritize-functional-feature-accounting.md): keep MARL-GPT fixed and compare a universal/pairwise/private domain-lattice SAE against one balanced mixture SAE and three independent domain SAEs.
 - [Causal cross-football concept transfer](decisions/2026-07-15-prioritize-causal-cross-football-concept-transfer.md) is superseded as the primary direction and retained as possible later feature interpretation.
 - [Start with GRF rollout statistics](decisions/2026-06-30-start-with-grf-rollout-statistics.md): use simple GRF statistics as the first reproducible gate before probes, steering, or flank-pass comparison.
@@ -42,6 +43,7 @@
 
 ## Active Questions
 
+- [Beat the TacSIm benchmark](questions/2026-07-18-beat-tacsim-benchmark.md)
 - [Functional feature accounting in MARL-GPT](questions/2026-07-18-functional-feature-accounting.md)
 - [Environment representations in MARL-GPT](questions/2026-07-06-environment-representations-in-marl-gpt.md)
 - [Cross-environment compute sharing in MARL-GPT](questions/2026-07-06-cross-env-compute-sharing.md)
@@ -61,6 +63,7 @@
 
 ## Planned Analyses
 
+- [TacSIm benchmark](experiments/2026-07-18-tacsim-benchmark.md)
 - [Domain-lattice SAE method validation](experiments/2026-07-18-domain-lattice-sae-method-validation.md)
 - [Causal cross-football pressure transfer](experiments/2026-07-15-causal-cross-football-pressure-transfer.md) is superseded as the primary track.
 - [Environment mechanism probes](experiments/2026-07-06-environment-mechanism-probes.md)

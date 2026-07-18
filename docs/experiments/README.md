@@ -6,6 +6,7 @@
 
 ## Planned Analyses
 
+- [TacSIm benchmark](2026-07-18-tacsim-benchmark.md): Primary planned football benchmark; reproduce the official evaluator and strongest baseline, then test matched random and MARL-GPT-initialized models.
 - [Domain-lattice SAE method validation](2026-07-18-domain-lattice-sae-method-validation.md): Primary planned track; validate support recovery synthetically, then compare a universal/pairwise/private dictionary against one balanced mixture SAE and three independent domain SAEs on fixed MARL-GPT activations.
 - [Causal cross-football pressure transfer](2026-07-15-causal-cross-football-pressure-transfer.md): Superseded as the primary planned track; retained as historical context and possible later feature interpretation.
 - [Random frame sampling control](2026-07-15-random-frame-sampling-control.md): Completed; random spaced frames collapse the contiguous CKA result while raw cosine remains near one, identifying temporal ordering and anisotropy as separate confounds.
