@@ -3,8 +3,8 @@
 ## Snapshot
 
 - Project: `marl-gpt-interp`
-- Phase: causal cross-football concept transfer
-- Status: the next claim-bearing track will test whether a GRF pressure readout transfers to La Liga and RoboCup and causally affects native-GRF behavior; no cross-football transfer claim is currently supported
+- Phase: functional sparse-feature accounting
+- Status: the primary planned track will test whether fixed MARL-GPT activations decompose into universal, pairwise, and environment-private functional features; no sparse feature-sharing claim is currently supported
 - Paper: [`../latex/`](../latex/)
 - Project brief: [`2026-06-30-project-brief.md`](2026-06-30-project-brief.md)
 - Setup notes: [`2026-07-02-grf-jz-setup.md`](2026-07-02-grf-jz-setup.md)
@@ -23,11 +23,12 @@
 
 ## Current Claims
 
-- Planned claim, not yet evidenced: MARL-GPT may contain interpretable coordination representations that can diagnose the gap between GRF simulator behavior and human football trajectories.
+- No feature-sharing claim is currently evidenced. The planned study will distinguish a compact functionally shared core, pairwise sharing, a union of environment-private features, and superficial activation overlap.
 
 ## Current Decisions
 
-- [Prioritize causal cross-football concept transfer](decisions/2026-07-15-prioritize-causal-cross-football-concept-transfer.md): use defender pressure as the primary concept and require held-out transfer plus native-GRF causal intervention before making a functional-representation claim.
+- [Prioritize functional feature accounting](decisions/2026-07-18-prioritize-functional-feature-accounting.md): keep MARL-GPT fixed and compare a universal/pairwise/private domain-lattice SAE against one balanced mixture SAE and three independent domain SAEs.
+- [Causal cross-football concept transfer](decisions/2026-07-15-prioritize-causal-cross-football-concept-transfer.md) is superseded as the primary direction and retained as possible later feature interpretation.
 - [Start with GRF rollout statistics](decisions/2026-06-30-start-with-grf-rollout-statistics.md): use simple GRF statistics as the first reproducible gate before probes, steering, or flank-pass comparison.
 - [Stage work from GRF to human gap](decisions/2026-06-30-stage-work-from-grf-to-human-gap.md): run and instrument GRF before human-football modelling-gap claims.
 - Treat R2DRL as a later online-bridge candidate, not the first environment target.
@@ -41,6 +42,7 @@
 
 ## Active Questions
 
+- [Functional feature accounting in MARL-GPT](questions/2026-07-18-functional-feature-accounting.md)
 - [Environment representations in MARL-GPT](questions/2026-07-06-environment-representations-in-marl-gpt.md)
 - [Cross-environment compute sharing in MARL-GPT](questions/2026-07-06-cross-env-compute-sharing.md)
 - [Coordination representations in MARL-GPT](questions/2026-06-30-coordination-representations-in-marl-gpt.md)
@@ -59,7 +61,8 @@
 
 ## Planned Analyses
 
-- [Causal cross-football pressure transfer](experiments/2026-07-15-causal-cross-football-pressure-transfer.md)
+- [Domain-lattice SAE method validation](experiments/2026-07-18-domain-lattice-sae-method-validation.md)
+- [Causal cross-football pressure transfer](experiments/2026-07-15-causal-cross-football-pressure-transfer.md) is superseded as the primary track.
 - [Environment mechanism probes](experiments/2026-07-06-environment-mechanism-probes.md)
 - [Cross-environment compute sharing](experiments/2026-07-06-cross-env-compute-sharing.md)
 - [GRF rollout statistics](experiments/2026-06-30-grf-rollout-statistics.md)

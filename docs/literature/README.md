@@ -1,5 +1,6 @@
 # Literature
 
+- [Sparse Feature Accounting Across Data Domains](2026-07-18-sparse-feature-accounting.md): Synthesis of flat, hierarchical, universal, multilingual, and reliability-focused SAE work motivating a functionally evaluated domain-lattice dictionary.
 - [MARL-GPT](2026-06-30-marl-gpt.md): Main model substrate; structured transformer MARL trained on SMACv2, GRF, and POGEMA.
 - [Adaptive Action Supervision](2026-06-30-adaptive-action-supervision.md): Human real-to-sim alignment framing using DTW-based action supervision.
 - [R2DRL](2026-06-30-r2drl.md): Possible future RoboCup 2D online bridge, gated by integration risk.

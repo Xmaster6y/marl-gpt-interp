@@ -2,7 +2,9 @@
 
 ## Status
 
-Planned. This is the next claim-bearing track; no experiment has been launched.
+Superseded as the primary track on 2026-07-18 by
+[domain-lattice SAE method validation](2026-07-18-domain-lattice-sae-method-validation.md). No experiment was launched;
+the note is retained as historical context and possible later feature interpretation.
 
 ## Question
 

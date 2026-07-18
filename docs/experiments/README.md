@@ -6,7 +6,8 @@
 
 ## Planned Analyses
 
-- [Causal cross-football pressure transfer](2026-07-15-causal-cross-football-pressure-transfer.md): Planned as the next claim-bearing track; test held-out GRF decoding, frozen readout transfer to La Liga and RoboCup, and native-GRF causal intervention without launching a run yet.
+- [Domain-lattice SAE method validation](2026-07-18-domain-lattice-sae-method-validation.md): Primary planned track; validate support recovery synthetically, then compare a universal/pairwise/private dictionary against one balanced mixture SAE and three independent domain SAEs on fixed MARL-GPT activations.
+- [Causal cross-football pressure transfer](2026-07-15-causal-cross-football-pressure-transfer.md): Superseded as the primary planned track; retained as historical context and possible later feature interpretation.
 - [Random frame sampling control](2026-07-15-random-frame-sampling-control.md): Completed; random spaced frames collapse the contiguous CKA result while raw cosine remains near one, identifying temporal ordering and anisotropy as separate confounds.
 - [Final-token-excluded pooling control](2026-07-15-final-token-excluded-pooling-control.md): Completed; removing the environment-token position from mean pooling barely changes football cosine and does not deconfound non-causal transformer states.
 - [Cross-football representation geometry](2026-07-15-cross-football-representation-geometry.md): Superseded; its high CKA depended on contiguous index ordering, while strong source separation remains.

@@ -2,11 +2,12 @@
 
 ## Status
 
-Accepted.
+Superseded on 2026-07-18 by [functional feature accounting](2026-07-18-prioritize-functional-feature-accounting.md).
 
 ## Choice
 
-Make causal cross-football concept transfer the next claim-bearing research track. The primary concept is defender
+At the time of this decision, causal cross-football concept transfer was selected as the next claim-bearing research
+track. The primary concept was defender
 pressure on the ball carrier, with support availability or passing-lane openness retained as secondary concepts after
 the primary workflow is validated.
 
