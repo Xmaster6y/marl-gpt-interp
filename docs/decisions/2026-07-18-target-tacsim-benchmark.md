@@ -2,12 +2,14 @@
 
 ## Status
 
-Accepted as the football objective.
+Superseded in timing by the expanded [functional feature accounting decision](2026-07-18-prioritize-functional-feature-accounting.md);
+retained as the eventual external football endpoint.
 
 ## Choice
 
-Treat TacSIm as the benchmark, not as a competing model. The immediate objective is to train a method using the official
-TacSIm protocol and beat all reported baselines on its primary tactical-style imitation score.
+Treat TacSIm as the benchmark, not as a competing model. After readiness gates and artifact reproduction, train a method
+using the official protocol and compare against reported baselines on its tactical-style imitation score. TacSIm is not
+a trajectory-failure diagnosis task.
 
 ## Rationale
 
@@ -23,6 +25,8 @@ representation or pretraining improves tactical imitation against BC, CMIL, IRL,
 - Compare MARL-GPT initialization with the same model trained from scratch.
 - Do not launch a full run until the exact artifact, metric implementation, compute budget, and reproduction command are
   recorded.
+- Treat sparse graph verification or candidate reranking only as later method hypotheses, after fixed-layer and proxy
+  validation.
 
 ## Revisit Condition
 
@@ -33,3 +37,4 @@ Revisit the decision if the benchmark cannot be reproduced from the released art
 - [Benchmark question](../questions/2026-07-18-beat-tacsim-benchmark.md)
 - [TacSIm literature note](../literature/2026-07-18-tacsim-benchmark.md)
 - [Benchmark experiment](../experiments/2026-07-18-tacsim-benchmark.md)
+- [Current sparse-feature decision](2026-07-18-prioritize-functional-feature-accounting.md)

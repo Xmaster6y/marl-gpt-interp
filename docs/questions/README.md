@@ -1,7 +1,7 @@
 # Research Questions
 
-- [Beat the TacSIm benchmark](2026-07-18-beat-tacsim-benchmark.md): Primary football application question; beat BC, CMIL, IRL, CoDAIL, and DRAIL on the locked official benchmark.
-- [Functional feature accounting in MARL-GPT](2026-07-18-functional-feature-accounting.md): Primary active question; test universal, pairwise, and private sparse functional capacity against one mixture SAE and three domain SAEs.
+- [Beat the TacSIm benchmark](2026-07-18-beat-tacsim-benchmark.md): Deferred endpoint; conditional tactical-style imitation, gated on official artifacts and baseline reproduction.
+- [Functional feature accounting in MARL-GPT](2026-07-18-functional-feature-accounting.md): Primary active question; test functional domain-support rate–distortion after synthetic recovery.
 - [Environment representations in MARL-GPT](2026-07-06-environment-representations-in-marl-gpt.md): Active.
 - [Cross-environment compute sharing in MARL-GPT](2026-07-06-cross-env-compute-sharing.md): Active.
 - [Coordination representations in MARL-GPT](2026-06-30-coordination-representations-in-marl-gpt.md): Active.

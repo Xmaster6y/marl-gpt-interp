@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted.
+Accepted and expanded on July 19. This supersedes only the timing in the TacSIm decision that called that benchmark the
+immediate objective; TacSIm remains the external endpoint.
 
 ## Choice
 
@@ -55,6 +56,23 @@ fail causal tests. Each outcome directly constrains what can be inferred from a 
 - Treat domain-general causal use as weaker than shared semantics unless a separate semantic test justifies the latter.
 - Do not launch cluster work until a local synthetic and activation-schema smoke validates the objective and metrics.
 
+## Gated Sequence
+
+1. Synthetic support recovery gates all real interpretation.
+2. Fixed-layer SMAC–GRF–POGEMA validation begins at `layer_03:final`; `layer_06:final` remains a schema check until the
+   first location is stable.
+3. After the synthetic gate, a separate GRF–La Liga–RoboCup robustness branch may proceed alongside the internal study,
+   without tactical-transfer claims.
+4. Per-layer MLP transcoders and bounded attribution graphs follow fixed-layer fidelity and stability. Cross-layer
+   transcoders require a separate faithfulness and cost comparison.
+5. A 3/5/10-second TacSIm-shaped continuation proxy follows trustworthy football robustness.
+6. Official TacSIm work begins only after artifact auditing and reproduction of one published baseline.
+
+Local smoke runs may debug schemas, losses, hooks, and metrics. Claim-bearing evidence requires frozen manifests, all
+declared controls, five seeds where prescribed, paired intervals, and complete per-domain reporting. Failed gates are
+diagnosed or simplified rather than weakened after inspection. No five-domain lattice, continuous trajectory head,
+cross-layer transcoder, or cluster launch belongs to the first milestone.
+
 ## Revisit Condition
 
 Revisit the method if synthetic experiments show that the lattice cannot recover known domain support, if functional
@@ -67,3 +85,5 @@ rather than preserving unnecessary method complexity.
 - [Functional feature accounting question](../questions/2026-07-18-functional-feature-accounting.md)
 - [Sparse feature accounting literature](../literature/2026-07-18-sparse-feature-accounting.md)
 - [Domain-lattice method validation experiment](../experiments/2026-07-18-domain-lattice-sae-method-validation.md)
+- [Cross-football robustness](../experiments/2026-07-19-cross-football-sparse-feature-robustness.md)
+- [TacSIm endpoint](2026-07-18-target-tacsim-benchmark.md)

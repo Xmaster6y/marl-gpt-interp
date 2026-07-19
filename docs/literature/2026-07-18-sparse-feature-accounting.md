@@ -4,8 +4,8 @@
 
 This note maps the work most relevant to decomposing a fixed MARL-GPT activation space into universal, pairwise-shared,
 and environment-private sparse features. The intended contribution is not a generic application of SAEs to MARL. It is
-a domain-structured and functionally evaluated accounting method for one generalist policy operating on heterogeneous
-data sources.
+a domain-structured and functionally evaluated rate–distortion analysis for one generalist policy operating on
+heterogeneous data sources. The architectural lattice alone has weak novelty.
 
 ## Sparse Autoencoder Foundations
 
@@ -24,10 +24,20 @@ data sources.
 - Source: [BatchTopK Sparse Autoencoders](https://openreview.net/pdf?id=d4dpOCqybL)
 - Contribution: applies the sparsity budget across a batch rather than forcing every example to activate exactly the same
   number of latents.
-- Project relevance: a sensible initial SAE backbone because SMACv2, GRF, and POGEMA activations may have different local
-  reconstruction complexity.
+- Project relevance: a sensitivity condition because SMACv2, GRF, and POGEMA activations may have different local
+  reconstruction complexity. Per-example TopK is primary.
 - Risk: mixed-domain batches could allocate disproportionate feature activity to high-norm or high-complexity domains;
-  training must use balanced batches and per-domain diagnostics.
+  any use must stratify the BatchTopK budget by domain and report per-domain diagnostics.
+
+### Routing And Multi-Layer Alternatives
+
+- [RouteSAE](https://aclanthology.org/2025.emnlp-main.346/) is a flexible learned-routing alternative to hard support
+  masks and becomes important if fixed lattice eligibility loses to routing.
+- [Cross-layer transcoders and attribution graphs](https://transformer-circuits.pub/2025/attribution-graphs/methods.html)
+  provide a more direct computational-graph substrate but compound approximation error and cost across layers. They are
+  reserved until fixed-layer reconstruction and native-output substitution are reliable.
+- [Concept Relevance Vectors](https://arxiv.org/abs/2510.09312) reinforce evaluating concepts by downstream relevance,
+  not merely decoder geometry or top activations.
 
 ### Matryoshka Sparse Autoencoders
 
@@ -119,13 +129,27 @@ The project-specific gap is therefore:
 
 > How can universal, partially shared, and private features be identified inside one multi-environment policy without
 > confusing data-distribution cues, arbitrary dictionary correspondence, or reconstructive overlap with functional
-> reuse?
+> reuse, and what activation code length and dictionary capacity buy a fixed level of native-policy fidelity?
+
+## Adversarial Novelty Verdict
+
+The lattice architecture alone has weak novelty. Dedicated Feature Crosscoders already encode shared and exclusive
+partitions, Universal SAEs span heterogeneous sources, Matryoshka SAEs impose nested structure, and RouteSAE supplies a
+learned-routing alternative. The defensible contribution is the empirical object: functional domain-support
+rate–distortion in one frozen generalist policy, validated through known-support recovery, native-output interventions,
+cue controls, and random baselines.
+
+The principal reviewer objections are that the mask imposes the answer, reconstruction is mistaken for function,
+domain blocks capture source cues, decoder matches are seed artifacts, and football source sharing is overinterpreted as
+tactical sharing. The required answers are flat, independent, simpler-hierarchy, routing, and constrained-random
+controls; masked actor and critic replacement; explicit token/padding/length/norm/action-mask probes; five-seed
+functional substitution; and a strict no-tactical-transfer claim boundary.
 
 ## Proposed Contribution Relative To Prior Work
 
-1. A domain-lattice SAE with universal, pairwise, and private blocks.
-2. Hierarchical residual losses that make the compact common core and domain residuals explicit.
-3. Behavior-preserving capacity curves using native actor and critic outputs.
+1. Functional domain-support rate–distortion curves using native actor and critic outputs.
+2. A domain-lattice SAE as one tested allocation mechanism, not the novelty claim by itself.
+3. Explicit separation of distributional, reconstructive, and functional support.
 4. Functional support sets based on per-domain ablation effects.
 5. Cross-seed correspondence verified through ablation fingerprints and feature substitution.
 6. Synthetic support recovery plus constrained-random baselines before MARL-GPT claims.

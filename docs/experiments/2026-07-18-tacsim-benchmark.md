@@ -2,7 +2,8 @@
 
 ## Status
 
-Planned. Artifact audit and baseline reproduction are required before method training. No run has been launched.
+Deferred endpoint. Readiness stages, official artifact audit, and baseline reproduction are required before method
+training. No run has been launched.
 
 ## Question
 
@@ -28,6 +29,10 @@ exactly, even if additional all-player metrics are reported separately.
 
 ## Stages
 
+This benchmark evaluates conditional tactical-style trajectory imitation, not trajectory-failure diagnosis. A
+TacSIm-shaped local proxy may be built only after cross-football sparse-feature robustness passes; proxy results are not
+TacSIm transfer evidence.
+
 ### 0. Artifact audit
 
 Record the official dataset URL, license, code revision, environment, preprocessing command, split files, metric code,
@@ -51,6 +56,9 @@ Train and evaluate:
 Match the proposed variants in data, input history, output target, parameter budget, optimizer search budget, and number
 of seeds wherever possible.
 
+Sparse attribution-graph verification or candidate reranking may be added only if fixed-layer decomposition, per-layer
+transcoders, and graph faithfulness have already passed their own gates.
+
 ## Primary Metric
 
 The primary metric is the official combined TacSIm score aggregated exactly as implemented by the benchmark. Report the
@@ -72,3 +80,4 @@ expected score, runtime, and resource estimate. Minimal evaluator and batch-shap
 - [Benchmark question](../questions/2026-07-18-beat-tacsim-benchmark.md)
 - [Benchmark decision](../decisions/2026-07-18-target-tacsim-benchmark.md)
 - [TacSIm literature note](../literature/2026-07-18-tacsim-benchmark.md)
+- [Staged direction decision](../decisions/2026-07-18-prioritize-functional-feature-accounting.md)

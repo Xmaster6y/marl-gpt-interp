@@ -2,12 +2,15 @@
 
 ## Status
 
-Primary active football application question.
+Deferred endpoint question, blocked on readiness gates, official artifacts, and baseline reproduction.
 
 ## Question
 
 Can a MARL-GPT-derived multi-agent imitation model outperform every reported method on the official TacSIm football
 tactical-style imitation benchmark?
+
+This asks about conditional continuation quality, not trajectory-failure diagnosis. Sparse graph verification or
+candidate reranking is only a possible later method, not the current hypothesis.
 
 ## Target
 
@@ -44,3 +47,4 @@ The target is a new best benchmark score.
 - [TacSIm literature note](../literature/2026-07-18-tacsim-benchmark.md)
 - [Benchmark decision](../decisions/2026-07-18-target-tacsim-benchmark.md)
 - [Benchmark experiment](../experiments/2026-07-18-tacsim-benchmark.md)
+- [Staged direction decision](../decisions/2026-07-18-prioritize-functional-feature-accounting.md)

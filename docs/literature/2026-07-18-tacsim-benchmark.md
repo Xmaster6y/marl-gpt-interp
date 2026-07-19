@@ -12,6 +12,9 @@ TacSIm reconstructs player and ball trajectories from 2024--2025 Premier League 
 standard pitch coordinate system compatible with a virtual football environment, and asks models to continue tactical
 behavior from observed context.
 
+This is conditional tactical-style imitation. It is not trajectory-failure detection, failure attribution, or a test of
+whether a model can identify why a rollout failed.
+
 At test time the paper supplies the first-frame player and ball state and evaluates generated continuations at multiple
 spatial resolutions and 3-, 5-, and 10-second horizons. The official benchmark text states that scoring is performed on
 the ball trajectory.
@@ -48,8 +51,9 @@ released evaluator must determine the claim-bearing definition.
 
 ## Project Use
 
-TacSIm is the task and benchmark for the football track. The research goal is a new benchmark state of the art.
-MARL-GPT is a candidate method or initialization.
+TacSIm is the eventual external task and benchmark for the football track. MARL-GPT or sparse decomposition may later
+support initialization, graph-based verification, or candidate reranking, but none is yet validated. The immediate work
+is method and tooling readiness; official artifacts and one reproduced baseline gate all TacSIm adaptation.
 
 ## Links
 

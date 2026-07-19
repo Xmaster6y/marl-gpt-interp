@@ -1,0 +1,21 @@
+defaults:
+  - _self_
+
+cache_dir: results/experiments/2026-07-19-sparse-activation-cache-smoke
+output_dir: results/experiments/2026-07-19-domain-lattice-sae-smoke
+activation_location: layer_03:final
+seed: 0
+model:
+  method: lattice
+  activation: topk
+  k: 8
+  width: 1792
+  width_per_domain: 597
+  width_per_support: 256
+training:
+  steps: 20
+  batch_size: 32
+  learning_rate: 0.001
+hydra:
+  run:
+    dir: results/hydra/sparse_marl_gpt/train_dictionary/${now:%Y-%m-%d_%H-%M-%S}

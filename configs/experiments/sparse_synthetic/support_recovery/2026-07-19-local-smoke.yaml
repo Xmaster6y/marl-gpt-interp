@@ -1,0 +1,34 @@
+defaults:
+  - _self_
+
+output_dir: results/experiments/2026-07-19-sparse-support-recovery-smoke
+domains: [smac, grf, pogema]
+seeds: [0]
+synthetic:
+  input_dim: 16
+  features_per_support: 1
+  samples_per_domain: 64
+  active_features: 2
+regimes:
+  - name: balanced-smoke
+    assumption_holding: true
+    noise_std: 0.02
+    correlation: 0.0
+    anisotropy: 0.0
+    superposition: 0.0
+    hierarchy: 0.0
+    imbalance: [1.0, 1.0, 1.0]
+model:
+  k: 2
+training:
+  steps: 20
+  batch_size: 32
+  learning_rate: 0.003
+gate:
+  support_macro_f1: 0.80
+  reconstruction_tolerance: 0.05
+  stable_seed_count: 4
+  decoder_match_threshold: 0.70
+hydra:
+  run:
+    dir: results/hydra/sparse_synthetic/support_recovery/${now:%Y-%m-%d_%H-%M-%S}

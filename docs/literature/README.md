@@ -1,6 +1,6 @@
 # Literature
 
-- [TacSIm Benchmark](2026-07-18-tacsim-benchmark.md): Defines the active football task, official methods, data, metrics, reproduction ambiguities, and state-of-the-art target.
+- [TacSIm Benchmark](2026-07-18-tacsim-benchmark.md): Defines the deferred conditional tactical-imitation endpoint, artifacts, metrics, and reproduction gates.
 - [Sparse Feature Accounting Across Data Domains](2026-07-18-sparse-feature-accounting.md): Synthesis of flat, hierarchical, universal, multilingual, and reliability-focused SAE work motivating a functionally evaluated domain-lattice dictionary.
 - [MARL-GPT](2026-06-30-marl-gpt.md): Main model substrate; structured transformer MARL trained on SMACv2, GRF, and POGEMA.
 - [Adaptive Action Supervision](2026-06-30-adaptive-action-supervision.md): Human real-to-sim alignment framing using DTW-based action supervision.

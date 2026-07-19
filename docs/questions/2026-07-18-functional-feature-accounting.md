@@ -2,7 +2,7 @@
 
 ## Status
 
-Active. This is the primary research question.
+Active. Synthetic method validity is the current gate; real MARL-GPT claims remain blocked until it passes.
 
 ## Question
 
@@ -11,7 +11,7 @@ GRF, and POGEMA: through features used universally, features shared by environme
 environment?
 
 More specifically, can a composed sparse dictionary preserve MARL-GPT's activations and actor/critic behavior more
-efficiently than either of the two naive alternatives:
+at a better functional rate–distortion point than either of the two naive alternatives:
 
 1. one sparse autoencoder trained on a balanced mixture of all three environments; or
 2. three independent sparse autoencoders, one per environment?
@@ -84,7 +84,7 @@ not prove identical semantics across environments because observation layouts an
 
 ### One Mixture SAE: Naive Universal Baseline
 
-Train one balanced BatchTopK SAE on pooled SMACv2, GRF, and POGEMA activations. Classify its features post hoc using
+Train one balanced per-example TopK SAE on pooled SMACv2, GRF, and POGEMA activations. Classify its features post hoc using
 domain-conditional activation and causal-effect statistics. This is the strongest simple baseline for the proposition
 that a flat shared dictionary is sufficient.
 
@@ -92,7 +92,7 @@ Calling it `universal` describes its training corpus, not a validated property o
 
 ### Three Independent SAEs: Naive Private Baseline
 
-Train one BatchTopK SAE per environment. Compare it under two capacity conventions:
+Train one per-example TopK SAE per environment. Compare it under two capacity conventions:
 
 - **Total-capacity matched:** the three dictionary widths sum to the width of the mixture or lattice model.
 - **Per-domain-capacity matched:** each private SAE receives the same width as the mixture SAE, producing a `3x`-capacity
@@ -108,6 +108,7 @@ ablation fingerprints and feature substitution.
 - Universal-plus-private model without pairwise blocks.
 - Standard Matryoshka or hierarchical SAE without domain structure.
 - Unequal-mixture and activation-norm controls.
+- Domain-stratified BatchTopK sensitivity variants; ordinary mixed-domain BatchTopK is not a primary condition.
 
 ## Metrics
 
@@ -119,9 +120,10 @@ ablation fingerprints and feature substitution.
 - Domain-conditional activation rate and feature-domain mutual information.
 - Per-domain feature-ablation effect and functional support set.
 - Feature-substitution quality across seeds and dictionary types.
-- Behavior-preserving feature capacity at fixed per-domain fidelity.
+- Functional rate–distortion: activation code length and dictionary capacity at fixed per-domain reconstruction and
+  actor/critic fidelity.
 
-At a fixed fidelity threshold, summarize reuse efficiency as:
+Raw feature count is not the primary outcome. At a fixed distortion threshold, summarize reuse efficiency as:
 
 ```text
 reuse_efficiency = 1 - K_lattice / (K_smac + K_grf + K_pogema).
@@ -149,6 +151,10 @@ Treat the composed dictionary as a useful method only if it:
 3. yields functionally supported feature assignments that reproduce across seeds; and
 4. beats constrained-random and simpler hierarchical controls.
 
+The claim-bearing location is `layer_03:final`. `layer_06:final` is cached for schema validation and expands only after
+the first location is stable. Per-layer transcoders and attribution graphs are a later research stage, not substitutes
+for this fixed-layer gate.
+
 If a single mixture SAE matches the lattice at every fair capacity and fidelity point, prefer the simpler method and
 report that explicit domain structure is unnecessary. If three independent SAEs dominate and no stable functionally
 shared core appears, conclude that MARL-GPT behaves as a sparse union of environment specialists. If activation-level
@@ -159,3 +165,4 @@ sharing disappears under functional tests, report superficial rather than mechan
 - [Sparse feature accounting literature](../literature/2026-07-18-sparse-feature-accounting.md)
 - [Domain-lattice method validation experiment](../experiments/2026-07-18-domain-lattice-sae-method-validation.md)
 - [Domain-lattice direction decision](../decisions/2026-07-18-prioritize-functional-feature-accounting.md)
+- [Staged direction decision](../decisions/2026-07-18-prioritize-functional-feature-accounting.md)

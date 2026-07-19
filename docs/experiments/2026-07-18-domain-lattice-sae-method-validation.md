@@ -2,7 +2,8 @@
 
 ## Status
 
-Planned. No implementation or experiment run has been launched.
+Infrastructure implemented; no claim-bearing experiment or cluster run has been launched. Local smoke configs are
+available for support recovery, activation collection, dictionary training, and evaluation.
 
 ## Question
 
@@ -52,8 +53,12 @@ Primary synthetic metrics:
 - stability across seeds;
 - robustness to unequal frequencies, scales, and sample counts.
 
-The MARL-GPT stage is blocked until the method beats the naive baselines on the declared synthetic regimes where its
-assumptions hold.
+The MARL-GPT stage is blocked until every declared assumption-holding regime satisfies all of these gates over five
+seeds: lattice support macro-F1 `>= 0.80`; paired 95% intervals above both flat and independent baselines are strictly
+positive; normalized reconstruction error is no more than 5% worse than the best matched-L0 baseline; and support plus
+decoder recovery are stable in at least four of five seeds. Failure triggers diagnosis or method simplification, not a
+post-hoc threshold change. Stable decoder recovery is operationalized as matched decoder cosine `>= 0.70` for the
+initial gate.
 
 ## Stage 1: Activation Corpus
 
@@ -73,8 +78,13 @@ Candidate locations:
 - actor-branch representation;
 - critic-branch representation.
 
-Start with one middle shared layer and the final shared-trunk decision token. Expand only after the cache and intervention
-paths are validated.
+Claim-bearing training starts at the middle shared block's final decision position, `layer_03:final`. Cache
+`layer_06:final` for schema validation only; expand to it after the first location is stable.
+
+Activation shards are tensor-only `.pt` files loaded with `weights_only=True`. Their JSON manifest and sample metadata
+record source, trajectory group, sample index, location, token selector, checkpoint hash, preprocessing identity, and
+grouped split. Local resolved configs, hashes, environment versions, statuses, metrics, checkpoints, and artifact paths
+are authoritative; W&B is optional.
 
 Controls for the explicit environment channel:
 
@@ -87,14 +97,14 @@ Controls for the explicit environment channel:
 
 ### Baseline A: Single Balanced Mixture SAE
 
-- One BatchTopK SAE trained on pooled, environment-balanced activations.
+- One per-example TopK SAE trained on pooled, environment-balanced activations.
 - Sweep dictionary width and target sparsity.
 - Assign feature support post hoc from domain-conditional activation and ablation statistics.
 - This is the naive universal baseline.
 
 ### Baseline B: Three Independent Domain SAEs
 
-- One BatchTopK SAE each for SMACv2, GRF, and POGEMA.
+- One per-example TopK SAE each for SMACv2, GRF, and POGEMA.
 - **Total-capacity-matched condition:** widths sum to the competing joint model width.
 - **Per-domain-capacity-matched condition:** each SAE receives the full competing width, yielding a `3x`-capacity oracle.
 - Candidate matches use greedy cosine and Sinkhorn, then require held-out ablation-fingerprint and substitution validation.
@@ -105,7 +115,7 @@ Controls for the explicit environment channel:
 - Universal, three pairwise, and three private blocks.
 - Hard domain-eligibility masks.
 - Hierarchical reconstruction at universal, universal-plus-pair, and full levels.
-- BatchTopK or another explicit sparsity budget per level.
+- Per-example TopK as the primary sparsity budget.
 - Sweep total capacity and block allocations.
 - Compare reconstruction-only training with a functionally regularized variant.
 
@@ -115,6 +125,7 @@ Controls for the explicit environment channel:
 - Universal-plus-private SAE without pairwise blocks.
 - Standard Matryoshka SAE without domain masks.
 - PCA, ICA, random decoder, random encoder, and random activation-pattern controls where applicable.
+- Domain-stratified BatchTopK sensitivity variants. Do not use unstratified mixed-domain BatchTopK for the primary claim.
 
 ## Functional Fidelity
 
@@ -160,13 +171,15 @@ per-domain ablation fingerprints and direct contribution substitution.
 
 ## Primary Comparison
 
-Construct behavior-preserving capacity curves. At each total feature budget and sparsity level, report per-domain:
+Construct functional rate–distortion curves. At each activation code length, total capacity, and sparsity level, report
+per-domain:
 
 - normalized reconstruction error;
 - actor KL;
 - critic KL;
 - selected-action agreement;
 - dead-feature fraction.
+- activation code length.
 
 For each method, find the minimum capacity satisfying all precommitted per-domain fidelity thresholds. Compute reuse
 efficiency only at matched thresholds:
@@ -216,12 +229,25 @@ functional substitution tests are required responses to these objections.
 
 ## Implementation Boundary
 
-No cluster launch is authorized by this plan. The next step is a local method smoke with synthetic data and a small
-cached activation subset. Final scripts, configs, commands, resource estimates, launch artifacts, and result paths will
-be specified after that smoke validates the objective and metrics.
+No cluster launch is authorized by this plan. The reusable core, four Hydra entrypoints, smoke configs, full gate config,
+cache schema, manifests, and unit tests now exist. Per-layer MLP transcoders and bounded attribution graphs begin only
+after fixed-layer fidelity and feature stability pass; cross-layer transcoders require a later faithfulness/cost gate.
+Continuous trajectory prediction and a five-domain lattice are out of scope.
+
+The current native loader does not expose trajectory identity. Its supplied collector config is consequently a
+`batch_schema_smoke`, records `claim_bearing: false`, and cannot satisfy the corpus gate. A claim run must provide a
+per-example trajectory group in `batch_info`; the collector otherwise refuses to proceed.
+
+Entrypoints and configs are grouped by experiment domain:
+
+- synthetic recovery: `scripts.experiments.sparse_synthetic.support_recovery` with
+  `configs/experiments/sparse_synthetic/support_recovery/`;
+- MARL-GPT collection, training, and evaluation: `scripts.experiments.sparse_marl_gpt.{collect_activations,train_dictionary,evaluate_dictionary}`
+  with matching folders under `configs/experiments/sparse_marl_gpt/`.
 
 ## Links
 
 - [Functional feature accounting question](../questions/2026-07-18-functional-feature-accounting.md)
 - [Sparse feature accounting literature](../literature/2026-07-18-sparse-feature-accounting.md)
 - [Domain-lattice direction decision](../decisions/2026-07-18-prioritize-functional-feature-accounting.md)
+- [Staged direction decision](../decisions/2026-07-18-prioritize-functional-feature-accounting.md)
