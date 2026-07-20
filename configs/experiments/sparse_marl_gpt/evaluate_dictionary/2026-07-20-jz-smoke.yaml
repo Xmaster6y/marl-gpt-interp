@@ -1,0 +1,11 @@
+defaults:
+  - _self_
+
+cache_dir: results/experiments/2026-07-20-layer03-sae-jz-smoke/cache
+model_dir: results/experiments/2026-07-20-layer03-sae-jz-smoke/model
+output_dir: results/experiments/2026-07-20-layer03-sae-jz-smoke/evaluation
+split: validation
+seed: 0
+hydra:
+  run:
+    dir: results/hydra/sparse_marl_gpt/evaluate_dictionary/${now:%Y-%m-%d_%H-%M-%S}

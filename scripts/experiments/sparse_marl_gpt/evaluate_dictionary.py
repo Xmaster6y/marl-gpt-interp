@@ -34,6 +34,12 @@ def main(cfg: DictConfig) -> dict:
         reconstruction, codes = model(x[mask], labels[mask])
     metrics = sparse_metrics(x[mask], reconstruction, codes)
     metrics["examples"] = int(mask.sum())
+    selected_labels = labels[mask]
+    for label, domain in enumerate(domains):
+        domain_mask = selected_labels == label
+        if domain_mask.any():
+            domain_metrics = sparse_metrics(x[mask][domain_mask], reconstruction[domain_mask], codes[domain_mask])
+            metrics.update({f"{domain}/{key}": value for key, value in domain_metrics.items()})
     write_json(output_dir / "evaluation_metrics.json", metrics)
     write_run_manifest(
         output_dir / "run_manifest.json",

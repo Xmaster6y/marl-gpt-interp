@@ -9,6 +9,7 @@ grf_jz_native_prefix := "results/grf-native/py3.12"
 grf_jz_python_install_dir := "results/uv-python"
 grf_jz_wheel := "results/wheels/gfootball-2.10.3-cp312-cp312-linux_x86_64.whl"
 grf_jz_torch := "2.8.0"
+jz_scratch_root := "/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp"
 
 install:
 	uv run pre-commit install
@@ -24,25 +25,33 @@ grf-install-jz python=grf_jz_python:
 	wheel="{{grf_jz_wheel}}"
 	prefix="$PWD/{{grf_jz_native_prefix}}"
 	pyroot="$PWD/{{grf_jz_python_install_dir}}/cpython-{{python}}-linux-x86_64-gnu"
-	cache_dir="$PWD/results/uv-cache"
-	if [[ -d "$HOME/.cache/uv" ]]; then
-		cache_dir="$HOME/.cache/uv"
-	fi
+	cache_dir="{{jz_scratch_root}}/.cache/uv"
+	tmp_dir="{{jz_scratch_root}}/tmp/setup"
 	test -f "$wheel"
 	test -d "$prefix"
 	test -d "$pyroot"
-	mkdir -p results/uv-cache results/tmp
+	mkdir -p "$cache_dir" "$tmp_dir"
 	export PREFIX="$prefix"
 	export PYROOT="$pyroot"
 	export LD_LIBRARY_PATH="$PREFIX/lib:$PREFIX/lib64:$PYROOT/lib:${LD_LIBRARY_PATH:-}"
 	export UV_MANAGED_PYTHON=1
 	export UV_PYTHON_INSTALL_DIR="$PWD/{{grf_jz_python_install_dir}}"
 	export UV_CACHE_DIR="$cache_dir"
-	export TMPDIR="$PWD/results/tmp"
-	uv sync --python {{python}} --group grf --no-install-package gfootball --no-install-package torch --no-install-package wandb --inexact
+	export TMPDIR="$tmp_dir"
+	uv sync --python {{python}} --group grf --group sae --no-install-package gfootball --no-install-package torch --inexact
 	uv pip install --python .venv/bin/python --offline "torch=={{grf_jz_torch}}"
 	uv pip install --python .venv/bin/python --no-deps "$wheel"
-	uv run --no-sync --python {{python}} --group grf python -c "import gymnasium, gfootball, torch; print('jz grf env ok')"
+	uv run --no-sync --python {{python}} --group grf --group sae python -c "import dictionary_learning, gymnasium, gfootball, torch, wandb; print('jz grf+sae env ok')"
+
+jz-stage-data:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	source_dir="$PWD/dataset"
+	target_dir="{{jz_scratch_root}}/dataset"
+	test -d "$source_dir"
+	mkdir -p "$target_dir"
+	rsync -a --ignore-existing "$source_dir/" "$target_dir/"
+	find "$target_dir" -type f -print
 
 grf-reinstall-gfootball python=grf_python:
 	mkdir -p results/uv-cache results/tmp

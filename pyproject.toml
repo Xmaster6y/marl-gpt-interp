@@ -32,6 +32,9 @@ grf = [
     "tdhook>=0.1.3",
     "torch>=2.8.0",
 ]
+sae = [
+    "dictionary-learning>=0.1.0",
+]
 
 [build]
 target-dir = "build/dist"

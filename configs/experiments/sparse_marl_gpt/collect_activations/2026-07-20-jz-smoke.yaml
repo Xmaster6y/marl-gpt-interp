@@ -1,21 +1,21 @@
 defaults:
   - _self_
 
-output_dir: results/experiments/2026-07-19-sparse-activation-cache-smoke
+output_dir: results/experiments/2026-07-20-layer03-sae-jz-smoke/cache
 checkpoint: results/marl-gpt-main.pt
 dataset_config:
   smac:
     config: {history_len: 6, history_step: 1, part_of_dataset: 1}
     map_types: [zerg]
-    folder_paths: [dataset/zerg_5_vs_5]
+    folder_paths: [/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/dataset/zerg_5_vs_5]
   pogema:
     config: {part_of_dataset: 1}
-    folder_paths: [dataset/dataset_pogema_ll/random]
+    folder_paths: [/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/dataset/dataset_pogema_ll/random]
   grf:
     config: {history_len: 6, history_step: 1, part_of_dataset: 1, load_part_file: false}
-    folder_paths: [dataset/dataset_grf/trajectories/academy_corner]
+    folder_paths: [/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/dataset/dataset_grf/trajectories/academy_corner]
 envs: [smac, pogema, grf]
-activation_locations: [layer_03:final, layer_06:final]
+activation_locations: [layer_03:final]
 grouping_mode: batch_schema_smoke
 group_field: source_file_id
 minimum_groups_per_environment: 6
@@ -23,7 +23,7 @@ max_rows_per_source: 0
 device: cuda:0
 seed: 0
 batch_size: 30
-num_batches: 2
+num_batches: 12
 max_block_size: 700
 max_action_size: 20
 last_token: true

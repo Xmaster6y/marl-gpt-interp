@@ -22,16 +22,32 @@ Then submit the launch artifact for the experiment:
 bash docs/experiments/to-launch/2026-06-30-grf-rollout-statistics-v100.sh
 ```
 
+For SAE work, stage reusable datasets on the fast semi-permanent SCRATCH filesystem before submission:
+
+```bash
+just jz-stage-data
+```
+
 The JZ path uses:
 
 - uv-managed CPython `3.12.11` under `results/uv-python/`.
-- Project-local uv cache and temporary directories under `results/`.
+- Reusable uv, Hugging Face, and Torch caches under
+  `/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/.cache/` on SCRATCH.
+- Reusable MARL-GPT datasets under `/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/dataset/` on SCRATCH.
+- Per-job `TMPDIR` and transient W&B files under `$JOBSCRATCH`, with a SCRATCH fallback for nonstandard shells.
+- Source, the Python environment, checkpoints, manifests, and retained experiment outputs under the WORK checkout.
 - Prebuilt GRF wheel at `results/wheels/gfootball-2.10.3-cp312-cp312-linux_x86_64.whl`.
 - Native GRF dependency prefix at `results/grf-native/py3.12`.
 - Cached `torch==2.8.0`, which produced `torch 2.8.0+cu128` and supports V100 `sm_70`.
-- `uv run --no-sync --python 3.12.11 --group grf` inside Slurm so compute nodes do not attempt dependency resolution.
+- `uv run --no-sync --python 3.12.11 --group grf --group sae` inside SAE Slurm jobs so compute nodes do not attempt
+  dependency resolution.
 
 The setup passed on the JZ login node with the import check output `jz grf env ok`.
+
+IDRIS documents WORK for source and persistent inputs/outputs, SCRATCH for high-throughput data reused over several jobs
+with a 30-day inactive-file lifetime, and JOBSCRATCH for job-lifetime temporary files that are deleted automatically.
+Large caches and datasets therefore do not belong under HOME or the WORK checkout. Important outputs must never remain
+only in JOBSCRATCH.
 
 ## Why Login-Node Preparation Is Required
 

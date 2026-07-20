@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import os
 import sys
@@ -13,6 +14,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from os import PathLike
 from pathlib import Path
+from types import MethodType
 from typing import Any
 
 from omegaconf import DictConfig, OmegaConf
@@ -247,6 +249,54 @@ def build_loader(root: Path, dataset_config: dict[str, Any], cfg: DictConfig):
             max_block_size=int(cfg.max_block_size),
             max_action_size=int(cfg.max_action_size),
         )
+
+
+def _stable_source_id(path: str) -> int:
+    """Return a deterministic identifier that fits in a signed int64 tensor."""
+
+    normalized = Path(path).as_posix()
+    return int.from_bytes(hashlib.sha256(normalized.encode()).digest()[:8], "big") % (2**63 - 1)
+
+
+def enable_sample_identity(loader: Any, *, max_rows_per_source: int = 0) -> dict[int, str]:
+    """Add source-file and original-row identity to native MARL-GPT batches.
+
+    The vendored loader permutes rows within each source and otherwise drops
+    both identities. Runtime instrumentation keeps the submodule unchanged
+    while permitting conservative, leakage-safe source-file splits.
+    """
+
+    torch = load_torch()
+    source_paths: dict[int, str] = {}
+    for aggregate in loader.dataloaders.values():
+        for critic_loader in aggregate.datasets:
+            data_loader = critic_loader.dataloader
+            for path in data_loader.file_paths:
+                source_paths[_stable_source_id(path)] = Path(path).as_posix()
+
+            original_load = data_loader.load_and_transfer_data_file
+
+            def load_with_identity(self, filename, *, _original=original_load):
+                result = _original(filename)
+                self._sample_identity_source_id = _stable_source_id(filename)
+                if max_rows_per_source > 0:
+                    self.indices = self.indices[:max_rows_per_source]
+                return result
+
+            data_loader.load_and_transfer_data_file = MethodType(load_with_identity, data_loader)
+            original_extra = critic_loader.add_extra_information_for_critic
+
+            def extra_with_identity(self, first_indx, *, _original=original_extra):
+                info = _original(first_indx)
+                inner = self.dataloader
+                indices = inner.indices[first_indx : first_indx + inner.batch_size]
+                info["source_file_id"] = torch.full_like(indices, inner._sample_identity_source_id, dtype=torch.long)
+                info["source_row_index"] = indices.to(device=inner.device, dtype=torch.long)
+                return info
+
+            critic_loader.add_extra_information_for_critic = MethodType(extra_with_identity, critic_loader)
+    loader.sample_identity_sources = source_paths
+    return source_paths
 
 
 def env_labels_for_batch(loader: Any) -> Any:

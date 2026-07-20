@@ -1,0 +1,12 @@
+defaults:
+  - _self_
+
+model_dirs:
+  - results/experiments/2026-07-20-layer03-topk-8x-k16-seed0
+  - results/experiments/REPLACE_WITH_SECOND_WIDTH_OR_SEED
+output_dir: results/experiments/2026-07-20-layer03-feature-comparison
+candidate_split_cosine: 0.7
+seed: 0
+hydra:
+  run:
+    dir: results/hydra/sparse_marl_gpt/compare_features/${now:%Y-%m-%d_%H-%M-%S}

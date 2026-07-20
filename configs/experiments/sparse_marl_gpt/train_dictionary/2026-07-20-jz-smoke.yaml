@@ -1,0 +1,32 @@
+defaults:
+  - _self_
+
+cache_dir: results/experiments/2026-07-20-layer03-sae-jz-smoke/cache
+output_dir: results/experiments/2026-07-20-layer03-sae-jz-smoke/model
+activation_location: layer_03:final
+device: cuda:0
+seed: 0
+model:
+  method: flat
+  backend: dictionary_learning
+  activation: topk
+  k: 8
+  width: 512
+training:
+  steps: 50
+  batch_size: 64
+  learning_rate: null
+  warmup_steps: 5
+  decay_start: 40
+  auxk_alpha: 0.03125
+  resume_from: null
+observability:
+  log_every: 10
+  checkpoint_every: 25
+  wandb:
+    enabled: false
+    mode: offline
+    project: marl-gpt-sae
+hydra:
+  run:
+    dir: results/hydra/sparse_marl_gpt/train_dictionary/${now:%Y-%m-%d_%H-%M-%S}

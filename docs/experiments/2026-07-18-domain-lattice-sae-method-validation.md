@@ -5,6 +5,11 @@
 Infrastructure implemented; no claim-bearing experiment or cluster run has been launched. Local smoke configs are
 available for support recovery, activation collection, dictionary training, and evaluation.
 
+The first real-data pilot is now specified at `layer_03:final`: a balanced pooled TopK SAE with width 2,048, `k=16`,
+and seed 0. It uses the `dictionary-learning` TopK implementation and training recipe, local resumable checkpoints,
+offline-first W&B, per-domain validation, and held-out feature summaries. The pilot is an infrastructure and training-
+health gate, not evidence for the lattice method.
+
 ## Question
 
 Can a domain-lattice sparse autoencoder recover known universal, pairwise, and private factors and then provide a more
@@ -85,6 +90,30 @@ Activation shards are tensor-only `.pt` files loaded with `weights_only=True`. T
 record source, trajectory group, sample index, location, token selector, checkpoint hash, preprocessing identity, and
 grouped split. Local resolved configs, hashes, environment versions, statuses, metrics, checkpoints, and artifact paths
 are authoritative; W&B is optional.
+
+### Leakage boundary in the native datasets
+
+The native loader reads one source file at a time, randomly permutes its flattened row indices, and constructs an
+observation from the selected row plus up to five preceding rows when `history_len=6`. It returns rewards and terminal
+flags but historically discarded the source-file path and original row index. A split assigned after collection at the
+activation-row or collector-batch level can therefore place overlapping history windows in different splits. In the
+multi-agent datasets it can also separate different agents or nearby timesteps from the same underlying episode.
+
+The collector now instruments the native loader without changing the vendored MARL-GPT submodule. Every example records
+a stable source-file identifier, original source-row index, target action, and grouping field. The initial safe contract
+groups by source file and stratifies the grouped split within each environment. This is deliberately conservative: all
+trajectories in one file remain in one split, avoiding reliance on ambiguous terminal-marker reconstruction in flattened
+multi-agent arrays. A collection is rejected if an environment has fewer than six source groups or any environment/split
+cell would be empty. Finer trajectory grouping is allowed later only when the dataset exports an authoritative episode
+identity.
+
+Because the native iterator exhausts one file before advancing, the pilot caps accepted loader rows at 8,192 per source.
+Without that cap, a fixed example budget can be dominated by the first large file and never reach enough independent
+groups. The cap is applied after the loader's row permutation, and the retained examples preserve their original row
+indices.
+
+Batch grouping remains schema-smoke-only. It proves tensor and manifest compatibility but has no scientific train/test
+meaning because a later batch can revisit the same file, episode, row, or overlapping history.
 
 Controls for the explicit environment channel:
 
@@ -229,20 +258,46 @@ functional substitution tests are required responses to these objections.
 
 ## Implementation Boundary
 
-No cluster launch is authorized by this plan. The reusable core, four Hydra entrypoints, smoke configs, full gate config,
+No cluster launch is authorized by this plan. The reusable core, six Hydra entrypoints, smoke configs, full gate config,
 cache schema, manifests, and unit tests now exist. Per-layer MLP transcoders and bounded attribution graphs begin only
 after fixed-layer fidelity and feature stability pass; cross-layer transcoders require a later faithfulness/cost gate.
 Continuous trajectory prediction and a five-domain lattice are out of scope.
 
-The current native loader does not expose trajectory identity. Its supplied collector config is consequently a
-`batch_schema_smoke`, records `claim_bearing: false`, and cannot satisfy the corpus gate. A claim run must provide a
-per-example trajectory group in `batch_info`; the collector otherwise refuses to proceed.
+The native files do not expose a uniform authoritative trajectory identity. The supplied smoke remains a
+`batch_schema_smoke`, records `claim_bearing: false`, and cannot satisfy the corpus gate. The pilot instead uses the
+conservative source-file grouping described above. Source files must be audited to ensure they are independently
+generated units; if a preprocessing pipeline shards one trajectory across files, those shard families require a shared
+upstream group identifier before a claim-bearing run.
+
+The real-data pilot workflow is:
+
+- collect: `2026-07-20-layer03-pilot`;
+- train: `2026-07-20-layer03-topk-pilot` with `uv run --group sae`;
+- post-pilot sweep: `2026-07-20-layer03-topk-sweep`, varying widths `{2048, 4096}`, `k` `{8, 16, 32}`, and seeds
+  `{0, 1, 2}` only after the pilot's health checks pass;
+- analyze: `2026-07-20-layer03-topk-pilot`;
+- compare widths or seeds: `2026-07-20-example` after replacing its second model directory.
+
+Before the pilot, the JZ end-to-end smoke uses the four `2026-07-20-jz-smoke` configs and
+`to-launch/2026-07-20-layer03-sae-smoke-v100.sh`. It collects 12 schema-only batches, trains a width-512 TopK SAE for 50
+steps, evaluates the held-out schema split, and writes feature summaries. It is infrastructure evidence only. The job
+reads staged datasets and reusable caches from SCRATCH, uses JOBSCRATCH for temporary files, and retains results in WORK.
+
+Feature summaries include per-domain firing rates, active magnitudes, stable source-row references, and top examples.
+They call cross-domain firing **apparent support**. Universality requires later per-domain policy ablation or substitution;
+decoder-cosine one-to-many matches similarly identify candidate splitting only, pending activation and causal validation.
+
+Training logs loss, learning rate, pre-clipping gradient norm, throughput, peak GPU memory, normalized reconstruction error,
+explained variance, L0, dead-feature fraction, feature-density quantiles, and per-domain validation metrics. Checkpoints
+contain model, optimizer, scheduler, dead-feature counters, balanced-sampler RNG state, normalization, and step, and are
+written atomically. Local JSONL and manifests remain authoritative when W&B is offline or unavailable.
 
 Entrypoints and configs are grouped by experiment domain:
 
 - synthetic recovery: `scripts.experiments.sparse_synthetic.support_recovery` with
   `configs/experiments/sparse_synthetic/support_recovery/`;
-- MARL-GPT collection, training, and evaluation: `scripts.experiments.sparse_marl_gpt.{collect_activations,train_dictionary,evaluate_dictionary}`
+- MARL-GPT collection, training, evaluation, and feature diagnostics:
+  `scripts.experiments.sparse_marl_gpt.{collect_activations,train_dictionary,evaluate_dictionary,analyze_features,compare_features}`
   with matching folders under `configs/experiments/sparse_marl_gpt/`.
 
 ## Links

@@ -5,6 +5,7 @@ import json
 import pytest
 import torch
 
+from marl_gpt_interp.marl_gpt_tools import enable_sample_identity
 from marl_gpt_interp.sparse_features import (
     DomainLatticeSAE,
     SparseAutoencoder,
@@ -19,12 +20,15 @@ from marl_gpt_interp.sparse_features import (
     replace_token_activation,
     sparse_replacement_hook,
     sparse_metrics,
+    stratified_grouped_split,
     support_macro_f1,
     topk_codes,
     train_sparse_model,
     write_activation_cache,
     write_run_manifest,
 )
+from marl_gpt_interp.sae_training import activation_norm_factor, balanced_batch_indices, train_topk_sae
+from scripts.experiments.sparse_marl_gpt.analyze_features import feature_rows
 
 
 def test_domain_lattice_has_complete_three_domain_support():
@@ -86,6 +90,132 @@ def test_grouped_split_never_leaks_a_group():
     splits = grouped_split(groups, seed=9)
     assert len({split for group, split in zip(groups, splits, strict=True) if group == "a"}) == 1
     assert set(splits) <= {"train", "validation", "test"}
+
+
+def test_stratified_grouped_split_preserves_groups_and_domain_coverage():
+    groups, domains = [], []
+    for domain in ("smac", "grf", "pogema"):
+        for group in range(10):
+            groups.extend([f"{domain}:{group}"] * 2)
+            domains.extend([domain] * 2)
+    splits = stratified_grouped_split(groups, domains, seed=3)
+    for group in set(groups):
+        assert len({split for value, split in zip(groups, splits, strict=True) if value == group}) == 1
+    for domain in set(domains):
+        assert {split for value, split in zip(domains, splits, strict=True) if value == domain} == {
+            "train",
+            "validation",
+            "test",
+        }
+
+
+def test_balanced_sampler_and_activation_norm():
+    labels = torch.tensor([0] * 3 + [1] * 9 + [2] * 2)
+    indices = balanced_batch_indices(labels, 12, torch.Generator().manual_seed(4))
+    assert torch.bincount(labels[indices], minlength=3).tolist() == [4, 4, 4]
+    assert activation_norm_factor(torch.tensor([[3.0, 4.0]])) == 5.0
+
+
+def test_feature_rows_keep_top_example_identity_and_mark_apparent_support():
+    codes = torch.tensor([[2.0, 0.0], [1.0, 0.0], [3.0, 4.0]])
+    labels = torch.tensor([0, 0, 1])
+    metadata = [
+        {
+            "sample_index": index,
+            "environment": "a" if index < 2 else "b",
+            "trajectory_group": f"group-{index}",
+            "source_file_id": 7,
+            "source_row_index": index + 10,
+            "target_action": index,
+        }
+        for index in range(3)
+    ]
+    rows = feature_rows(codes, labels, ["a", "b"], metadata, top_n=2, minimum_rate=0.5)
+    assert rows[0]["apparent_support"] == ["a", "b"]
+    assert rows[0]["top_examples"][0]["source_row_index"] == 12
+    assert rows[0]["causal_status"] == "not_evaluated"
+
+
+def test_dictionary_learning_training_writes_resumable_checkpoint(tmp_path):
+    pytest.importorskip("dictionary_learning")
+    x = torch.randn(36, 4, generator=torch.Generator().manual_seed(2))
+    labels = torch.tensor([0, 1, 2] * 12)
+    result = train_topk_sae(
+        x[:27],
+        labels[:27],
+        ["a", "b", "c"],
+        x[27:],
+        labels[27:],
+        output_dir=tmp_path,
+        width=8,
+        k=2,
+        steps=2,
+        batch_size=6,
+        learning_rate=1e-3,
+        warmup_steps=0,
+        decay_start=None,
+        auxk_alpha=0.0,
+        log_every=1,
+        checkpoint_every=1,
+        device="cpu",
+        seed=3,
+    )
+    assert result.final_step == 1
+    assert result.metrics["train/gradient_norm_pre_clip"] > 0
+    assert result.metrics["system/examples_per_second"] > 0
+    checkpoint = torch.load(tmp_path / "checkpoints" / "latest.pt", weights_only=True)
+    assert checkpoint["step"] == 1
+    assert "optimizer" in checkpoint
+    resumed = train_topk_sae(
+        x[:27],
+        labels[:27],
+        ["a", "b", "c"],
+        x[27:],
+        labels[27:],
+        output_dir=tmp_path,
+        width=8,
+        k=2,
+        steps=4,
+        batch_size=6,
+        learning_rate=1e-3,
+        warmup_steps=0,
+        decay_start=None,
+        auxk_alpha=0.0,
+        log_every=1,
+        checkpoint_every=1,
+        device="cpu",
+        seed=3,
+        resume_from=tmp_path / "checkpoints" / "latest.pt",
+    )
+    assert resumed.final_step == 3
+
+
+def test_native_loader_identity_instrumentation_preserves_source_and_row(tmp_path):
+    class InnerLoader:
+        file_paths = [str(tmp_path / "source.pt")]
+        batch_size = 2
+        device = "cpu"
+        indices = torch.tensor([4, 1, 3, 2, 0])
+
+        def load_and_transfer_data_file(self, filename):
+            self.loaded = filename
+
+    class CriticLoader:
+        def __init__(self):
+            self.dataloader = InnerLoader()
+
+        def add_extra_information_for_critic(self, first_index):
+            return {"rewards": torch.zeros(2)}
+
+    critic = CriticLoader()
+    aggregate = type("Aggregate", (), {"datasets": [critic]})()
+    loader = type("Loader", (), {"dataloaders": {"grf": aggregate}})()
+    sources = enable_sample_identity(loader, max_rows_per_source=4)
+    critic.dataloader.load_and_transfer_data_file(critic.dataloader.file_paths[0])
+    assert len(critic.dataloader.indices) == 4
+    info = critic.add_extra_information_for_critic(1)
+    assert info["source_row_index"].tolist() == [1, 3]
+    assert info["source_file_id"].unique().item() in sources
 
 
 def test_activation_cache_round_trip_and_hash_validation(tmp_path):

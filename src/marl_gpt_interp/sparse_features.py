@@ -385,6 +385,26 @@ def grouped_split(
     return [mapping[group] for group in groups]
 
 
+def stratified_grouped_split(
+    groups: Sequence[str],
+    strata: Sequence[str],
+    *,
+    seed: int = 0,
+    fractions: Sequence[float] = (0.7, 0.15, 0.15),
+) -> list[str]:
+    """Split whole groups independently inside each stratum."""
+
+    if len(groups) != len(strata):
+        raise ValueError("groups and strata must have the same length")
+    output = [""] * len(groups)
+    for stratum in sorted(set(strata)):
+        indices = [index for index, value in enumerate(strata) if value == stratum]
+        local = grouped_split([groups[index] for index in indices], seed=seed, fractions=fractions)
+        for index, split in zip(indices, local, strict=True):
+            output[index] = split
+    return output
+
+
 def file_sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:

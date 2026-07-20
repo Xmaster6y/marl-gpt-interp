@@ -12,6 +12,7 @@ from marl_gpt_interp.marl_gpt_tools import (
     activation_hooks,
     as_path,
     build_loader,
+    enable_sample_identity,
     enabled_envs,
     env_labels_for_batch,
     load_model,
@@ -21,7 +22,12 @@ from marl_gpt_interp.marl_gpt_tools import (
     resolve_dataset_config,
     to_plain_config,
 )
-from marl_gpt_interp.sparse_features import file_sha256, grouped_split, write_activation_cache, write_run_manifest
+from marl_gpt_interp.sparse_features import (
+    file_sha256,
+    stratified_grouped_split,
+    write_activation_cache,
+    write_run_manifest,
+)
 
 
 @hydra.main(config_path="../../../configs/experiments/sparse_marl_gpt/collect_activations", version_base=None)
@@ -33,6 +39,8 @@ def main(cfg: DictConfig) -> dict:
     active_envs = enabled_envs(dataset_config, list(cfg.envs))
     dataset_config = {env: dataset_config[env] for env in active_envs}
     loader = build_loader(root, dataset_config, cfg)
+    max_rows_per_source = int(cfg.get("max_rows_per_source", 0))
+    source_paths = enable_sample_identity(loader, max_rows_per_source=max_rows_per_source)
     with marl_gpt_cwd(root):
         model, model_config = load_model(root, cfg)
     requested = set(str(value) for value in cfg.activation_locations)
@@ -40,12 +48,13 @@ def main(cfg: DictConfig) -> dict:
     preprocessing_identity = "marl-gpt-native-loader-v1"
     tensors: dict[str, list] = defaultdict(list)
     metadata = []
+    torch.manual_seed(int(cfg.seed))
     iterator = iter(loader)
     hooks = []
     try:
         for batch_index in range(int(cfg.num_batches)):
             with marl_gpt_cwd(root):
-                batch_obs, _target, _mask, _next_obs, batch_info = next(iterator)
+                batch_obs, target, _mask, _next_obs, batch_info = next(iterator)
             labels = env_labels_for_batch(loader)
             captured = {}
             hooks = activation_hooks(model, captured)
@@ -59,28 +68,37 @@ def main(cfg: DictConfig) -> dict:
                 if location not in selected:
                     raise KeyError(f"Unknown activation location {location!r}; available: {sorted(selected)}")
                 tensors[location].append(selected[location])
-            group_field = str(cfg.get("trajectory_group_field", "trajectory_id"))
+            grouping_mode = str(cfg.grouping_mode)
+            group_field = str(cfg.get("group_field", "source_file_id"))
             raw_groups = batch_info.get(group_field)
             if raw_groups is not None:
                 group_values = raw_groups.detach().cpu().reshape(-1).tolist()
                 if len(group_values) != len(labels):
                     raise ValueError(f"{group_field} must have one value per sample")
-            elif str(cfg.grouping_mode) == "batch_schema_smoke":
+            elif grouping_mode == "batch_schema_smoke":
                 group_values = [f"batch-{batch_index:06d}"] * len(labels)
             else:
                 raise ValueError(
                     f"Claim-bearing collection requires batch_info[{group_field!r}]; "
                     "batch grouping is allowed only for a schema smoke"
                 )
+            source_ids = batch_info.get("source_file_id")
+            source_rows = batch_info.get("source_row_index")
             for sample_index, label in enumerate(labels.tolist()):
                 domain = ID_TO_ENV.get(int(label), str(label))
                 group = f"{domain}:{group_values[sample_index]}"
+                source_id = int(source_ids[sample_index]) if source_ids is not None else None
                 metadata.append(
                     {
                         "environment": domain,
                         "environment_label": int(label),
                         "trajectory_group": group,
                         "grouping_mode": str(cfg.grouping_mode),
+                        "group_field": group_field,
+                        "source_file_id": source_id,
+                        "source_file": source_paths.get(source_id) if source_id is not None else None,
+                        "source_row_index": int(source_rows[sample_index]) if source_rows is not None else None,
+                        "target_action": int(target[sample_index]),
                         "sample_index": len(metadata),
                         "batch_index": batch_index,
                         "batch_sample_index": sample_index,
@@ -93,7 +111,36 @@ def main(cfg: DictConfig) -> dict:
     finally:
         for hook in hooks:
             hook.remove()
-    splits = grouped_split([row["trajectory_group"] for row in metadata], seed=int(cfg.seed))
+    groups_per_environment = {
+        domain: len({row["trajectory_group"] for row in metadata if row["environment"] == domain})
+        for domain in active_envs
+    }
+    minimum_groups = int(cfg.get("minimum_groups_per_environment", 6))
+    if grouping_mode != "batch_schema_smoke" and any(
+        count < minimum_groups for count in groups_per_environment.values()
+    ):
+        raise ValueError(
+            "Leakage-safe collection needs at least "
+            f"{minimum_groups} distinct {group_field} groups per environment; got {groups_per_environment}"
+        )
+    splits = stratified_grouped_split(
+        [row["trajectory_group"] for row in metadata],
+        [row["environment"] for row in metadata],
+        seed=int(cfg.seed),
+    )
+    if grouping_mode != "batch_schema_smoke":
+        coverage = {
+            domain: {
+                split: sum(
+                    row["environment"] == domain and assigned_split == split
+                    for row, assigned_split in zip(metadata, splits, strict=True)
+                )
+                for split in ("train", "validation", "test")
+            }
+            for domain in active_envs
+        }
+        if any(count == 0 for counts in coverage.values() for count in counts.values()):
+            raise ValueError(f"Grouped split leaves an empty environment/split cell: {coverage}")
     for row, split in zip(metadata, splits, strict=True):
         row["split"] = split
     cache = write_activation_cache(
@@ -108,7 +155,11 @@ def main(cfg: DictConfig) -> dict:
             "activation_locations": sorted(requested),
             "preprocessing_identity": preprocessing_identity,
             "grouping_mode": str(cfg.grouping_mode),
-            "claim_bearing": str(cfg.grouping_mode) != "batch_schema_smoke",
+            "group_field": group_field,
+            "groups_per_environment": groups_per_environment,
+            "source_files": {str(key): value for key, value in sorted(source_paths.items())},
+            "max_rows_per_source": max_rows_per_source,
+            "claim_bearing": grouping_mode != "batch_schema_smoke",
         },
     )
     write_run_manifest(
