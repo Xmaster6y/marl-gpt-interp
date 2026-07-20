@@ -3,7 +3,6 @@
 #SBATCH --account=nwq@v100
 #SBATCH --cpus-per-task=4
 #SBATCH --error=results/slurm/%x-%j.err
-#SBATCH --mem=8G
 #SBATCH --output=results/slurm/%x-%j.out
 #SBATCH --partition=prepost
 #SBATCH --time=12:00:00
