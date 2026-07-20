@@ -4,13 +4,13 @@ defaults:
 repo_id: nortem/marl-gpt-datasets
 revision: b70333a01a9bd7bd8a4ff8d9215dfee9357e6024
 cache_root: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/hf-cache/nortem--marl-gpt-datasets/b70333a01a9bd7bd8a4ff8d9215dfee9357e6024
-view_root: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-core-small
+view_root: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-core-balanced-small
 seed: 0
 concurrency: 2
 retries: 8
 verify_sha256: true
 plan_only: false
-max_rows_per_source: 8192
+max_rows_per_source: 1024
 environments:
   smac:
     source_groups: 6
@@ -19,6 +19,7 @@ environments:
         weight: 1
         source_prefix: dataset-SMACv2/zerg_5_vs_5
         destination_prefix: dataset/zerg_5_vs_5
+        group_pattern: '(chunk_\d+)'
   pogema:
     source_groups: 6
     components:
@@ -33,6 +34,7 @@ environments:
         weight: 1
         source_prefix: dataset-GRF/academy_corner
         destination_prefix: dataset/dataset_grf/trajectories/academy_corner
+        group_pattern: '(chunk_\d+)'
 hydra:
   run:
     dir: results/hydra/sparse_marl_gpt/build_balanced_dataset/${now:%Y-%m-%d_%H-%M-%S}

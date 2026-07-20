@@ -26,6 +26,7 @@ class RemoteFile:
 class SelectedFile:
     environment: str
     component: str
+    source_group: str
     source_path: str
     destination_path: str
     size: int
@@ -99,19 +100,43 @@ def build_selection(
     for environment, environment_cfg in environments.items():
         components = list(environment_cfg["components"])
         counts = allocate_component_counts(
-            int(environment_cfg["source_files"]),
+            int(environment_cfg["source_groups"]),
             {str(component["name"]): float(component["weight"]) for component in components},
         )
         for component in components:
             name = str(component["name"])
             source_prefix = str(component["source_prefix"]).strip("/")
             destination_prefix = str(component["destination_prefix"]).strip("/")
-            chosen = deterministic_select(catalog(source_prefix), counts[name], seed=seed, namespace=source_prefix)
-            for remote in chosen:
+            available = list(catalog(source_prefix))
+            group_pattern = component.get("group_pattern")
+            grouped: dict[str, list[RemoteFile]] = {}
+            for remote in available:
+                if group_pattern:
+                    match = re.search(str(group_pattern), Path(remote.source_path).name)
+                    if not match:
+                        raise ValueError(f"group pattern does not match {remote.source_path}: {group_pattern}")
+                    group = f"{source_prefix}/{match.group(1)}"
+                else:
+                    group = remote.source_path
+                grouped.setdefault(group, []).append(remote)
+            group_candidates = [RemoteFile(group, max(item.size for item in members)) for group, members in grouped.items()]
+            chosen_groups = deterministic_select(
+                group_candidates, counts[name], seed=seed, namespace=f"{source_prefix}:groups"
+            )
+            for chosen_group in chosen_groups:
+                members = grouped[chosen_group.source_path]
+                remote = max(
+                    members,
+                    key=lambda item: (
+                        item.size,
+                        hashlib.sha256(f"{seed}:{chosen_group.source_path}:{item.source_path}".encode()).hexdigest(),
+                    ),
+                )
                 selected.append(
                     SelectedFile(
                         environment=str(environment),
                         component=name,
+                        source_group=chosen_group.source_path,
                         source_path=remote.source_path,
                         destination_path=f"{destination_prefix}/{Path(remote.source_path).name}",
                         size=remote.size,
@@ -203,7 +228,7 @@ def materialize_balanced_view(cfg: Mapping[str, Any]) -> dict[str, Any]:
         environment: sum(item.environment == environment for item in selected) for environment in environments
     }
     if len(set(counts.values())) != 1:
-        raise ValueError(f"environment source-file counts are not balanced: {counts}")
+        raise ValueError(f"environment source-group counts are not balanced: {counts}")
     manifest_path = view_root / "balanced_dataset_manifest.json"
     payload: dict[str, Any] = {
         "format_version": 1,
@@ -215,7 +240,7 @@ def materialize_balanced_view(cfg: Mapping[str, Any]) -> dict[str, Any]:
         "seed": seed,
         "cache_root": str(cache_root),
         "view_root": str(view_root),
-        "source_files_per_environment": counts,
+        "source_groups_per_environment": counts,
         "max_rows_per_source": int(cfg["max_rows_per_source"]),
         "total_expected_bytes": sum(item.size for item in selected),
         "files": [asdict(item) for item in selected],
@@ -304,16 +329,29 @@ def audit_balanced_view(manifest_path: Path, output_path: Path) -> dict[str, Any
         selected = [row for row in rows if row["environment"] == environment]
         environment_summary[environment] = {
             "physical_files": len(selected),
+            "source_groups": len(
+                {row.get("source_group", row["candidate_shard_family"]) for row in selected}
+            ),
             "candidate_shard_families": len({row["candidate_shard_family"] for row in selected}),
             "raw_rows": sum(row["rows"] for row in selected),
             "accepted_row_cap": sum(row["accepted_row_cap"] for row in selected),
             "files_below_cap": sum(not row["meets_row_cap"] for row in selected),
         }
+    structural_errors = []
+    accepted_counts = {summary["accepted_row_cap"] for summary in environment_summary.values()}
+    for environment, summary in environment_summary.items():
+        if summary["files_below_cap"]:
+            structural_errors.append(f"{environment} has {summary['files_below_cap']} files below the row cap")
+        if summary["source_groups"] != summary["physical_files"]:
+            structural_errors.append(f"{environment} repeats a configured source group")
+    if len(accepted_counts) != 1:
+        structural_errors.append("accepted row budgets differ across environments")
     payload = {
         "format_version": 1,
         "manifest": str(manifest_path),
-        "status": "audited_pending_group_validation",
+        "status": "rejected_structural_imbalance" if structural_errors else "audited_balanced_pending_provenance",
         "claim_bearing": False,
+        "structural_errors": structural_errors,
         "blockers": [
             "candidate multipart shard families require provenance validation",
             "POGEMA terminal boundaries are synthesized at 256 rows by the native loader",
@@ -322,4 +360,6 @@ def audit_balanced_view(manifest_path: Path, output_path: Path) -> dict[str, Any
         "files": rows,
     }
     _write_manifest(output_path, payload)
+    if structural_errors:
+        raise ValueError("balanced dataset audit rejected: " + "; ".join(structural_errors))
     return payload

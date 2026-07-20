@@ -32,12 +32,12 @@ envs: [smac, pogema, grf]
 activation_locations: [layer_03:final]
 grouping_mode: source_file
 group_field: source_file_id
-minimum_groups_per_environment: 6
-max_rows_per_source: 3330
+minimum_groups_per_environment: 18
+max_rows_per_source: 5120
 device: cuda:0
 seed: 0
 batch_size: 192
-num_batches: 1665
+num_batches: 1440
 max_block_size: 700
 max_action_size: 20
 last_token: true

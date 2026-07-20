@@ -4,6 +4,6 @@ defaults:
 
 view_root: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-small
 environments:
-  smac: {source_files: 12}
-  pogema: {source_files: 12}
-  grf: {source_files: 12}
+  smac: {source_groups: 12}
+  pogema: {source_groups: 12}
+  grf: {source_groups: 12}
