@@ -115,3 +115,6 @@ def test_audit_rejects_unequal_accepted_environment_budgets(tmp_path):
     audit = json.loads(audit_path.read_text())
     assert audit["status"] == "rejected_structural_imbalance"
     assert audit["environment_summary"]["grf"]["accepted_row_cap"] == 3
+    manifest = json.loads(manifest_path.read_text())
+    assert manifest["status"] == "rejected_structural_imbalance"
+    assert manifest["structural_balance_passed"] is False

@@ -6,7 +6,7 @@
 
 ## Planned Analyses
 
-- [Balanced offline MARL-GPT corpus](2026-07-20-balanced-offline-corpus.md): Scalable JZ SCRATCH builder ready; core view is a non-claim audit artifact and the 30-source full-training-mixture view gates the SAE pilot.
+- [Balanced offline MARL-GPT corpus](2026-07-20-balanced-offline-corpus.md): Six-group-per-environment JZ view passed the structural 6,144-row balance gate; episode provenance and the 18-group full-training-mixture view gate the SAE pilot.
 - [Domain-lattice SAE method validation](2026-07-18-domain-lattice-sae-method-validation.md): JZ schema smoke completed end to end; the claim-bearing pilot is blocked because the current corpus has only one source file per environment.
 - [Cross-football sparse-feature robustness](2026-07-19-cross-football-sparse-feature-robustness.md): Blocked on the synthetic gate; separate GRF–La Liga–RoboCup robustness branch with no tactical-transfer claim.
 - [TacSIm benchmark](2026-07-18-tacsim-benchmark.md): Deferred endpoint; reproduce official artifacts and a baseline after readiness stages.

@@ -4,8 +4,8 @@
 
 Builder and scalable configs implemented. The first six-file-per-environment view was materialized on JZ SCRATCH but
 rejected by its audit: five of six GRF files fell below the common row cap and represented only four distinct
-`chunk_*` families. A corrected six-group view is ready to materialize through the pre/post-processing partition. No
-view is claim-bearing until its episode and shard-family audit passes.
+`chunk_*` families. The corrected six-group view passed its structural audit on JZ. It remains non-claim-bearing until
+episode provenance is validated and group-disjoint activation splits are constructed.
 
 ## Actual Problem
 
@@ -69,6 +69,18 @@ This view is rejected because its accepted environment budgets differ and its GR
 corrected core uses six distinct groups per environment, a 1,024-row cap per group, and exactly 96 equal-domain batches,
 targeting 6,144 accepted activation rows per environment. A successful file audit is necessary but not sufficient:
 authoritative episode provenance and group-disjoint activation splits remain required before a scientific claim.
+
+JZ pre/post job `2108042` then materialized and audited the corrected view in 12m52s with exit code zero. It selected
+8,889,497,275 physical bytes and produced the following structural result:
+
+| Environment | Physical files | Source groups | Raw rows | Accepted rows at 1,024 cap | Files below cap |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| GRF | 6 | 6 | 702,064 | 6,144 | 0 |
+| POGEMA | 6 | 6 | 12,582,912 | 6,144 | 0 |
+| SMAC | 6 | 6 | 4,330,882 | 6,144 | 0 |
+
+The audit status is `audited_balanced_pending_provenance` with no structural errors. This passes the acquisition and
+equal-budget gate; it does not validate true episode boundaries or authorize feature-universality claims.
 
 ## JZ Layout And Launch
 

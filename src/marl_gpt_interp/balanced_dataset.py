@@ -346,10 +346,11 @@ def audit_balanced_view(manifest_path: Path, output_path: Path) -> dict[str, Any
             structural_errors.append(f"{environment} repeats a configured source group")
     if len(accepted_counts) != 1:
         structural_errors.append("accepted row budgets differ across environments")
+    audit_status = "rejected_structural_imbalance" if structural_errors else "audited_balanced_pending_provenance"
     payload = {
         "format_version": 1,
         "manifest": str(manifest_path),
-        "status": "rejected_structural_imbalance" if structural_errors else "audited_balanced_pending_provenance",
+        "status": audit_status,
         "claim_bearing": False,
         "structural_errors": structural_errors,
         "blockers": [
@@ -360,6 +361,10 @@ def audit_balanced_view(manifest_path: Path, output_path: Path) -> dict[str, Any
         "files": rows,
     }
     _write_manifest(output_path, payload)
+    manifest["status"] = audit_status
+    manifest["audit_path"] = str(output_path)
+    manifest["structural_balance_passed"] = not structural_errors
+    _write_manifest(manifest_path, manifest)
     if structural_errors:
         raise ValueError("balanced dataset audit rejected: " + "; ".join(structural_errors))
     return payload
