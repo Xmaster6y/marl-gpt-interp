@@ -20,6 +20,61 @@ import torch
 from marl_gpt_interp.sparse_features import sparse_metrics
 
 
+def fit_activation_preprocessing(
+    x: torch.Tensor,
+    labels: torch.Tensor,
+    domains: Sequence[str],
+    mode: str,
+) -> dict[str, Any]:
+    """Fit a declared train-only activation transform for SAE diagnostics."""
+
+    if mode == "natural":
+        return {"mode": mode, "fit_split": "train", "metric_space": "natural_activation"}
+    if mode != "per_domain_center_rms":
+        raise ValueError(f"Unknown activation preprocessing mode {mode!r}")
+    means, rms_scales = [], []
+    for label, domain in enumerate(domains):
+        values = x[labels == label]
+        if not len(values):
+            raise ValueError(f"Cannot fit preprocessing without training rows for {domain}")
+        mean = values.mean(dim=0)
+        centered = values - mean
+        scale = activation_norm_factor(centered)
+        means.append(mean.tolist())
+        rms_scales.append(scale)
+    return {
+        "mode": mode,
+        "fit_split": "train",
+        "metric_space": "per_domain_centered_rms_scaled",
+        "domains": list(domains),
+        "means": means,
+        "rms_scales": rms_scales,
+    }
+
+
+def apply_activation_preprocessing(
+    x: torch.Tensor,
+    labels: torch.Tensor,
+    preprocessing: dict[str, Any],
+) -> torch.Tensor:
+    """Apply a fitted activation transform without mixing domain statistics."""
+
+    mode = str(preprocessing["mode"])
+    if mode == "natural":
+        return x
+    if mode != "per_domain_center_rms":
+        raise ValueError(f"Unknown activation preprocessing mode {mode!r}")
+    result = torch.empty_like(x)
+    means = torch.tensor(preprocessing["means"], dtype=x.dtype, device=x.device)
+    scales = torch.tensor(preprocessing["rms_scales"], dtype=x.dtype, device=x.device)
+    if labels.numel() and (int(labels.min()) < 0 or int(labels.max()) >= len(means)):
+        raise ValueError("Activation preprocessing labels fall outside the fitted domains")
+    for label in range(len(means)):
+        mask = labels == label
+        result[mask] = (x[mask] - means[label]) / scales[label]
+    return result
+
+
 def _dictionary_learning_types():
     try:
         distribution = importlib.metadata.distribution("dictionary-learning")

@@ -6,6 +6,8 @@ output_dir: results/experiments/2026-07-20-layer03-balanced-training-small-topk-
 activation_location: layer_03:final
 device: cuda:0
 seed: 0
+preprocessing:
+  mode: natural
 model:
   method: flat
   backend: dictionary_learning

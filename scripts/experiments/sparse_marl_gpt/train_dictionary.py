@@ -20,7 +20,12 @@ from marl_gpt_interp.sparse_features import (
     train_sparse_model,
     write_run_manifest,
 )
-from marl_gpt_interp.sae_training import DictionaryLearningTopK, train_topk_sae
+from marl_gpt_interp.sae_training import (
+    DictionaryLearningTopK,
+    apply_activation_preprocessing,
+    fit_activation_preprocessing,
+    train_topk_sae,
+)
 
 
 def build_model(cfg, input_dim: int, domains: list[str]):
@@ -50,6 +55,13 @@ def main(cfg: DictConfig) -> dict:
     domain_to_label = {domain: index for index, domain in enumerate(domains)}
     labels = torch.tensor([domain_to_label[row["environment"]] for row in metadata])
     train_mask = torch.tensor([row["split"] == "train" for row in metadata])
+    preprocessing = fit_activation_preprocessing(
+        x[train_mask],
+        labels[train_mask],
+        domains,
+        str(OmegaConf.select(cfg, "preprocessing.mode", default="natural")),
+    )
+    model_x = apply_activation_preprocessing(x, labels, preprocessing)
     backend = str(OmegaConf.select(cfg, "model.backend", default="local"))
     model = build_model(cfg, x.shape[1], domains)
     if backend == "dictionary_learning":
@@ -60,10 +72,10 @@ def main(cfg: DictConfig) -> dict:
             raise ValueError("Training requires a non-empty leakage-safe validation split")
         resume_value = OmegaConf.select(cfg, "training.resume_from", default=None)
         result = train_topk_sae(
-            x[train_mask],
+            model_x[train_mask],
             labels[train_mask],
             domains,
-            x[validation_mask],
+            model_x[validation_mask],
             labels[validation_mask],
             output_dir=output_dir,
             width=int(cfg.model.width),
@@ -98,7 +110,7 @@ def main(cfg: DictConfig) -> dict:
     else:
         losses = train_sparse_model(
             model,
-            x[train_mask],
+            model_x[train_mask],
             labels[train_mask],
             steps=int(cfg.training.steps),
             batch_size=int(cfg.training.batch_size),
@@ -110,12 +122,12 @@ def main(cfg: DictConfig) -> dict:
     model.eval()
     if backend != "dictionary_learning":
         with torch.no_grad():
-            reconstruction, codes = model(x[train_mask], labels[train_mask])
+            reconstruction, codes = model(model_x[train_mask], labels[train_mask])
         metrics = {
             **metrics,
             **{
                 f"train_final/{key}": value
-                for key, value in sparse_metrics(x[train_mask], reconstruction, codes).items()
+                for key, value in sparse_metrics(model_x[train_mask], reconstruction, codes).items()
             },
         }
     torch.save(model.state_dict(), output_dir / "model.pt")
@@ -126,6 +138,7 @@ def main(cfg: DictConfig) -> dict:
         "activation_location": location,
         "backend": backend,
         "cache_manifest_sha256": cache_manifest["shards"][0]["sha256"],
+        "preprocessing": preprocessing,
     }
     (output_dir / "model_spec.json").write_text(json.dumps(spec, indent=2, sort_keys=True) + "\n")
     write_json(output_dir / "training_metrics.json", {**metrics, "final_loss": final_loss})

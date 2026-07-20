@@ -387,6 +387,29 @@ collapse; failure blocks the width, sparsity, and seed sweep.
    the five-seed synthetic support-recovery gate. Only then launch flat-versus-independent-versus-lattice
    rate--distortion comparisons or make universality/reuse claims.
 
+### Queued Post-Health Suite
+
+The next suite is a mutually exclusive conditional launch rather than an unconditional sweep. Launch artifact
+`to-launch/2026-07-20-layer03-post-health-v100.sh` consumes the full-mixture cache and checks the authoritative primary
+suite audit before doing any GPU work:
+
+- if the primary suite passes, a two-task array trains the identical natural-activation width-2,048, `k=16` condition
+  at seeds 1 and 2; together with primary seed 0 this is the first feature-usage stability check;
+- if the primary suite fails only its health gates while every structural check passes, a three-task diagnostic array
+  adds natural width 512 and per-domain-centered/RMS-scaled widths 512 and 2,048. The primary natural width-2,048 result
+  is the fourth cell, so it is not recomputed;
+- if acquisition, collection, or another structural prerequisite fails, neither scientific branch is valid. The
+  diagnostic launcher fails closed rather than treating an infrastructure failure as dead-feature evidence.
+
+The per-domain transform is fitted on training rows only and replayed unchanged on validation and test rows. Scaled
+reconstruction errors live in transformed coordinates and are not compared numerically with natural-space
+reconstruction. The diagnostic comparison is whether centering/scaling and/or lower width materially repair held-out
+feature usage at matched `k`; the scaled condition cannot replace the natural corpus in later claims.
+
+The primary job is still pending, so both arrays are submitted behind mutually exclusive Slurm dependencies: stability
+uses `afterok:2113434`, while the diagnostic branch uses `afternotok:2113434` and additionally requires a written audit
+with all structural checks passing and `health.passed=false`.
+
 The completed JZ end-to-end smoke used the four `2026-07-20-jz-smoke` configs and
 `archived/2026-07-20-layer03-sae-smoke-v100.sh`. It collected 12 schema-only batches, trained a width-512 TopK SAE for 50
 steps, evaluated the held-out schema split, and wrote feature summaries. It is infrastructure evidence only. The job

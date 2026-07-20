@@ -29,7 +29,13 @@ from marl_gpt_interp.sparse_features import (
     write_activation_cache,
     write_run_manifest,
 )
-from marl_gpt_interp.sae_training import activation_norm_factor, balanced_batch_indices, train_topk_sae
+from marl_gpt_interp.sae_training import (
+    activation_norm_factor,
+    apply_activation_preprocessing,
+    balanced_batch_indices,
+    fit_activation_preprocessing,
+    train_topk_sae,
+)
 from scripts.experiments.sparse_marl_gpt.analyze_features import feature_rows
 
 
@@ -161,6 +167,25 @@ def test_balanced_sampler_and_activation_norm():
     indices = balanced_batch_indices(labels, 12, torch.Generator().manual_seed(4))
     assert torch.bincount(labels[indices], minlength=3).tolist() == [4, 4, 4]
     assert activation_norm_factor(torch.tensor([[3.0, 4.0]])) == 5.0
+
+
+def test_per_domain_preprocessing_uses_train_statistics_and_balances_rms():
+    x = torch.tensor([[1.0, 3.0], [3.0, 5.0], [10.0, 14.0], [14.0, 18.0]])
+    labels = torch.tensor([0, 0, 1, 1])
+    preprocessing = fit_activation_preprocessing(x, labels, ["a", "b"], "per_domain_center_rms")
+    transformed = apply_activation_preprocessing(x, labels, preprocessing)
+    for label in (0, 1):
+        values = transformed[labels == label]
+        assert torch.allclose(values.mean(dim=0), torch.zeros(2))
+        assert activation_norm_factor(values) == pytest.approx(1.0)
+    held_out = apply_activation_preprocessing(torch.tensor([[2.0, 4.0]]), torch.tensor([0]), preprocessing)
+    assert torch.allclose(held_out, torch.zeros_like(held_out))
+
+
+def test_natural_preprocessing_is_identity():
+    x = torch.randn(4, 3)
+    preprocessing = fit_activation_preprocessing(x, torch.tensor([0, 0, 1, 1]), ["a", "b"], "natural")
+    assert apply_activation_preprocessing(x, torch.tensor([0, 0, 1, 1]), preprocessing) is x
 
 
 def test_feature_rows_keep_top_example_identity_and_mark_apparent_support():

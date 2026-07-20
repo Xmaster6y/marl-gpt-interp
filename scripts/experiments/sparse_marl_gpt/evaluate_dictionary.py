@@ -10,6 +10,7 @@ from omegaconf import DictConfig
 
 from marl_gpt_interp.marl_gpt_tools import as_path, repo_root, to_plain_config, write_json
 from marl_gpt_interp.sparse_features import file_sha256, load_activation_cache, sparse_metrics, write_run_manifest
+from marl_gpt_interp.sae_training import apply_activation_preprocessing
 from scripts.experiments.sparse_marl_gpt.train_dictionary import build_model
 
 
@@ -24,6 +25,8 @@ def main(cfg: DictConfig) -> dict:
     x = tensors[spec["activation_location"]].float()
     domains = list(spec["domains"])
     labels = torch.tensor([{domain: i for i, domain in enumerate(domains)}[row["environment"]] for row in metadata])
+    preprocessing = dict(spec.get("preprocessing", {"mode": "natural"}))
+    x = apply_activation_preprocessing(x, labels, preprocessing)
     mask = torch.tensor([row["split"] == str(cfg.split) for row in metadata])
     model_cfg = DictConfig({"model": spec["model"]})
     model = build_model(model_cfg, int(spec["input_dim"]), domains)
@@ -55,7 +58,11 @@ def main(cfg: DictConfig) -> dict:
             "sparse_checkpoint": file_sha256(model_dir / "model.pt"),
         },
         split_manifest={str(cfg.split): int(mask.sum())},
-        environment_versions={"cache_schema": str(cache_manifest["format_version"])},
+        environment_versions={
+            "cache_schema": str(cache_manifest["format_version"]),
+            "preprocessing_mode": str(preprocessing["mode"]),
+            "metric_space": str(preprocessing.get("metric_space", "natural_activation")),
+        },
     )
     return metrics
 

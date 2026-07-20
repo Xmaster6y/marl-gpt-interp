@@ -82,6 +82,7 @@ def main(cfg: DictConfig) -> dict:
         "health": health,
         "evaluation_metrics": metrics,
         "feature_summary": feature_summary,
+        "preprocessing": model_spec.get("preprocessing", {"mode": "natural"}),
     }
     write_json(output_dir / "suite_audit.json", payload)
     write_run_manifest(

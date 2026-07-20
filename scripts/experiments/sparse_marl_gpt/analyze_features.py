@@ -10,6 +10,7 @@ from omegaconf import DictConfig
 
 from marl_gpt_interp.marl_gpt_tools import as_path, repo_root, to_plain_config, write_json
 from marl_gpt_interp.sparse_features import load_activation_cache, write_run_manifest
+from marl_gpt_interp.sae_training import apply_activation_preprocessing
 from scripts.experiments.sparse_marl_gpt.train_dictionary import build_model
 
 
@@ -85,6 +86,8 @@ def main(cfg: DictConfig) -> dict:
     domains = list(spec["domains"])
     domain_to_label = {domain: index for index, domain in enumerate(domains)}
     labels = torch.tensor([domain_to_label[row["environment"]] for row in selected_metadata])
+    preprocessing = dict(spec.get("preprocessing", {"mode": "natural"}))
+    x = apply_activation_preprocessing(x, labels, preprocessing)
     model = build_model(DictConfig({"model": spec["model"]}), int(spec["input_dim"]), domains)
     model.load_state_dict(torch.load(model_dir / "model.pt", map_location="cpu", weights_only=True))
     model.eval()
