@@ -412,6 +412,27 @@ with all structural checks passing and `health.passed=false`. At commit `b8a375c
 diagnostic array `2114755` were accepted by Slurm. These job IDs establish launch state only; neither branch has produced
 evidence, and only one dependency condition can be satisfied by the primary job's terminal state.
 
+### Feature Dossiers And Stability Evidence
+
+The next analysis layer is implemented independently of the method-comparison claim. Each completed model can produce a
+bounded dossier for at most 128 held-out features with activation rate at least `0.001`. A dossier combines 20 top and
+20 deterministically sampled random-active examples with their source file and row, six-row history boundary, action,
+reward/terminal fields when present, and generic finite/norm summaries for every tensor field. Source files are loaded
+with `weights_only=True`, one at a time. The output remains `unlabeled_requires_human_review`: tensor summaries help a
+reviewer form a semantic hypothesis but do not name a feature automatically.
+
+For the three natural width-2,048 seeds, pairwise stability uses the identical held-out cache. Decoder cosine `>=0.70`
+only generates candidates. An activation-validated candidate additionally requires held-out activation Pearson
+correlation `>=0.50`, domain firing-rate fingerprint cosine `>=0.90`, and top-example identity Jaccard `>=0.10`. A
+one-to-many match passing all three is still a **candidate split**, not a demonstrated split, until its semantic and
+causal fingerprints agree. Negative decoder cosine is not a valid match for these nonnegative TopK codes.
+
+Launch artifacts are `to-launch/2026-07-20-layer03-feature-dossiers-prepost.sh` and
+`to-launch/2026-07-20-layer03-feature-stability-v100.sh`. Primary dossiers use `afterany:2113434` so a health failure can
+still be inspected. Stability dossiers and all three seed-pair comparisons require `afterok:2114756`. Diagnostic
+dossiers require `afterok:2114755`. No causal or semantic universality claim follows from these jobs; they only identify
+which active candidates deserve batched intervention.
+
 The completed JZ end-to-end smoke used the four `2026-07-20-jz-smoke` configs and
 `archived/2026-07-20-layer03-sae-smoke-v100.sh`. It collected 12 schema-only batches, trained a width-512 TopK SAE for 50
 steps, evaluated the held-out schema split, and wrote feature summaries. It is infrastructure evidence only. The job

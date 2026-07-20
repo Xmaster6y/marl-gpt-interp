@@ -22,8 +22,22 @@ def feature_rows(
     metadata: list[dict],
     *,
     top_n: int,
+    random_active_n: int = 0,
+    seed: int = 0,
     minimum_rate: float,
 ) -> list[dict]:
+    def example_row(index: int, activation: float) -> dict:
+        sample = metadata[index]
+        return {
+            "activation": activation,
+            "sample_index": sample["sample_index"],
+            "environment": sample["environment"],
+            "source_file_id": sample.get("source_file_id"),
+            "source_row_index": sample.get("source_row_index"),
+            "target_action": sample.get("target_action"),
+            "trajectory_group": sample["trajectory_group"],
+        }
+
     rows = []
     for feature in range(codes.shape[1]):
         values = codes[:, feature]
@@ -39,21 +53,22 @@ def feature_rows(
         universality = min(rates.values(), default=0.0) / maximum_rate if maximum_rate else 0.0
         count = min(top_n, int((values > 0).sum()))
         top_examples = []
+        top_indices_list = []
         if count:
             top_values, top_indices = torch.topk(values, count)
+            top_indices_list = top_indices.tolist()
             for activation, index in zip(top_values.tolist(), top_indices.tolist(), strict=True):
-                sample = metadata[index]
-                top_examples.append(
-                    {
-                        "activation": activation,
-                        "sample_index": sample["sample_index"],
-                        "environment": sample["environment"],
-                        "source_file_id": sample.get("source_file_id"),
-                        "source_row_index": sample.get("source_row_index"),
-                        "target_action": sample.get("target_action"),
-                        "trajectory_group": sample["trajectory_group"],
-                    }
-                )
+                top_examples.append(example_row(index, activation))
+        active_indices = (values > 0).nonzero(as_tuple=False).flatten()
+        if top_indices_list:
+            keep = ~torch.isin(active_indices, torch.tensor(top_indices_list))
+            active_indices = active_indices[keep]
+        random_count = min(random_active_n, len(active_indices))
+        random_active_examples = []
+        if random_count:
+            generator = torch.Generator().manual_seed(seed + feature)
+            chosen = active_indices[torch.randperm(len(active_indices), generator=generator)[:random_count]]
+            random_active_examples = [example_row(int(index), float(values[index])) for index in chosen]
         rows.append(
             {
                 "feature": feature,
@@ -64,6 +79,7 @@ def feature_rows(
                 "apparent_support": support,
                 "apparent_universality": universality,
                 "top_examples": top_examples,
+                "random_active_examples": random_active_examples,
                 "causal_status": "not_evaluated",
             }
         )
@@ -98,6 +114,8 @@ def main(cfg: DictConfig) -> dict:
         domains,
         selected_metadata,
         top_n=int(cfg.top_examples_per_feature),
+        random_active_n=int(cfg.get("random_active_examples_per_feature", 0)),
+        seed=int(cfg.seed),
         minimum_rate=float(cfg.minimum_domain_activation_rate),
     )
     path = output_dir / "feature_summary.jsonl"

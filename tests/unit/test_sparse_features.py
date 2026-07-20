@@ -5,6 +5,7 @@ import json
 import pytest
 import torch
 
+from marl_gpt_interp.feature_dossiers import rehydrate_references, summarize_tensor_row
 from marl_gpt_interp.marl_gpt_tools import enable_sample_identity
 from marl_gpt_interp.sparse_features import (
     DomainLatticeSAE,
@@ -37,6 +38,11 @@ from marl_gpt_interp.sae_training import (
     train_topk_sae,
 )
 from scripts.experiments.sparse_marl_gpt.analyze_features import feature_rows
+from scripts.experiments.sparse_marl_gpt.compare_features import (
+    activation_correlations,
+    domain_rate_fingerprints,
+    jaccard,
+)
 
 
 def test_domain_lattice_has_complete_three_domain_support():
@@ -188,6 +194,35 @@ def test_natural_preprocessing_is_identity():
     assert apply_activation_preprocessing(x, torch.tensor([0, 0, 1, 1]), preprocessing) is x
 
 
+def test_feature_stability_fingerprints_and_correlations():
+    left = torch.tensor([[0.0, 1.0], [1.0, 0.0], [2.0, 0.0], [3.0, 1.0]])
+    right = torch.tensor([[0.0, 2.0], [2.0, 0.0], [4.0, 0.0], [6.0, 2.0]])
+    correlations = activation_correlations(left, right)
+    assert correlations.diag().tolist() == pytest.approx([1.0, 1.0])
+    fingerprints = domain_rate_fingerprints(left, torch.tensor([0, 0, 1, 1]), 2)
+    assert fingerprints.tolist() == [[0.5, 1.0], [0.5, 0.5]]
+    assert jaccard({(1, 2), (3, 4)}, {(1, 2), (5, 6)}) == pytest.approx(1 / 3)
+
+
+def test_feature_dossier_rehydrates_tensor_only_source_rows(tmp_path):
+    source = tmp_path / "source.pt"
+    torch.save(
+        {
+            "actions": torch.tensor([1, 2, 3]),
+            "rewards": torch.tensor([0.0, 1.0, -1.0]),
+            "observations": torch.arange(120, dtype=torch.float32).reshape(3, 40),
+        },
+        source,
+    )
+    references = [{"source_file_id": 9, "source_row_index": 1}]
+    hydrated = rehydrate_references(references, {9: str(source)}, history_length=6)
+    row = hydrated[(9, 1)]
+    assert row["history_row_start"] == 0
+    assert row["fields"]["actions"]["values"] == [2]
+    assert row["fields"]["observations"]["shape"] == [40]
+    assert summarize_tensor_row(torch.tensor([1.0, 2.0]))["values"] == [1.0, 2.0]
+
+
 def test_feature_rows_keep_top_example_identity_and_mark_apparent_support():
     codes = torch.tensor([[2.0, 0.0], [1.0, 0.0], [3.0, 4.0]])
     labels = torch.tensor([0, 0, 1])
@@ -202,9 +237,20 @@ def test_feature_rows_keep_top_example_identity_and_mark_apparent_support():
         }
         for index in range(3)
     ]
-    rows = feature_rows(codes, labels, ["a", "b"], metadata, top_n=2, minimum_rate=0.5)
+    rows = feature_rows(
+        codes,
+        labels,
+        ["a", "b"],
+        metadata,
+        top_n=1,
+        random_active_n=1,
+        seed=7,
+        minimum_rate=0.5,
+    )
     assert rows[0]["apparent_support"] == ["a", "b"]
     assert rows[0]["top_examples"][0]["source_row_index"] == 12
+    assert len(rows[0]["random_active_examples"]) == 1
+    assert rows[0]["random_active_examples"][0]["source_row_index"] in {10, 11}
     assert rows[0]["causal_status"] == "not_evaluated"
 
 
