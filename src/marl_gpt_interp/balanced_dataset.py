@@ -74,7 +74,7 @@ def _lfs_sha256(item: Mapping[str, Any]) -> str | None:
 
 def list_huggingface_files(repo_id: str, revision: str, prefix: str) -> list[RemoteFile]:
     encoded_prefix = urllib.parse.quote(prefix.strip("/"), safe="/")
-    query = urllib.parse.urlencode({"recursive": "true", "expand": "true", "limit": 1000})
+    query = urllib.parse.urlencode({"recursive": "true", "expand": "false", "limit": 1000})
     url = f"https://huggingface.co/api/datasets/{repo_id}/tree/{revision}/{encoded_prefix}?{query}"
     with urllib.request.urlopen(url, timeout=120) as response:
         items = json.load(response)
