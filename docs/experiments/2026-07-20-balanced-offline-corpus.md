@@ -109,10 +109,12 @@ The launch runs on `prepost`, consumes no GPU allocation, and inherits the JZ lo
 JZ pre/post job `2111291` was submitted for the 12-group `training-small` materialization and fail-closed row audit at
 commit `eff3b2b`.
 
-At the latest 2026-07-20 snapshot, job `2111291` was running at 46m42s with manifest status `downloading`: 25/36 selected
-objects and 19,016,961,293/64,562,177,143 bytes were finalized, with another 1,376,256,000 resumable partial bytes. The
-dependent GPU suite is job `2113434` with `afterok:2111291`; Slurm reports `Dependency` until acquisition and audit exit
-zero. Submission is not evidence that the dataset or SAE gate passed.
+At the latest 2026-07-20 snapshot, job `2111291` was still running at 4h43m34s with manifest status `downloading`. It had
+finalized 35/36 selected objects and 56,145,159,965/64,562,177,143 bytes, with another 1,092,558,848 bytes in the final
+resumable partial object. Total transferred data was 88.66% of the plan, and the partial had been written 1.3 seconds
+before inspection, so this snapshot shows active acquisition rather than a stalled or completed job. The dependent GPU
+suite is job `2113434` with `afterok:2111291`; it remained pending and had produced no cache, evaluation, or audit
+artifact. Submission and byte progress are not evidence that the dataset or SAE gate passed.
 
 ## Decision Rule
 

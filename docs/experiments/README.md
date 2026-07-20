@@ -6,8 +6,8 @@
 
 ## Planned Analyses
 
-- [Balanced offline MARL-GPT corpus](2026-07-20-balanced-offline-corpus.md): Six-group view passed structural balance; 12-group full-mixture acquisition is running with its GPU suite dependency-submitted, while authoritative episode provenance remains open.
-- [Domain-lattice SAE method validation](2026-07-18-domain-lattice-sae-method-validation.md): Core diagnostic passed split/reconstruction checks but failed held-out feature usage; 12-group full-mixture suite is dependency-submitted behind dataset audit.
+- [Balanced offline MARL-GPT corpus](2026-07-20-balanced-offline-corpus.md): Six-group view passed structural balance; the latest 12-group acquisition snapshot had 35/36 files finalized but no completed audit, while authoritative episode provenance remains open.
+- [Domain-lattice SAE method validation](2026-07-18-domain-lattice-sae-method-validation.md): Core diagnostic passed split/reconstruction checks but failed held-out feature usage; all full-mixture, diagnostic, dossier, and stability jobs remain dependency-held with no new scientific result.
 - [Cross-football sparse-feature robustness](2026-07-19-cross-football-sparse-feature-robustness.md): Blocked on the synthetic gate; separate GRF–La Liga–RoboCup robustness branch with no tactical-transfer claim.
 - [TacSIm benchmark](2026-07-18-tacsim-benchmark.md): Deferred endpoint; reproduce official artifacts and a baseline after readiness stages.
 - [Causal cross-football pressure transfer](2026-07-15-causal-cross-football-pressure-transfer.md): Superseded as the primary planned track; retained as historical context and possible later feature interpretation.

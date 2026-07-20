@@ -435,6 +435,26 @@ which active candidates deserve batched intervention. At commit `1ea04fe`, Slurm
 `2122395`, stability-dossier array `2122396`, diagnostic-dossier array `2122392`, and pairwise stability array `2122397`.
 These are dependency-held launches, not results.
 
+### Run Ledger At Latest Snapshot
+
+As of the latest 2026-07-20 inspection, only the schema smoke and six-group core diagnostic had executed to completion.
+The current chain had the following authoritative state:
+
+| Job | Intended work | State | Evidence status |
+| --- | --- | --- | --- |
+| `2111291` | Materialize and audit the 12-group balanced corpus | Running; 35/36 files finalized | Acquisition progress only; dataset audit absent |
+| `2113434` | Collect, train, evaluate, analyze, and strictly audit the primary full-mixture SAE | Pending on `afterok:2111291` | Not run; no result artifacts |
+| `2114755` | Three-condition collapse diagnostic | Pending on primary failure | Not run |
+| `2114756` | Natural width-2,048 seeds 1 and 2 | Pending on primary success | Not run |
+| `2122392` | Diagnostic feature dossiers | Pending on diagnostic completion | Not run |
+| `2122395` | Primary feature dossiers | Pending on primary termination | Not run |
+| `2122396` | Stability-seed feature dossiers | Pending on stability completion | Not run |
+| `2122397` | Three pairwise seed-stability comparisons | Pending on stability completion | Not run |
+
+Consequently, the latest scientific result remains core resume job `2112970`: reconstruction and split checks passed,
+but the `0.939` held-out dead-feature fraction failed feature-usage health. No full-mixture, diagnostic, dossier,
+cross-seed stability, semantic, or causal result exists yet.
+
 The completed JZ end-to-end smoke used the four `2026-07-20-jz-smoke` configs and
 `archived/2026-07-20-layer03-sae-smoke-v100.sh`. It collected 12 schema-only batches, trained a width-512 TopK SAE for 50
 steps, evaluated the held-out schema split, and wrote feature summaries. It is infrastructure evidence only. The job
