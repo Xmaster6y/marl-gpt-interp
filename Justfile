@@ -37,6 +37,8 @@ grf-install-jz python=grf_jz_python:
 	export UV_MANAGED_PYTHON=1
 	export UV_PYTHON_INSTALL_DIR="$PWD/{{grf_jz_python_install_dir}}"
 	export UV_CACHE_DIR="$cache_dir"
+	export UV_HTTP_TIMEOUT="${UV_HTTP_TIMEOUT:-300}"
+	export UV_HTTP_RETRIES="${UV_HTTP_RETRIES:-10}"
 	export TMPDIR="$tmp_dir"
 	uv sync --python {{python}} --group grf --group sae --no-install-package gfootball --no-install-package torch --inexact
 	uv pip install --python .venv/bin/python --offline "torch=={{grf_jz_torch}}"
