@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 import urllib.parse
 import urllib.request
@@ -249,4 +250,76 @@ def materialize_balanced_view(cfg: Mapping[str, Any]) -> dict[str, Any]:
         link.symlink_to(cached_path)
     payload["status"] = "materialized_pending_audit"
     _write_manifest(manifest_path, payload)
+    return payload
+
+
+def shard_family(source_path: str) -> str:
+    """Return a conservative candidate family for multipart source filenames."""
+
+    stem = Path(source_path).stem
+    match = re.match(r"^(chunk_\d+)_part_\d+$", stem)
+    if match:
+        return f"{Path(source_path).parent.as_posix()}/{match.group(1)}"
+    return source_path
+
+
+def audit_balanced_view(manifest_path: Path, output_path: Path) -> dict[str, Any]:
+    """Inspect row/terminal counts without treating candidate shard families as ground truth."""
+
+    import pyarrow as pa
+    import torch
+
+    manifest = json.loads(manifest_path.read_text())
+    view_root = Path(manifest["view_root"])
+    cap = int(manifest["max_rows_per_source"])
+    rows = []
+    for item in manifest["files"]:
+        path = view_root / item["destination_path"]
+        if not path.exists():
+            raise FileNotFoundError(path)
+        suffix = path.suffix.lower()
+        if suffix == ".pt":
+            tensors = torch.load(path, map_location="cpu", weights_only=True)
+            count = int(tensors["actions"].shape[0])
+            terminals = int(tensors["dones"].to(torch.bool).sum()) if "dones" in tensors else None
+        elif suffix == ".arrow":
+            with pa.memory_map(str(path)) as source:
+                reader = pa.ipc.open_file(source)
+                count = sum(reader.get_batch(index).num_rows for index in range(reader.num_record_batches))
+            terminals = count // 256
+        else:
+            raise ValueError(f"unsupported balanced dataset file: {path}")
+        rows.append(
+            {
+                **item,
+                "rows": count,
+                "terminal_count": terminals,
+                "accepted_row_cap": min(count, cap),
+                "meets_row_cap": count >= cap,
+                "candidate_shard_family": shard_family(item["source_path"]),
+            }
+        )
+    environment_summary = {}
+    for environment in sorted({row["environment"] for row in rows}):
+        selected = [row for row in rows if row["environment"] == environment]
+        environment_summary[environment] = {
+            "physical_files": len(selected),
+            "candidate_shard_families": len({row["candidate_shard_family"] for row in selected}),
+            "raw_rows": sum(row["rows"] for row in selected),
+            "accepted_row_cap": sum(row["accepted_row_cap"] for row in selected),
+            "files_below_cap": sum(not row["meets_row_cap"] for row in selected),
+        }
+    payload = {
+        "format_version": 1,
+        "manifest": str(manifest_path),
+        "status": "audited_pending_group_validation",
+        "claim_bearing": False,
+        "blockers": [
+            "candidate multipart shard families require provenance validation",
+            "POGEMA terminal boundaries are synthesized at 256 rows by the native loader",
+        ],
+        "environment_summary": environment_summary,
+        "files": rows,
+    }
+    _write_manifest(output_path, payload)
     return payload

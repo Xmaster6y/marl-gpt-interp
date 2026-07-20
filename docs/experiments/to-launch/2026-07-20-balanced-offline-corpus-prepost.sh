@@ -24,3 +24,6 @@ export XDG_CACHE_HOME="/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/.c
 echo "config_name=$config_name"
 echo "work_repo=$work_repo"
 .venv/bin/python -m scripts.experiments.sparse_marl_gpt.build_balanced_dataset --config-name "$config_name"
+if [[ "$config_name" == "2026-07-20-core-small" ]]; then
+    .venv/bin/python -m scripts.experiments.sparse_marl_gpt.audit_balanced_dataset --config-name "$config_name"
+fi

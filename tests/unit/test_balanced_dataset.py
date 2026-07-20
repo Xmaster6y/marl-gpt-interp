@@ -5,6 +5,7 @@ from marl_gpt_interp.balanced_dataset import (
     allocate_component_counts,
     build_selection,
     deterministic_select,
+    shard_family,
 )
 
 
@@ -48,3 +49,8 @@ def test_selection_balances_source_files_across_environments():
         "grf": 6,
     }
     assert all(item.destination_path.startswith(f"dataset/{item.environment}/") for item in selected)
+
+
+def test_shard_family_marks_multipart_chunks_without_assuming_arrow_families():
+    assert shard_family("dataset-GRF/task/chunk_3_part_4.pt") == "dataset-GRF/task/chunk_3"
+    assert shard_family("dataset-LMAPF/random/part_2_7.arrow") == "dataset-LMAPF/random/part_2_7.arrow"

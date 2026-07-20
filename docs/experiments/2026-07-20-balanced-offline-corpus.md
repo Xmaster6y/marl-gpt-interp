@@ -25,6 +25,10 @@ selects files deterministically from config weights, downloads them resumably in
 and exposes config-specific views through symlinks. It never overwrites a conflicting view path. Each view manifest
 records expected sizes, available hashes, environment/component identities, row caps, revision, seed, and status.
 
+The core launch then runs `scripts.experiments.sparse_marl_gpt.audit_balanced_dataset`, which reads each materialized file
+sequentially, records raw and capped row counts, terminal counts, files below the configured cap, and candidate multipart
+`chunk_*` families. Candidate families remain warnings rather than silently becoming ground-truth episode identities.
+
 Materialization status is `materialized_pending_audit`, with `claim_bearing: false`. A separate audit must establish:
 
 - whether trajectories cross file or `part_*` boundaries;
