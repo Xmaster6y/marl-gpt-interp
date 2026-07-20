@@ -102,12 +102,13 @@ activation-row or collector-batch level can therefore place overlapping history 
 multi-agent datasets it can also separate different agents or nearby timesteps from the same underlying episode.
 
 The collector now instruments the native loader without changing the vendored MARL-GPT submodule. Every example records
-a stable source-file identifier, original source-row index, target action, and grouping field. The initial safe contract
-groups by source file and stratifies the grouped split within each environment. This is deliberately conservative: all
-trajectories in one file remain in one split, avoiding reliance on ambiguous terminal-marker reconstruction in flattened
-multi-agent arrays. A collection is rejected if an environment has fewer than six source groups or any environment/split
-cell would be empty. Finer trajectory grouping is allowed later only when the dataset exports an authoritative episode
-identity.
+a stable source-file identifier, original source-row index, target action, and grouping field. Balanced views use the
+audited manifest's `source_group`: multipart `chunk_N_part_M` representatives inherit group `chunk_N`, and the grouped
+split is stratified within each environment. This is deliberately conservative: all retained data from one candidate
+upstream family remain in one split, avoiding reliance on ambiguous terminal-marker reconstruction in flattened
+multi-agent arrays. A collection is rejected if an environment has fewer than the configured source-group count or any
+environment/split cell would be empty. Finer trajectory grouping is allowed only when the dataset exports an
+authoritative episode identity.
 
 Because the native iterator exhausts one file before advancing, each suite caps accepted loader rows by source and
 component. Without those caps, a fixed example budget can be dominated by the first large file and never reach enough
@@ -349,9 +350,42 @@ third of GRF and POGEMA examples; mean active magnitude was `24.68` for SMAC, `0
 and all top-20 examples were SMAC. It is therefore an environment/scale-cue candidate, not evidence of semantic
 universality. No causal intervention has been run.
 
+Authoritative core artifacts on JZ WORK are:
+
+- activation cache: `results/experiments/2026-07-20-layer03-balanced-core-small-cache/`;
+- SAE model and checkpoints: `results/experiments/2026-07-20-layer03-balanced-core-small-topk-w1024-k16-seed0/`;
+- held-out metrics: `results/experiments/2026-07-20-layer03-balanced-core-small-topk-w1024-k16-seed0-evaluation/`;
+- feature rows: `results/experiments/2026-07-20-layer03-balanced-core-small-topk-w1024-k16-seed0-features/`;
+- final gate: `results/experiments/2026-07-20-layer03-balanced-core-small-suite-audit/`.
+
 Full-mixture job `2113434` is submitted with `afterok:2111291`. It will start only if the 36-file acquisition and
 8,192-row-per-source audit pass. Its strict suite audit will test whether task/scenario diversity repairs held-out feature
 collapse; failure blocks the width, sparsity, and seed sweep.
+
+## Next Steps And Gates
+
+1. **Finish acquisition without changing the mixture.** Let job `2111291` complete its size/hash and row audit. If any
+   source is below 8,192 rows, replace only that representative within the same task and source group; do not relax the
+   common accepted-row budget or remove the task.
+2. **Run the already-submitted full-mixture flat SAE.** Job `2113434` must retain 12 groups and equal examples in every
+   environment/split cell. Record reconstruction, L0, dead features, apparent support, and top-example provenance. This
+   is the decisive training-health result, not a method comparison.
+3. **Branch on held-out feature usage.** If dead-feature fraction is `<=0.50` and every domain meets normalized-MSE gates,
+   proceed to the width/k/seed stability sweep. If collapse persists, freeze the broad sweep and run a bounded diagnostic
+   comparing widths `{512, 2048}` and natural pooled scaling versus a separately reported per-domain-centered/RMS-scaled
+   condition. Do not substitute the scaled diagnostic for the natural-activation result.
+4. **Add semantic rehydration before naming features.** Reconstruct each selected top example from `source_file`,
+   `source_row_index`, scenario, action, reward, and terminal metadata; attach environment-specific state summaries. A
+   feature receives a semantic label only when its top and random-active examples distinguish a reproducible concept.
+5. **Test splitting and stability.** Generate cross-seed decoder matches only as candidates, then require held-out
+   activation fingerprints and matched top-example concepts. One-to-many matches remain candidate feature splits until
+   causal fingerprints agree.
+6. **Test functional universality.** For high-activity, stable candidates first, run batched per-domain ablation and direct
+   contribution substitution through the frozen model remainder. Apparent cross-domain firing alone is never universal
+   support.
+7. **Close claim gates before lattice comparisons.** Obtain authoritative upstream episode/chunk provenance and complete
+   the five-seed synthetic support-recovery gate. Only then launch flat-versus-independent-versus-lattice
+   rate--distortion comparisons or make universality/reuse claims.
 
 The completed JZ end-to-end smoke used the four `2026-07-20-jz-smoke` configs and
 `archived/2026-07-20-layer03-sae-smoke-v100.sh`. It collected 12 schema-only batches, trained a width-512 TopK SAE for 50

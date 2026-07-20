@@ -4,8 +4,9 @@
 
 Builder and scalable configs implemented. The first six-file-per-environment view was materialized on JZ SCRATCH but
 rejected by its audit: five of six GRF files fell below the common row cap and represented only four distinct
-`chunk_*` families. The corrected six-group view passed its structural audit on JZ. It remains non-claim-bearing until
-episode provenance is validated and group-disjoint activation splits are constructed.
+`chunk_*` families. The corrected six-group view passed its structural audit on JZ. The 12-group full-mixture view is
+currently materializing. All views remain non-claim-bearing until episode provenance is validated; activation splits are
+now group-disjoint at the audited candidate-family boundary.
 
 ## Actual Problem
 
@@ -108,14 +109,19 @@ The launch runs on `prepost`, consumes no GPU allocation, and inherits the JZ lo
 JZ pre/post job `2111291` was submitted for the 12-group `training-small` materialization and fail-closed row audit at
 commit `eff3b2b`.
 
+At the latest 2026-07-20 snapshot, job `2111291` was running at 46m42s with manifest status `downloading`: 25/36 selected
+objects and 19,016,961,293/64,562,177,143 bytes were finalized, with another 1,376,256,000 resumable partial bytes. The
+dependent GPU suite is job `2113434` with `afterok:2111291`; Slurm reports `Dependency` until acquisition and audit exit
+zero. Submission is not evidence that the dataset or SAE gate passed.
+
 ## Decision Rule
 
 Proceed from core-balanced-small to training-small, and from training-small to training-pilot only if each builder run is
 resumable, every selected file matches its expected size/hash, and every environment reaches its configured group and
 accepted-row budget. The audit exits nonzero on any duplicate group, undersized file, or unequal environment budget.
-Proceed to SAE training only when the activation
-cache contains equal train, validation, and test example counts per environment with all configured scenarios represented
-in the declared splits. Otherwise revise grouping or mixture before spending GPU time.
+Proceed to SAE training only when the activation cache contains equal train, validation, and test example counts per
+environment with all configured scenarios represented in the declared splits. Otherwise revise grouping or mixture
+before spending GPU time.
 
 ## Links
 
