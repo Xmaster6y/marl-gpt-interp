@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import platform
 import subprocess
 import sys
@@ -474,7 +475,13 @@ def load_activation_cache(directory: Path) -> tuple[dict[str, torch.Tensor], lis
 
 
 def git_commit(root: Path) -> str:
-    result = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=False, capture_output=True, text=True)
+    injected_commit = os.environ.get("EXPERIMENT_GIT_COMMIT")
+    if injected_commit:
+        return injected_commit
+    try:
+        result = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=False, capture_output=True, text=True)
+    except OSError:
+        return "unknown"
     return result.stdout.strip() if result.returncode == 0 else "unknown"
 
 

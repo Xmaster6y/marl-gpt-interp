@@ -15,7 +15,8 @@ set -euo pipefail
 
 if [[ -z "${SLURM_JOB_ID:-}" ]]; then
     mkdir -p results/slurm
-    exec sbatch "$0"
+    git_commit="$(git rev-parse HEAD 2>/dev/null || printf unknown)"
+    exec sbatch --export="ALL,EXPERIMENT_GIT_COMMIT=$git_commit" "$0"
 fi
 
 if command -v module >/dev/null 2>&1; then
