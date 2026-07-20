@@ -57,12 +57,13 @@ The training mixture uses the six SMAC 5v5/5v6 race-task folders equally, POGEMA
 component-specific caps of 4,800 SMAC/GRF rows, 4,860 POGEMA-maze rows, and 4,320 POGEMA-random rows. Its 1,440 batches
 collect exactly 86,400 rows per environment without cycling a component.
 
-The initial largest-part JZ plan for `training-small` selected 36 source groups but required 65,043,204,663 physical
-bytes, including several 8.42 GB GRF parts from which only 4,070 rows would be consumed. It was rejected before
-materialization. The corrected smallest-above-8-MB policy preserves two groups from every SMAC and GRF task plus 11:1
-POGEMA groups; its exact byte plan is pending the committed JZ re-plan. Its downstream collector uses component-specific
-caps rather than the acquisition audit's 8,192-row ceiling, producing exactly 48,840 activation rows per environment
-without cycling a smaller component.
+The initial largest-part JZ plan for `training-small` selected 36 source groups and 65,043,204,663 physical bytes,
+including several 8.42 GB GRF parts from which only 4,070 rows would be consumed. The corrected smallest-above-8-MB
+policy preserves two groups from every SMAC and GRF task plus 11:1 POGEMA groups and reduces the plan to
+64,562,177,143 bytes. The small reduction establishes that full native-task coverage is the storage constraint: three
+GRF training scenarios have no smaller selected-group representatives. This bounded view is 4.7% of the 1.37 TB
+acquisition pool. Its downstream collector uses component-specific caps rather than the acquisition audit's 8,192-row
+ceiling, producing exactly 48,840 activation rows per environment without cycling a smaller component.
 
 ## Materialization Evidence
 
@@ -103,6 +104,9 @@ manifest itself to that status with `structural_balance_passed: true` and an exp
 
 The launch runs on `prepost`, consumes no GPU allocation, and inherits the JZ login proxy. Its default is the corrected
 `2026-07-20-core-balanced-small`; larger views reuse any already cached files.
+
+JZ pre/post job `2111291` was submitted for the 12-group `training-small` materialization and fail-closed row audit at
+commit `eff3b2b`.
 
 ## Decision Rule
 
