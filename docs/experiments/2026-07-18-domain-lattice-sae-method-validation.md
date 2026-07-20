@@ -331,6 +331,13 @@ W&B offline.
 JZ job `2111294` was submitted at commit `eff3b2b` for the immediate six-group core diagnostic. The 12-group acquisition
 job is `2111291`; its audit must pass before the full-mixture GPU suite is submitted.
 
+Job `2111294` completed the collection gate before failing at training because the offline JZ environment lacked the
+optional `wandb` package. The cache contains 18,432 rows: exactly 6,144 per environment, six dataset source groups per
+environment, and identical per-environment split cells of 4,096 train, 1,024 validation, and 1,024 test rows. It records
+`dataset_source_group` and `claim_bearing: false`. No cache recollection is needed. The launcher now accepts a resume
+stage, and W&B absence falls back explicitly to authoritative local JSONL/checkpoint observability unless a config marks
+W&B required.
+
 The completed JZ end-to-end smoke used the four `2026-07-20-jz-smoke` configs and
 `archived/2026-07-20-layer03-sae-smoke-v100.sh`. It collected 12 schema-only batches, trained a width-512 TopK SAE for 50
 steps, evaluated the held-out schema split, and wrote feature summaries. It is infrastructure evidence only. The job

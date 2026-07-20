@@ -25,6 +25,7 @@ observability:
   checkpoint_every: 1000
   wandb:
     enabled: true
+    required: false
     mode: offline
     project: marl-gpt-sae
 hydra:

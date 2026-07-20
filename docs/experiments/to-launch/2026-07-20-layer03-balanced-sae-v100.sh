@@ -14,6 +14,7 @@
 set -euo pipefail
 
 config_name="${1:-2026-07-20-layer03-balanced-core-small}"
+start_stage="${2:-collect_activations}"
 case "$config_name" in
     2026-07-20-layer03-balanced-core-small)
         dataset_manifest="/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-core-balanced-small/balanced_dataset_manifest.json"
@@ -30,7 +31,7 @@ esac
 if [[ -z "${SLURM_JOB_ID:-}" ]]; then
     mkdir -p results/slurm
     git_commit="$(git rev-parse HEAD 2>/dev/null || printf unknown)"
-    exec sbatch --export="ALL,EXPERIMENT_GIT_COMMIT=$git_commit" "$0" "$config_name"
+    exec sbatch --export="ALL,EXPERIMENT_GIT_COMMIT=$git_commit" "$0" "$config_name" "$start_stage"
 fi
 
 if command -v module >/dev/null 2>&1; then
@@ -82,13 +83,25 @@ assert manifest["structural_balance_passed"] is True
 PY
 
 echo "config_name=$config_name"
+echo "start_stage=$start_stage"
 echo "work_repo=$work_repo"
 echo "scratch_root=$scratch_root"
 echo "job_root=$job_root"
 
+run_stage=false
 for stage in collect_activations train_dictionary evaluate_dictionary analyze_features audit_sae_suite; do
+    if [[ "$stage" == "$start_stage" ]]; then
+        run_stage=true
+    fi
+    if [[ "$run_stage" != true ]]; then
+        continue
+    fi
     uv run --no-sync --python 3.12.11 --group grf --group sae \
         -m "scripts.experiments.sparse_marl_gpt.${stage}" \
         --config-name "$config_name" \
         hydra.run.dir="results/hydra/sparse_marl_gpt/${stage}/${SLURM_JOB_ID}"
 done
+if [[ "$run_stage" != true ]]; then
+    echo "unknown start stage: $start_stage" >&2
+    exit 2
+fi

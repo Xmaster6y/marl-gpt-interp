@@ -10,6 +10,7 @@ import os
 import sys
 import time
 import types
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Sequence
@@ -198,16 +199,24 @@ def train_topk_sae(
 
     wandb_run = None
     if wandb_cfg and bool(wandb_cfg.get("enabled", False)):
-        import wandb
-
-        wandb_run = wandb.init(
-            project=str(wandb_cfg.get("project", "marl-gpt-sae")),
-            name=output_dir.name,
-            dir=str(output_dir),
-            mode=str(wandb_cfg.get("mode", "offline")),
-            config=dict(wandb_cfg.get("config", {})),
-            resume="allow",
-        )
+        try:
+            import wandb
+        except ModuleNotFoundError:
+            if bool(wandb_cfg.get("required", False)):
+                raise
+            warnings.warn(
+                "wandb is unavailable; continuing with authoritative local JSONL metrics and checkpoints",
+                stacklevel=2,
+            )
+        else:
+            wandb_run = wandb.init(
+                project=str(wandb_cfg.get("project", "marl-gpt-sae")),
+                name=output_dir.name,
+                dir=str(output_dir),
+                mode=str(wandb_cfg.get("mode", "offline")),
+                config=dict(wandb_cfg.get("config", {})),
+                resume="allow",
+            )
 
     metrics_path = output_dir / "training_metrics.jsonl"
     latest_metrics: dict[str, float] = {}
