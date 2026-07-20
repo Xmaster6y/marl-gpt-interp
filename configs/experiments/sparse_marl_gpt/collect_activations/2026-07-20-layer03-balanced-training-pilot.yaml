@@ -1,0 +1,47 @@
+defaults:
+  - _self_
+
+output_dir: results/experiments/2026-07-20-layer03-balanced-training-pilot-cache
+checkpoint: results/marl-gpt-main.pt
+dataset_config:
+  smac:
+    config: {history_len: 6, history_step: 1, part_of_dataset: 1}
+    map_types: [protoss, protoss, terran, terran, zerg, zerg]
+    folder_paths:
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/protoss_5_vs_5
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/protoss_5_vs_6
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/terran_5_vs_5
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/terran_5_vs_6
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/zerg_5_vs_5
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/zerg_5_vs_6
+  pogema:
+    config: {part_of_dataset: 1}
+    folder_paths:
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/dataset_pogema_ll/mazes
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/dataset_pogema_ll/random
+  grf:
+    config: {history_len: 6, history_step: 1, part_of_dataset: 1, load_part_file: true}
+    folder_paths:
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/dataset_grf/trajectories/11vs11a11r_5to10_checkpoint
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/dataset_grf/trajectories/11vs11a11r_60to65_checkpoint
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/dataset_grf/trajectories/11vs11a11r_99to100_checkpoint
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/dataset_grf/trajectories/academy_corner
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/dataset_grf/trajectories/academy_counterattack_easy
+      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/dataset_grf/trajectories/academy_pass_and_shoot_with_keeper
+envs: [smac, pogema, grf]
+activation_locations: [layer_03:final]
+grouping_mode: source_file
+group_field: source_file_id
+minimum_groups_per_environment: 6
+max_rows_per_source: 3330
+device: cuda:0
+seed: 0
+batch_size: 192
+num_batches: 1665
+max_block_size: 700
+max_action_size: 20
+last_token: true
+env_specific: true
+hydra:
+  run:
+    dir: results/hydra/sparse_marl_gpt/collect_activations/${now:%Y-%m-%d_%H-%M-%S}

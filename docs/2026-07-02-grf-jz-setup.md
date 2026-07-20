@@ -28,6 +28,17 @@ For SAE work, stage reusable datasets on the fast semi-permanent SCRATCH filesys
 just jz-stage-data
 ```
 
+Long Hugging Face downloads must use a login shell so the IDRIS HTTP proxy is exported, or run through the `prepost`
+partition. The balanced offline-corpus workflow uses the latter:
+
+```bash
+bash docs/experiments/to-launch/2026-07-20-balanced-offline-corpus-prepost.sh \
+  2026-07-20-core-small
+```
+
+It keeps immutable revision-pinned files in one SCRATCH cache and creates config-specific balanced symlink views, so
+larger mixtures reuse prior downloads without duplicating data.
+
 If the JZ login node cannot reach PyPI's file host, copy the locked, platform-independent wheels into
 `results/wheels/sae-jz/` and install the cached-activation SAE runtime without network access:
 
