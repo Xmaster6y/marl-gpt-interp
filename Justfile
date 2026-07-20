@@ -48,8 +48,13 @@ grf-install-jz python=grf_jz_python:
 sae-install-jz-offline:
 	#!/usr/bin/env bash
 	set -euo pipefail
+	cache_dir="{{jz_scratch_root}}/.cache/uv"
+	tmp_dir="{{jz_scratch_root}}/tmp/setup"
 	test -f results/wheels/sae-jz/dictionary_learning-0.1.0-py3-none-any.whl
 	test -f results/wheels/sae-jz/einops-0.8.2-py3-none-any.whl
+	mkdir -p "$cache_dir" "$tmp_dir"
+	export UV_CACHE_DIR="$cache_dir"
+	export TMPDIR="$tmp_dir"
 	uv pip install --python .venv/bin/python --offline --no-deps \
 		results/wheels/sae-jz/dictionary_learning-0.1.0-py3-none-any.whl \
 		results/wheels/sae-jz/einops-0.8.2-py3-none-any.whl
