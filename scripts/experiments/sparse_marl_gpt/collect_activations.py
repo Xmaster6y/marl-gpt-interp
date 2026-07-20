@@ -71,12 +71,12 @@ def main(cfg: DictConfig) -> dict:
             grouping_mode = str(cfg.grouping_mode)
             group_field = str(cfg.get("group_field", "source_file_id"))
             raw_groups = batch_info.get(group_field)
-            if raw_groups is not None:
+            if grouping_mode == "batch_schema_smoke":
+                group_values = [f"batch-{batch_index:06d}"] * len(labels)
+            elif raw_groups is not None:
                 group_values = raw_groups.detach().cpu().reshape(-1).tolist()
                 if len(group_values) != len(labels):
                     raise ValueError(f"{group_field} must have one value per sample")
-            elif grouping_mode == "batch_schema_smoke":
-                group_values = [f"batch-{batch_index:06d}"] * len(labels)
             else:
                 raise ValueError(
                     f"Claim-bearing collection requires batch_info[{group_field!r}]; "
