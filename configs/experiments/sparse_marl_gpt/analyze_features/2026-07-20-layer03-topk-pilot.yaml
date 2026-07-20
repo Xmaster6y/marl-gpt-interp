@@ -1,9 +1,9 @@
 defaults:
   - _self_
 
-cache_dir: results/experiments/2026-07-20-layer03-activation-cache-pilot
-model_dir: results/experiments/2026-07-20-layer03-topk-8x-k16-seed0
-output_dir: results/experiments/2026-07-20-layer03-topk-8x-k16-seed0-features
+cache_dir: results/experiments/2026-07-20-layer03-balanced-training-pilot-cache
+model_dir: results/experiments/2026-07-20-layer03-balanced-training-pilot-topk-w2048-k16-seed0
+output_dir: results/experiments/2026-07-20-layer03-balanced-training-pilot-topk-w2048-k16-seed0-features
 split: test
 top_examples_per_feature: 20
 minimum_domain_activation_rate: 0.001

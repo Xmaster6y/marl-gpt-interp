@@ -1,8 +1,8 @@
 defaults:
   - _self_
 
-cache_dir: results/experiments/2026-07-20-layer03-balanced-training-pilot-cache
-output_dir: results/experiments/2026-07-20-layer03-balanced-training-pilot-topk-w2048-k16-seed0
+cache_dir: results/experiments/2026-07-20-layer03-balanced-training-small-cache
+output_dir: results/experiments/2026-07-20-layer03-balanced-training-small-topk-w2048-k16-seed0
 activation_location: layer_03:final
 device: cuda:0
 seed: 0

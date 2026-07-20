@@ -2,8 +2,10 @@
 
 ## Status
 
-Infrastructure implemented and the JZ end-to-end schema smoke completed. No claim-bearing real-data experiment has been
-launched. Local configs are available for support recovery, activation collection, dictionary training, and evaluation.
+Infrastructure implemented, the JZ end-to-end schema smoke completed, and the corrected six-group dataset passed its
+structural audit. The next exploratory suite is ready for launch: a six-group core diagnostic can run immediately while
+the 12-group full-training-mixture view is materialized and audited. Neither is claim-bearing because upstream episode
+provenance remains unresolved.
 
 The first real-data pilot is now specified at `layer_03:final`: a balanced pooled TopK SAE with width 2,048, `k=16`,
 and seed 0. It uses the `dictionary-learning` TopK implementation and training recipe, local resumable checkpoints,
@@ -107,10 +109,11 @@ multi-agent arrays. A collection is rejected if an environment has fewer than si
 cell would be empty. Finer trajectory grouping is allowed later only when the dataset exports an authoritative episode
 identity.
 
-Because the native iterator exhausts one file before advancing, the pilot caps accepted loader rows at 8,192 per source.
-Without that cap, a fixed example budget can be dominated by the first large file and never reach enough independent
-groups. The cap is applied after the loader's row permutation, and the retained examples preserve their original row
-indices.
+Because the native iterator exhausts one file before advancing, each suite caps accepted loader rows by source and
+component. Without those caps, a fixed example budget can be dominated by the first large file and never reach enough
+independent groups. The cap is applied after the loader's row permutation, and the retained examples preserve their
+original row indices. Dataset manifests now supply the grouping identity: every `chunk_N_part_M` representative maps
+back to `chunk_N`, and the collector rejects a missing, ambiguous, unaudited, or incomplete manifest mapping.
 
 Batch grouping remains schema-smoke-only. It proves tensor and manifest compatibility but has no scientific train/test
 meaning because a later batch can revisit the same file, episode, row, or overlapping history.
@@ -284,26 +287,46 @@ evidence.
 
 ## Implementation Boundary
 
-The schema-only cluster smoke is complete; the claim-bearing pilot remains blocked by the corpus-group gate. The reusable
-core, six Hydra entrypoints, smoke configs, full gate config, cache schema, manifests, and unit tests now exist. Per-layer
-MLP transcoders and bounded attribution graphs begin only
+The schema-only cluster smoke and structural corpus gate are complete. The reusable core, eight Hydra entrypoints, smoke
+configs, full gate config, cache schema, manifests, and unit tests now exist. Per-layer MLP transcoders and bounded
+attribution graphs begin only
 after fixed-layer fidelity and feature stability pass; cross-layer transcoders require a later faithfulness/cost gate.
 Continuous trajectory prediction and a five-domain lattice are out of scope.
 
 The native files do not expose a uniform authoritative trajectory identity. The supplied smoke remains a
-`batch_schema_smoke`, records `claim_bearing: false`, and cannot satisfy the corpus gate. The pilot instead uses the
-conservative source-file grouping described above. Source files must be audited to ensure they are independently
-generated units; if a preprocessing pipeline shards one trajectory across files, those shard families require a shared
-upstream group identifier before a claim-bearing run.
+`batch_schema_smoke`, records `claim_bearing: false`, and cannot satisfy the corpus gate. The new suites consume the
+audited dataset source-group mapping described above. This closes known multipart leakage but does not prove different
+`chunk_N` groups are independently generated episodes, so the runs remain exploratory pending upstream provenance.
 
-The real-data pilot workflow is:
+The current real-data workflow is:
 
-- collect: `2026-07-20-layer03-pilot`;
-- train: `2026-07-20-layer03-topk-pilot` with `uv run --group sae`;
+- acquisition: `2026-07-20-training-small`, then `2026-07-20-training-pilot` only after the smaller suite passes;
+- immediate diagnostic: all five stages use `2026-07-20-layer03-balanced-core-small`;
+- first full-mixture run: all five stages use `2026-07-20-layer03-balanced-training-small`;
+- later 18-group pilot train: `2026-07-20-layer03-topk-pilot` with `uv run --group sae`;
 - post-pilot sweep: `2026-07-20-layer03-topk-sweep`, varying widths `{2048, 4096}`, `k` `{8, 16, 32}`, and seeds
   `{0, 1, 2}` only after the pilot's health checks pass;
 - analyze: `2026-07-20-layer03-topk-pilot`;
 - compare widths or seeds: `2026-07-20-example` after replacing its second model directory.
+
+The core diagnostic collects exactly 6,144 rows per environment from six audited groups and trains width 1,024,
+`k=16` for 2,000 steps. The full-mixture run collects exactly 48,840 rows per environment from 12 audited groups and
+trains width 2,048, `k=16` for 10,000 steps. Its 814 batches match one complete pass through every native component:
+SMAC/GRF sources contribute 4,070 rows, POGEMA maze sources 3,996, and the POGEMA random source 4,884. This compensates
+for the native loader's actual 60-row-per-environment batch and 9:1 POGEMA allocation rather than assuming the requested
+192-row global batch survives folder-level integer division. After whole-group split assignment, deterministic
+round-robin subsampling equalizes each environment within train, validation, and test separately without dropping a
+source group.
+
+The final `audit_sae_suite` stage verifies group-disjoint splits, equal environment rows, complete split coverage,
+upstream completion, held-out L0, aggregate and per-domain normalized MSE, and dead-feature fraction. The precommitted
+full-mixture health gates are aggregate normalized MSE `<=0.20`, every domain `<=0.30`, held-out dead-feature fraction
+`<=0.50`, and L0 within `0.10` of 16. Failure blocks the width/sparsity/seed sweep. The core records the same diagnostics
+without treating its single-scenario mixture as a strict gate.
+
+Launch artifact: `to-launch/2026-07-20-layer03-balanced-sae-v100.sh`. It refuses unaudited dataset manifests and runs
+collection, training, evaluation, feature analysis, and the suite audit in order with local manifests authoritative and
+W&B offline.
 
 The completed JZ end-to-end smoke used the four `2026-07-20-jz-smoke` configs and
 `archived/2026-07-20-layer03-sae-smoke-v100.sh`. It collected 12 schema-only batches, trained a width-512 TopK SAE for 50
@@ -324,7 +347,7 @@ Entrypoints and configs are grouped by experiment domain:
 - synthetic recovery: `scripts.experiments.sparse_synthetic.support_recovery` with
   `configs/experiments/sparse_synthetic/support_recovery/`;
 - MARL-GPT collection, training, evaluation, and feature diagnostics:
-  `scripts.experiments.sparse_marl_gpt.{collect_activations,train_dictionary,evaluate_dictionary,analyze_features,compare_features}`
+  `scripts.experiments.sparse_marl_gpt.{collect_activations,train_dictionary,evaluate_dictionary,analyze_features,compare_features,audit_sae_suite}`
   with matching folders under `configs/experiments/sparse_marl_gpt/`.
 
 ## Links

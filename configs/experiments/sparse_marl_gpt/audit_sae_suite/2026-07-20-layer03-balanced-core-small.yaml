@@ -1,0 +1,19 @@
+defaults:
+  - _self_
+
+cache_dir: results/experiments/2026-07-20-layer03-balanced-core-small-cache
+model_dir: results/experiments/2026-07-20-layer03-balanced-core-small-topk-w1024-k16-seed0
+evaluation_dir: results/experiments/2026-07-20-layer03-balanced-core-small-topk-w1024-k16-seed0-evaluation
+feature_dir: results/experiments/2026-07-20-layer03-balanced-core-small-topk-w1024-k16-seed0-features
+output_dir: results/experiments/2026-07-20-layer03-balanced-core-small-suite-audit
+minimum_groups_per_environment: 6
+strict: false
+seed: 0
+gates:
+  max_normalized_mse: 0.20
+  max_domain_normalized_mse: 0.30
+  max_dead_feature_fraction: 0.50
+  l0_tolerance: 0.10
+hydra:
+  run:
+    dir: results/hydra/sparse_marl_gpt/audit_sae_suite/${now:%Y-%m-%d_%H-%M-%S}

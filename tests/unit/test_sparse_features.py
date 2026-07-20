@@ -9,9 +9,11 @@ from marl_gpt_interp.marl_gpt_tools import enable_sample_identity
 from marl_gpt_interp.sparse_features import (
     DomainLatticeSAE,
     SparseAutoencoder,
+    balanced_stratified_split_indices,
     batch_topk_codes,
     domain_lattice,
     domain_stratified_batch_topk_codes,
+    evaluate_sae_health,
     evaluate_synthetic_gate,
     generate_synthetic_sparse_data,
     grouped_split,
@@ -85,6 +87,40 @@ def test_sparse_metrics_and_support_f1():
     assert support_macro_f1((frozenset({"a"}),), (frozenset({"a"}),)) == 1.0
 
 
+def test_sae_health_requires_every_domain_and_feature_usage_gate():
+    metrics = {
+        "normalized_mse": 0.1,
+        "l0": 16.0,
+        "dead_feature_fraction": 0.2,
+        "smac/normalized_mse": 0.2,
+        "grf/normalized_mse": 0.1,
+        "pogema/normalized_mse": 0.15,
+    }
+    health = evaluate_sae_health(
+        metrics,
+        ["smac", "grf", "pogema"],
+        expected_l0=16,
+        max_normalized_mse=0.2,
+        max_domain_normalized_mse=0.3,
+        max_dead_feature_fraction=0.5,
+        l0_tolerance=0.1,
+    )
+    assert health["passed"] is True
+    metrics["smac/normalized_mse"] = 0.31
+    assert (
+        evaluate_sae_health(
+            metrics,
+            ["smac", "grf", "pogema"],
+            expected_l0=16,
+            max_normalized_mse=0.2,
+            max_domain_normalized_mse=0.3,
+            max_dead_feature_fraction=0.5,
+            l0_tolerance=0.1,
+        )["passed"]
+        is False
+    )
+
+
 def test_grouped_split_never_leaks_a_group():
     groups = ["a", "a", "b", "c", "c", "d", "e", "f"]
     splits = grouped_split(groups, seed=9)
@@ -107,6 +143,17 @@ def test_stratified_grouped_split_preserves_groups_and_domain_coverage():
             "validation",
             "test",
         }
+
+
+def test_balanced_stratified_split_indices_equalize_cells_without_dropping_groups():
+    groups = ["a0"] * 4 + ["a1"] * 4 + ["b0"] * 5 + ["b1"] * 5
+    strata = ["a"] * 8 + ["b"] * 10
+    splits = ["train"] * 18
+    retained = balanced_stratified_split_indices(groups, strata, splits, seed=2)
+    kept_strata = [strata[index] for index in retained]
+    kept_groups = {groups[index] for index in retained}
+    assert kept_strata.count("a") == kept_strata.count("b") == 8
+    assert kept_groups == {"a0", "a1", "b0", "b1"}
 
 
 def test_balanced_sampler_and_activation_norm():
@@ -210,9 +257,11 @@ def test_native_loader_identity_instrumentation_preserves_source_and_row(tmp_pat
     critic = CriticLoader()
     aggregate = type("Aggregate", (), {"datasets": [critic]})()
     loader = type("Loader", (), {"dataloaders": {"grf": aggregate}})()
-    sources = enable_sample_identity(loader, max_rows_per_source=4)
+    source_caps = {}
+    sources = enable_sample_identity(loader, max_rows_per_source=4, max_rows_by_source=source_caps)
+    source_caps[next(iter(sources))] = 3
     critic.dataloader.load_and_transfer_data_file(critic.dataloader.file_paths[0])
-    assert len(critic.dataloader.indices) == 4
+    assert len(critic.dataloader.indices) == 3
     info = critic.add_extra_information_for_critic(1)
     assert info["source_row_index"].tolist() == [1, 3]
     assert info["source_file_id"].unique().item() in sources

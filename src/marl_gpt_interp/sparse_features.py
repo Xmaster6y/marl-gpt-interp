@@ -321,6 +321,30 @@ def sparse_metrics(x: torch.Tensor, reconstruction: torch.Tensor, codes: torch.T
     }
 
 
+def evaluate_sae_health(
+    metrics: Mapping[str, float],
+    domains: Sequence[str],
+    *,
+    expected_l0: float,
+    max_normalized_mse: float,
+    max_domain_normalized_mse: float,
+    max_dead_feature_fraction: float,
+    l0_tolerance: float,
+) -> dict[str, Any]:
+    """Apply predeclared held-out reconstruction and feature-usage gates."""
+
+    checks = {
+        "aggregate_normalized_mse": float(metrics["normalized_mse"]) <= max_normalized_mse,
+        "l0": abs(float(metrics["l0"]) - expected_l0) <= l0_tolerance,
+        "dead_feature_fraction": float(metrics["dead_feature_fraction"]) <= max_dead_feature_fraction,
+    }
+    for domain in domains:
+        checks[f"{domain}_normalized_mse"] = (
+            float(metrics[f"{domain}/normalized_mse"]) <= max_domain_normalized_mse
+        )
+    return {"passed": all(checks.values()), "checks": checks}
+
+
 @torch.no_grad()
 def infer_functional_supports(
     codes: torch.Tensor,
@@ -404,6 +428,52 @@ def stratified_grouped_split(
         for index, split in zip(indices, local, strict=True):
             output[index] = split
     return output
+
+
+def balanced_stratified_split_indices(
+    groups: Sequence[str],
+    strata: Sequence[str],
+    splits: Sequence[str],
+    *,
+    seed: int = 0,
+) -> list[int]:
+    """Retain equal stratum counts per split while sampling every group round-robin."""
+
+    if not (len(groups) == len(strata) == len(splits)):
+        raise ValueError("groups, strata, and splits must have the same length")
+    retained = []
+    for split in sorted(set(splits)):
+        cells = {
+            stratum: [index for index, value in enumerate(strata) if value == stratum and splits[index] == split]
+            for stratum in sorted(set(strata))
+        }
+        target = min(map(len, cells.values()))
+        for stratum, indices in cells.items():
+            by_group: dict[str, list[int]] = {}
+            for index in indices:
+                by_group.setdefault(groups[index], []).append(index)
+            ordered_groups = sorted(
+                by_group,
+                key=lambda group: hashlib.sha256(f"{seed}:{split}:{stratum}:{group}".encode()).hexdigest(),
+            )
+            for group, values in by_group.items():
+                values.sort(key=lambda index: hashlib.sha256(f"{seed}:{group}:{index}".encode()).hexdigest())
+            offsets = {group: 0 for group in ordered_groups}
+            chosen = []
+            while len(chosen) < target:
+                progressed = False
+                for group in ordered_groups:
+                    offset = offsets[group]
+                    if offset < len(by_group[group]):
+                        chosen.append(by_group[group][offset])
+                        offsets[group] += 1
+                        progressed = True
+                        if len(chosen) == target:
+                            break
+                if not progressed:
+                    raise ValueError(f"cannot balance split {split!r} for stratum {stratum!r}")
+            retained.extend(chosen)
+    return sorted(retained)
 
 
 def file_sha256(path: Path) -> str:

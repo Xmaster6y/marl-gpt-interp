@@ -33,6 +33,57 @@ class SelectedFile:
     sha256: str | None = None
 
 
+def _path_aliases(path: Path) -> set[str]:
+    aliases = {Path(os.path.abspath(path)).as_posix()}
+    if path.exists():
+        aliases.add(path.resolve().as_posix())
+    return aliases
+
+
+def audited_source_records(manifest_path: Path, source_paths: Mapping[int, str]) -> dict[int, dict[str, str]]:
+    """Map native loader source ids to structurally audited dataset groups."""
+
+    manifest = json.loads(manifest_path.read_text())
+    if manifest.get("status") != "audited_balanced_pending_provenance":
+        raise ValueError(f"dataset manifest is not structurally audited: {manifest.get('status')}")
+    if manifest.get("structural_balance_passed") is not True:
+        raise ValueError("dataset manifest does not pass structural balance")
+    audit_path = Path(str(manifest.get("audit_path", "")))
+    if not audit_path.is_file():
+        raise ValueError(f"dataset audit artifact is missing: {audit_path}")
+    audit = json.loads(audit_path.read_text())
+    if audit.get("status") != manifest["status"] or audit.get("structural_errors"):
+        raise ValueError("dataset audit artifact disagrees with the manifest")
+
+    view_root = Path(str(manifest["view_root"]))
+    by_alias: dict[str, dict[str, str]] = {}
+    expected_groups = set()
+    for item in manifest["files"]:
+        record = {
+            "environment": str(item["environment"]),
+            "component": str(item["component"]),
+            "source_group": str(item["source_group"]),
+        }
+        expected_groups.add(record["source_group"])
+        for alias in _path_aliases(view_root / str(item["destination_path"])):
+            if alias in by_alias and by_alias[alias] != record:
+                raise ValueError(f"dataset source alias maps to conflicting groups: {alias}")
+            by_alias[alias] = record
+
+    records: dict[int, dict[str, str]] = {}
+    for source_id, source_path in source_paths.items():
+        matches = {tuple(sorted(by_alias[alias].items())) for alias in _path_aliases(Path(source_path)) if alias in by_alias}
+        if len(matches) != 1:
+            raise ValueError(f"loader source is absent or ambiguous in the audited manifest: {source_path}")
+        records[int(source_id)] = dict(matches.pop())
+    observed_groups = {record["source_group"] for record in records.values()}
+    if observed_groups != expected_groups:
+        missing = sorted(expected_groups - observed_groups)
+        extra = sorted(observed_groups - expected_groups)
+        raise ValueError(f"loader and audited manifest source groups differ: missing={missing}, extra={extra}")
+    return records
+
+
 def allocate_component_counts(total: int, weights: Mapping[str, float]) -> dict[str, int]:
     """Use largest remainders while retaining every positive component when possible."""
 
@@ -109,6 +160,10 @@ def build_selection(
             destination_prefix = str(component["destination_prefix"]).strip("/")
             available = list(catalog(source_prefix))
             group_pattern = component.get("group_pattern")
+            representative_policy = str(component.get("representative_policy", "largest"))
+            minimum_representative_bytes = int(component.get("minimum_representative_bytes", 0))
+            if representative_policy not in {"largest", "smallest_above_minimum"}:
+                raise ValueError(f"unknown representative policy: {representative_policy}")
             grouped: dict[str, list[RemoteFile]] = {}
             for remote in available:
                 if group_pattern:
@@ -119,18 +174,30 @@ def build_selection(
                 else:
                     group = remote.source_path
                 grouped.setdefault(group, []).append(remote)
+            if representative_policy == "smallest_above_minimum":
+                grouped = {
+                    group: [member for member in members if member.size >= minimum_representative_bytes]
+                    for group, members in grouped.items()
+                    if any(member.size >= minimum_representative_bytes for member in members)
+                }
             group_candidates = [RemoteFile(group, max(item.size for item in members)) for group, members in grouped.items()]
             chosen_groups = deterministic_select(
                 group_candidates, counts[name], seed=seed, namespace=f"{source_prefix}:groups"
             )
             for chosen_group in chosen_groups:
                 members = grouped[chosen_group.source_path]
-                remote = max(
-                    members,
-                    key=lambda item: (
+                def rank(item: RemoteFile) -> tuple[int, str]:
+                    return (
                         item.size,
-                        hashlib.sha256(f"{seed}:{chosen_group.source_path}:{item.source_path}".encode()).hexdigest(),
-                    ),
+                        hashlib.sha256(
+                            f"{seed}:{chosen_group.source_path}:{item.source_path}".encode()
+                        ).hexdigest(),
+                    )
+
+                remote = (
+                    min(members, key=rank)
+                    if representative_policy == "smallest_above_minimum"
+                    else max(members, key=rank)
                 )
                 selected.append(
                     SelectedFile(

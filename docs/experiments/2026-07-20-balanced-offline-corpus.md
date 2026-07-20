@@ -22,11 +22,13 @@ formats differ.
 ## Builder Contract
 
 `scripts.experiments.sparse_marl_gpt.build_balanced_dataset` queries the pinned Hugging Face tree from a JZ pre/post node,
-selects groups deterministically from config weights, downloads one largest physical part per selected group resumably
-into one revision-addressed SCRATCH cache, and exposes config-specific views through symlinks. Multipart `chunk_N_part_M`
-files share group `chunk_N`; selecting only one part prevents a group from being counted twice while keeping this first
-corpus small. The builder never overwrites a conflicting view path. Each view manifest records group identity, expected
-size, available hash, environment/component identity, row cap, revision, seed, and status.
+selects groups deterministically from config weights, downloads one configured physical representative per group
+resumably into one revision-addressed SCRATCH cache, and exposes config-specific views through symlinks. Multipart
+`chunk_N_part_M` files share group `chunk_N`; selecting only one part prevents a group from being counted twice. The
+audited core retains its largest-part policy. Scalable full-mixture configs select the smallest part of at least 8 MB,
+then let the row audit reject any representative below the actual 8,192-row requirement. The builder never overwrites a
+conflicting view path. Each view manifest records group identity, expected size, available hash, environment/component
+identity, row cap, revision, seed, and status.
 
 The core launch then runs `scripts.experiments.sparse_marl_gpt.audit_balanced_dataset`, which reads each materialized file
 sequentially, records raw and capped row counts, terminal counts, files below the configured cap, and candidate multipart
@@ -51,8 +53,16 @@ Materialization status is `materialized_pending_audit`, with `claim_bearing: fal
 | `2026-07-20-training-large` | 20 | MARL-GPT training tasks | Larger feasible group-balanced view; weakest GRF task remains at three groups |
 
 The training mixture uses the six SMAC 5v5/5v6 race-task folders equally, POGEMA mazes/random at the native loader's
-9:1 mixture, and the six GRF training folders equally. Domain batches remain equal. The 18-group activation config caps
-each source at 5,120 accepted rows and runs 1,440 balanced batches, targeting 92,160 activation rows per environment.
+9:1 mixture, and the six GRF training folders equally. Domain batches remain equal. The 18-group activation config uses
+component-specific caps of 4,800 SMAC/GRF rows, 4,860 POGEMA-maze rows, and 4,320 POGEMA-random rows. Its 1,440 batches
+collect exactly 86,400 rows per environment without cycling a component.
+
+The initial largest-part JZ plan for `training-small` selected 36 source groups but required 65,043,204,663 physical
+bytes, including several 8.42 GB GRF parts from which only 4,070 rows would be consumed. It was rejected before
+materialization. The corrected smallest-above-8-MB policy preserves two groups from every SMAC and GRF task plus 11:1
+POGEMA groups; its exact byte plan is pending the committed JZ re-plan. Its downstream collector uses component-specific
+caps rather than the acquisition audit's 8,192-row ceiling, producing exactly 48,840 activation rows per environment
+without cycling a smaller component.
 
 ## Materialization Evidence
 
@@ -96,9 +106,10 @@ The launch runs on `prepost`, consumes no GPU allocation, and inherits the JZ lo
 
 ## Decision Rule
 
-Proceed from core-balanced-small to training-pilot only if the builder is resumable, every selected file matches its
-expected size/hash, and every environment reaches six distinct groups and 6,144 accepted rows. The audit exits nonzero
-on any duplicate group, undersized file, or unequal environment budget. Proceed to SAE training only when the activation
+Proceed from core-balanced-small to training-small, and from training-small to training-pilot only if each builder run is
+resumable, every selected file matches its expected size/hash, and every environment reaches its configured group and
+accepted-row budget. The audit exits nonzero on any duplicate group, undersized file, or unequal environment budget.
+Proceed to SAE training only when the activation
 cache contains equal train, validation, and test example counts per environment with all configured scenarios represented
 in the declared splits. Otherwise revise grouping or mixture before spending GPU time.
 

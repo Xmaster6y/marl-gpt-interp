@@ -258,7 +258,12 @@ def _stable_source_id(path: str) -> int:
     return int.from_bytes(hashlib.sha256(normalized.encode()).digest()[:8], "big") % (2**63 - 1)
 
 
-def enable_sample_identity(loader: Any, *, max_rows_per_source: int = 0) -> dict[int, str]:
+def enable_sample_identity(
+    loader: Any,
+    *,
+    max_rows_per_source: int = 0,
+    max_rows_by_source: Mapping[int, int] | None = None,
+) -> dict[int, str]:
     """Add source-file and original-row identity to native MARL-GPT batches.
 
     The vendored loader permutes rows within each source and otherwise drops
@@ -268,6 +273,7 @@ def enable_sample_identity(loader: Any, *, max_rows_per_source: int = 0) -> dict
 
     torch = load_torch()
     source_paths: dict[int, str] = {}
+    source_caps = max_rows_by_source if max_rows_by_source is not None else {}
     for aggregate in loader.dataloaders.values():
         for critic_loader in aggregate.datasets:
             data_loader = critic_loader.dataloader
@@ -279,8 +285,9 @@ def enable_sample_identity(loader: Any, *, max_rows_per_source: int = 0) -> dict
             def load_with_identity(self, filename, *, _original=original_load):
                 result = _original(filename)
                 self._sample_identity_source_id = _stable_source_id(filename)
-                if max_rows_per_source > 0:
-                    self.indices = self.indices[:max_rows_per_source]
+                row_cap = int(source_caps.get(self._sample_identity_source_id, max_rows_per_source))
+                if row_cap > 0:
+                    self.indices = self.indices[:row_cap]
                 return result
 
             data_loader.load_and_transfer_data_file = MethodType(load_with_identity, data_loader)

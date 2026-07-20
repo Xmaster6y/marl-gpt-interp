@@ -8,6 +8,7 @@ import torch
 from marl_gpt_interp.balanced_dataset import (
     RemoteFile,
     allocate_component_counts,
+    audited_source_records,
     audit_balanced_view,
     build_selection,
     deterministic_select,
@@ -85,6 +86,37 @@ def test_selection_uses_one_largest_file_from_each_distinct_group():
     }
 
 
+def test_selection_uses_smallest_representative_above_floor_and_filters_groups():
+    environments = {
+        "grf": {
+            "source_groups": 2,
+            "components": [
+                {
+                    "name": "task",
+                    "weight": 1,
+                    "source_prefix": "remote/grf",
+                    "destination_prefix": "dataset/grf",
+                    "group_pattern": r"(chunk_\d+)",
+                    "representative_policy": "smallest_above_minimum",
+                    "minimum_representative_bytes": 15,
+                }
+            ],
+        }
+    }
+    files = [
+        RemoteFile("remote/grf/chunk_0_part_0.pt", 10),
+        RemoteFile("remote/grf/chunk_0_part_1.pt", 20),
+        RemoteFile("remote/grf/chunk_0_part_2.pt", 30),
+        RemoteFile("remote/grf/chunk_1_part_0.pt", 25),
+        RemoteFile("remote/grf/chunk_2_part_0.pt", 5),
+    ]
+    selected = build_selection(environments, seed=0, catalog=lambda _prefix: files)
+    assert {item.source_path for item in selected} == {
+        "remote/grf/chunk_0_part_1.pt",
+        "remote/grf/chunk_1_part_0.pt",
+    }
+
+
 def test_shard_family_marks_multipart_chunks_without_assuming_arrow_families():
     assert shard_family("dataset-GRF/task/chunk_3_part_4.pt") == "dataset-GRF/task/chunk_3"
     assert shard_family("dataset-LMAPF/random/part_2_7.arrow") == "dataset-LMAPF/random/part_2_7.arrow"
@@ -118,3 +150,40 @@ def test_audit_rejects_unequal_accepted_environment_budgets(tmp_path):
     manifest = json.loads(manifest_path.read_text())
     assert manifest["status"] == "rejected_structural_imbalance"
     assert manifest["structural_balance_passed"] is False
+
+
+def test_audited_source_records_resolve_view_and_cache_aliases(tmp_path):
+    view_root = tmp_path / "view"
+    cached = tmp_path / "cache" / "chunk_0_part_1.pt"
+    cached.parent.mkdir()
+    cached.write_bytes(b"data")
+    link = view_root / "dataset" / "task" / cached.name
+    link.parent.mkdir(parents=True)
+    link.symlink_to(cached)
+    audit_path = view_root / "balanced_dataset_audit.json"
+    audit_path.write_text(json.dumps({"status": "audited_balanced_pending_provenance", "structural_errors": []}))
+    manifest_path = view_root / "balanced_dataset_manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "status": "audited_balanced_pending_provenance",
+                "structural_balance_passed": True,
+                "audit_path": str(audit_path),
+                "view_root": str(view_root),
+                "files": [
+                    {
+                        "environment": "grf",
+                        "component": "task",
+                        "source_group": "remote/task/chunk_0",
+                        "destination_path": f"dataset/task/{cached.name}",
+                    }
+                ],
+            }
+        )
+    )
+
+    records = audited_source_records(manifest_path, {7: str(cached)})
+
+    assert records == {
+        7: {"environment": "grf", "component": "task", "source_group": "remote/task/chunk_0"}
+    }

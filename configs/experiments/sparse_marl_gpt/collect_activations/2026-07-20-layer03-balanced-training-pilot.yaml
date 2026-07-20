@@ -3,6 +3,7 @@ defaults:
 
 output_dir: results/experiments/2026-07-20-layer03-balanced-training-pilot-cache
 checkpoint: results/marl-gpt-main.pt
+dataset_manifest_path: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/balanced_dataset_manifest.json
 dataset_config:
   smac:
     config: {history_len: 6, history_step: 1, part_of_dataset: 1}
@@ -30,10 +31,30 @@ dataset_config:
       - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot/dataset/dataset_grf/trajectories/academy_pass_and_shoot_with_keeper
 envs: [smac, pogema, grf]
 activation_locations: [layer_03:final]
-grouping_mode: source_file
-group_field: source_file_id
+grouping_mode: dataset_source_group
+group_field: source_group
 minimum_groups_per_environment: 18
-max_rows_per_source: 5120
+max_rows_per_source: 0
+max_rows_per_component:
+  smac:
+    protoss_5_vs_5: 4800
+    protoss_5_vs_6: 4800
+    terran_5_vs_5: 4800
+    terran_5_vs_6: 4800
+    zerg_5_vs_5: 4800
+    zerg_5_vs_6: 4800
+  pogema: {mazes: 4860, random: 4320}
+  grf:
+    11vs11a11r_5to10: 4800
+    11vs11a11r_60to65: 4800
+    11vs11a11r_99to100: 4800
+    academy_corner: 4800
+    academy_counterattack_easy: 4800
+    academy_pass_and_shoot_with_keeper: 4800
+expected_rows_per_environment: 86400
+require_complete_source_caps: true
+balance_splits_across_environments: true
+claim_bearing: false
 device: cuda:0
 seed: 0
 batch_size: 192

@@ -1,0 +1,13 @@
+defaults:
+  - _self_
+
+cache_dir: results/experiments/2026-07-20-layer03-balanced-training-small-cache
+model_dir: results/experiments/2026-07-20-layer03-balanced-training-small-topk-w2048-k16-seed0
+output_dir: results/experiments/2026-07-20-layer03-balanced-training-small-topk-w2048-k16-seed0-features
+split: test
+top_examples_per_feature: 20
+minimum_domain_activation_rate: 0.001
+seed: 0
+hydra:
+  run:
+    dir: results/hydra/sparse_marl_gpt/analyze_features/${now:%Y-%m-%d_%H-%M-%S}

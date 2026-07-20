@@ -1,8 +1,8 @@
 defaults:
   - _self_
 
-cache_dir: results/experiments/2026-07-20-layer03-balanced-training-pilot-cache
-output_dir: results/experiments/2026-07-20-layer03-balanced-training-pilot-topk-w2048-k16-seed0
+cache_dir: results/experiments/2026-07-20-layer03-balanced-core-small-cache
+output_dir: results/experiments/2026-07-20-layer03-balanced-core-small-topk-w1024-k16-seed0
 activation_location: layer_03:final
 device: cuda:0
 seed: 0
@@ -11,18 +11,18 @@ model:
   backend: dictionary_learning
   activation: topk
   k: 16
-  width: 2048
+  width: 1024
 training:
-  steps: 10000
-  batch_size: 2048
+  steps: 2000
+  batch_size: 1024
   learning_rate: null
-  warmup_steps: 500
-  decay_start: 8000
+  warmup_steps: 100
+  decay_start: 1600
   auxk_alpha: 0.03125
   resume_from: null
 observability:
-  log_every: 100
-  checkpoint_every: 1000
+  log_every: 50
+  checkpoint_every: 500
   wandb:
     enabled: true
     mode: offline
