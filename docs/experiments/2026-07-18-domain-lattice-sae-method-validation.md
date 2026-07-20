@@ -3,9 +3,9 @@
 ## Status
 
 Infrastructure implemented, the JZ end-to-end schema smoke completed, and the corrected six-group dataset passed its
-structural audit. The next exploratory suite is ready for launch: a six-group core diagnostic can run immediately while
-the 12-group full-training-mixture view is materialized and audited. Neither is claim-bearing because upstream episode
-provenance remains unresolved.
+structural audit. The six-group core diagnostic completed and failed its dead-feature health check. The 12-group
+full-training-mixture view is materializing, with its GPU suite submitted behind the acquisition audit. Neither run is
+claim-bearing because upstream episode provenance remains unresolved.
 
 The first real-data pilot is now specified at `layer_03:final`: a balanced pooled TopK SAE with width 2,048, `k=16`,
 and seed 0. It uses the `dictionary-learning` TopK implementation and training recipe, local resumable checkpoints,
@@ -337,6 +337,21 @@ environment, and identical per-environment split cells of 4,096 train, 1,024 val
 `dataset_source_group` and `claim_bearing: false`. No cache recollection is needed. The launcher now accepts a resume
 stage, and W&B absence falls back explicitly to authoritative local JSONL/checkpoint observability unless a config marks
 W&B required.
+
+Resume job `2112970` completed training, held-out evaluation, feature analysis, and the suite audit in 1m52s. All split
+integrity checks passed. Held-out aggregate normalized MSE was `0.000555`, with GRF `0.0000425`, POGEMA `0.0000672`, and
+SMAC `0.0682`; L0 was `15.994`. Feature stability failed: held-out dead-feature fraction was `0.939` (962/1,024 feature
+summary rows dead), above the precommitted `0.50` ceiling. Validation showed the same `0.940` dead fraction despite
+`0.998` explained variance, so this is not merely a test-sample anomaly.
+
+Only feature 683 met the descriptive three-domain firing threshold. It fired on all SMAC test examples but roughly one
+third of GRF and POGEMA examples; mean active magnitude was `24.68` for SMAC, `0.324` for POGEMA, and `0.127` for GRF,
+and all top-20 examples were SMAC. It is therefore an environment/scale-cue candidate, not evidence of semantic
+universality. No causal intervention has been run.
+
+Full-mixture job `2113434` is submitted with `afterok:2111291`. It will start only if the 36-file acquisition and
+8,192-row-per-source audit pass. Its strict suite audit will test whether task/scenario diversity repairs held-out feature
+collapse; failure blocks the width, sparsity, and seed sweep.
 
 The completed JZ end-to-end smoke used the four `2026-07-20-jz-smoke` configs and
 `archived/2026-07-20-layer03-sae-smoke-v100.sh`. It collected 12 schema-only batches, trained a width-512 TopK SAE for 50
