@@ -408,7 +408,9 @@ feature usage at matched `k`; the scaled condition cannot replace the natural co
 
 The primary job is still pending, so both arrays are submitted behind mutually exclusive Slurm dependencies: stability
 uses `afterok:2113434`, while the diagnostic branch uses `afternotok:2113434` and additionally requires a written audit
-with all structural checks passing and `health.passed=false`.
+with all structural checks passing and `health.passed=false`. At commit `b8a375c`, stability array `2114756` and
+diagnostic array `2114755` were accepted by Slurm. These job IDs establish launch state only; neither branch has produced
+evidence, and only one dependency condition can be satisfied by the primary job's terminal state.
 
 The completed JZ end-to-end smoke used the four `2026-07-20-jz-smoke` configs and
 `archived/2026-07-20-layer03-sae-smoke-v100.sh`. It collected 12 schema-only batches, trained a width-512 TopK SAE for 50
