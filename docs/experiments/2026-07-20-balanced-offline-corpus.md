@@ -81,6 +81,8 @@ JZ pre/post job `2108042` then materialized and audited the corrected view in 12
 
 The audit status is `audited_balanced_pending_provenance` with no structural errors. This passes the acquisition and
 equal-budget gate; it does not validate true episode boundaries or authorize feature-universality claims.
+After the manifest-status observability update, idempotent pre/post job `2108264` completed in 22s and promoted the
+manifest itself to that status with `structural_balance_passed: true` and an explicit audit-artifact path.
 
 ## JZ Layout And Launch
 
