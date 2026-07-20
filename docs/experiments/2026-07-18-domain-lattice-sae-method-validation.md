@@ -431,7 +431,9 @@ Launch artifacts are `to-launch/2026-07-20-layer03-feature-dossiers-prepost.sh` 
 `to-launch/2026-07-20-layer03-feature-stability-v100.sh`. Primary dossiers use `afterany:2113434` so a health failure can
 still be inspected. Stability dossiers and all three seed-pair comparisons require `afterok:2114756`. Diagnostic
 dossiers require `afterok:2114755`. No causal or semantic universality claim follows from these jobs; they only identify
-which active candidates deserve batched intervention.
+which active candidates deserve batched intervention. At commit `1ea04fe`, Slurm accepted primary dossier job
+`2122395`, stability-dossier array `2122396`, diagnostic-dossier array `2122392`, and pairwise stability array `2122397`.
+These are dependency-held launches, not results.
 
 The completed JZ end-to-end smoke used the four `2026-07-20-jz-smoke` configs and
 `archived/2026-07-20-layer03-sae-smoke-v100.sh`. It collected 12 schema-only batches, trained a width-512 TopK SAE for 50
