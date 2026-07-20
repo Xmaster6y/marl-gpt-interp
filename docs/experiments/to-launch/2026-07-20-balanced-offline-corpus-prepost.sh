@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=balanced-corpus
+#SBATCH --account=nwq@v100
 #SBATCH --cpus-per-task=4
 #SBATCH --error=results/slurm/%x-%j.err
 #SBATCH --mem=8G
