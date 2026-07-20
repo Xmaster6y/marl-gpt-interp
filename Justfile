@@ -45,6 +45,16 @@ grf-install-jz python=grf_jz_python:
 	uv pip install --python .venv/bin/python --no-deps "$wheel"
 	uv run --no-sync --python {{python}} --group grf --group sae python -c "import dictionary_learning, gymnasium, gfootball, torch, wandb; print('jz grf+sae env ok')"
 
+sae-install-jz-offline:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	test -f results/wheels/sae-jz/dictionary_learning-0.1.0-py3-none-any.whl
+	test -f results/wheels/sae-jz/einops-0.8.2-py3-none-any.whl
+	uv pip install --python .venv/bin/python --offline --no-deps \
+		results/wheels/sae-jz/dictionary_learning-0.1.0-py3-none-any.whl \
+		results/wheels/sae-jz/einops-0.8.2-py3-none-any.whl
+	.venv/bin/python -c "from marl_gpt_interp.sae_training import _dictionary_learning_types; _dictionary_learning_types(); print('jz cached-activation SAE env ok')"
+
 jz-stage-data:
 	#!/usr/bin/env bash
 	set -euo pipefail

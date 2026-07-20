@@ -28,6 +28,13 @@ For SAE work, stage reusable datasets on the fast semi-permanent SCRATCH filesys
 just jz-stage-data
 ```
 
+If the JZ login node cannot reach PyPI's file host, copy the locked, platform-independent wheels into
+`results/wheels/sae-jz/` and install the cached-activation SAE runtime without network access:
+
+```bash
+just sae-install-jz-offline
+```
+
 The JZ path uses:
 
 - uv-managed CPython `3.12.11` under `results/uv-python/`.
@@ -37,6 +44,8 @@ The JZ path uses:
 - Per-job `TMPDIR` and transient W&B files under `$JOBSCRATCH`, with a SCRATCH fallback for nonstandard shells.
 - Source, the Python environment, checkpoints, manifests, and retained experiment outputs under the WORK checkout.
 - Prebuilt GRF wheel at `results/wheels/gfootball-2.10.3-cp312-cp312-linux_x86_64.whl`.
+- Offline cached-activation SAE wheels under `results/wheels/sae-jz/`; the runtime uses
+  `dictionary-learning`'s upstream TopK trainer while avoiding its unused language-model activation-buffer imports.
 - Native GRF dependency prefix at `results/grf-native/py3.12`.
 - Cached `torch==2.8.0`, which produced `torch 2.8.0+cu128` and supports V100 `sm_70`.
 - `uv run --no-sync --python 3.12.11 --group grf --group sae` inside SAE Slurm jobs so compute nodes do not attempt

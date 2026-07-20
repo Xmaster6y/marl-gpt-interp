@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import json
+import importlib
+import importlib.metadata
 import math
 import os
+import sys
 import time
+import types
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Sequence
@@ -17,10 +21,26 @@ from marl_gpt_interp.sparse_features import sparse_metrics
 
 def _dictionary_learning_types():
     try:
-        from dictionary_learning.trainers.top_k import AutoEncoderTopK, TopKTrainer
+        distribution = importlib.metadata.distribution("dictionary-learning")
     except ImportError as error:
         raise ImportError("Install the SAE dependencies with `uv sync --group sae`.") from error
-    return AutoEncoderTopK, TopKTrainer
+
+    # dictionary-learning eagerly imports its language-model activation buffer from
+    # package __init__ files.  Cached-activation training does not use that stack, so
+    # load the upstream TopK module without importing nnsight/datasets/transformers.
+    package_root = Path(distribution.locate_file("dictionary_learning"))
+    for name, path in (
+        ("dictionary_learning", package_root),
+        ("dictionary_learning.trainers", package_root / "trainers"),
+    ):
+        if name not in sys.modules:
+            package = types.ModuleType(name)
+            package.__path__ = [str(path)]
+            package.__package__ = name
+            sys.modules[name] = package
+
+    top_k = importlib.import_module("dictionary_learning.trainers.top_k")
+    return top_k.AutoEncoderTopK, top_k.TopKTrainer
 
 
 class DictionaryLearningTopK(torch.nn.Module):
