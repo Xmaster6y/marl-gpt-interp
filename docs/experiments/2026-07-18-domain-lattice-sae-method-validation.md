@@ -2,8 +2,8 @@
 
 ## Status
 
-Infrastructure implemented; no claim-bearing experiment or cluster run has been launched. Local smoke configs are
-available for support recovery, activation collection, dictionary training, and evaluation.
+Infrastructure implemented and the JZ end-to-end schema smoke completed. No claim-bearing real-data experiment has been
+launched. Local configs are available for support recovery, activation collection, dictionary training, and evaluation.
 
 The first real-data pilot is now specified at `layer_03:final`: a balanced pooled TopK SAE with width 2,048, `k=16`,
 and seed 0. It uses the `dictionary-learning` TopK implementation and training recipe, local resumable checkpoints,
@@ -256,10 +256,37 @@ seeds.
 The synthetic benchmark, two capacity conventions, reconstruction-only variant, cue controls, multiple seeds, and
 functional substitution tests are required responses to these objections.
 
+## JZ Schema-Smoke Result
+
+JZ job `2107050` completed the four-stage workflow on one V100 in 4 minutes 25 seconds at commit `41662ce`. It collected
+360 `layer_03:final` activations, split as 240 train, 60 validation, and 60 test examples using 12 synthetic batch groups
+per environment; trained a width-512, `k=8` upstream `dictionary-learning` TopK SAE for 50 steps; wrote resumable steps
+25 and 50; evaluated; and produced 512 held-out feature summaries. Raw artifacts are under
+`results/experiments/2026-07-20-layer03-sae-jz-smoke/` on WORK, with Slurm output under `results/slurm/`.
+
+The aggregate held-out normalized MSE was `0.0657`, explained variance at the final validation checkpoint was `0.795`,
+and L0 was exactly 8. The per-domain normalized MSEs were GRF `0.0287`, POGEMA `0.0480`, and SMAC `2.936`; 501 of 512
+features were dead on the 60-example held-out split. These numbers establish only that collection, training,
+checkpointing, evaluation, and analysis execute. Fifty steps and 60 held-out examples are insufficient for feature
+quality, and the poor SMAC fidelity and 97.9% held-out dead-feature fraction explicitly fail any training-health claim.
+Seven features fired in all three domains, but they are only apparent-support outputs, not universal features.
+
+The run also confirmed the current leakage blocker: each available environment dataset contains exactly one source file.
+A file-grouped train/validation/test split is therefore impossible without more independently generated source files or
+an authoritative episode identity. Batch grouping was used only for the non-claim schema smoke. The configured pilot
+continues to reject fewer than six source groups per environment and must not be launched on the current three-file
+corpus.
+
+Two preceding smoke attempts are retained as diagnostic failures: job `2106780` found that compute nodes lack `git`, so
+the launcher now injects the login-node commit into manifests; job `2106813` found the schema-smoke grouping precedence
+bug that initially collapsed each environment to its single source-file group. Neither attempt produced scientific
+evidence.
+
 ## Implementation Boundary
 
-No cluster launch is authorized by this plan. The reusable core, six Hydra entrypoints, smoke configs, full gate config,
-cache schema, manifests, and unit tests now exist. Per-layer MLP transcoders and bounded attribution graphs begin only
+The schema-only cluster smoke is complete; the claim-bearing pilot remains blocked by the corpus-group gate. The reusable
+core, six Hydra entrypoints, smoke configs, full gate config, cache schema, manifests, and unit tests now exist. Per-layer
+MLP transcoders and bounded attribution graphs begin only
 after fixed-layer fidelity and feature stability pass; cross-layer transcoders require a later faithfulness/cost gate.
 Continuous trajectory prediction and a five-domain lattice are out of scope.
 
@@ -278,10 +305,10 @@ The real-data pilot workflow is:
 - analyze: `2026-07-20-layer03-topk-pilot`;
 - compare widths or seeds: `2026-07-20-example` after replacing its second model directory.
 
-Before the pilot, the JZ end-to-end smoke uses the four `2026-07-20-jz-smoke` configs and
-`to-launch/2026-07-20-layer03-sae-smoke-v100.sh`. It collects 12 schema-only batches, trains a width-512 TopK SAE for 50
-steps, evaluates the held-out schema split, and writes feature summaries. It is infrastructure evidence only. The job
-reads staged datasets and reusable caches from SCRATCH, uses JOBSCRATCH for temporary files, and retains results in WORK.
+The completed JZ end-to-end smoke used the four `2026-07-20-jz-smoke` configs and
+`archived/2026-07-20-layer03-sae-smoke-v100.sh`. It collected 12 schema-only batches, trained a width-512 TopK SAE for 50
+steps, evaluated the held-out schema split, and wrote feature summaries. It is infrastructure evidence only. The job
+read staged datasets and reusable caches from SCRATCH, used JOBSCRATCH for temporary files, and retained results in WORK.
 
 Feature summaries include per-domain firing rates, active magnitudes, stable source-row references, and top examples.
 They call cross-domain firing **apparent support**. Universality requires later per-domain policy ablation or substitution;
