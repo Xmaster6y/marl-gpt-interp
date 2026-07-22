@@ -2,6 +2,7 @@
 #SBATCH --job-name=clt-data
 #SBATCH --account=nwq@v100
 #SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
 #SBATCH --partition=prepost
 #SBATCH --output=/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/slurm/%x-%j.out
 #SBATCH --error=/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/slurm/%x-%j.err
