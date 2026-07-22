@@ -469,6 +469,11 @@ train widths `{512,2048}` at fixed `k=16`, seed 0, and 10,000 steps. Launch arti
 - **Deferred sparsity sweep:** after choosing a preprocessing space, vary `k={8,16,32,64}` at the healthier width and run
   multiple seeds only for the retained one or two adjacent values.
 
+At commit `c4c2014`, JZ accepted two-task array `12354` for the global-normalization control. Task 0 trains width 512 and
+task 1 trains width 2,048. Both use `k=16`, seed 0, the same balanced cache and training recipe, and one train-fitted
+global mean plus RMS scale. The array was pending allocation with no dependency at the submission snapshot; this is
+launch evidence only.
+
 The natural stability array `2114756` became dependency-unsatisfied after the primary failure. Diagnostic array
 `2114755` completed all three tasks successfully at the process level and produced the results above.
 
@@ -510,6 +515,7 @@ executed to completion. The current chain had the following authoritative state:
 | `2122395` | Primary feature dossiers | Pending on primary termination | Not run |
 | `2122396` | Stability-seed feature dossiers | Pending on stability completion | Not run |
 | `2122397` | Three pairwise seed-stability comparisons | Pending on stability completion | Not run |
+| `12354` | Global-normalization pooled SAEs at widths 512 and 2,048 | Pending allocation | Submitted at `c4c2014`; no result yet |
 
 The latest real-data result is therefore diagnostic: natural pooled activations collapse at both tested widths, while
 per-domain centering/RMS scaling repairs feature usage. No dossier, semantic, causal, cross-seed, or method-comparison

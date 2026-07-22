@@ -5,7 +5,7 @@
 - Project: `marl-gpt-interp`
 - Phase: pooled feature-decomposition normalization diagnosis
 - Status: natural pooled SAEs collapsed at widths 512 and 2,048, while per-domain centering/RMS scaling passed health;
-  a global-normalization control is the next gate before any sparsity sweep or feature interpretation;
+  global-normalization array `12354` is submitted as the next gate before any sparsity sweep or feature interpretation;
   no sparse feature-sharing, tactical-transfer, TacSIm-transfer, or trajectory-failure claim is currently supported
 - Program: [Prioritize functional feature accounting](decisions/2026-07-18-prioritize-functional-feature-accounting.md)
 - Paper: [`../latex/`](../latex/)
