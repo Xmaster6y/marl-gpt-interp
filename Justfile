@@ -1,7 +1,7 @@
 cluster_host_cv := "cv"
 cluster_host_jz := "jz"
 cluster_repo_cv := "~/work/marl-gpt-interp"
-cluster_repo_jz := "/lustre/fswork/projects/rech/nwq/uim47nr/marl-gpt-interp"
+cluster_repo_jz := "/lustre/fswork/projects/rech/jhr/uim47nr/marl-gpt-interp"
 result_folders := "slurm experiments hydra"
 grf_python := "3.12"
 grf_jz_python := "3.12.11"
@@ -9,7 +9,7 @@ grf_jz_native_prefix := "results/grf-native/py3.12"
 grf_jz_python_install_dir := "results/uv-python"
 grf_jz_wheel := "results/wheels/gfootball-2.10.3-cp312-cp312-linux_x86_64.whl"
 grf_jz_torch := "2.8.0"
-jz_scratch_root := "/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp"
+jz_scratch_root := "/lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp"
 
 install:
 	uv run pre-commit install
@@ -22,6 +22,10 @@ grf-install python=grf_python:
 grf-install-jz python=grf_jz_python:
 	#!/usr/bin/env bash
 	set -euo pipefail
+	if command -v module >/dev/null 2>&1; then
+		module purge
+		module load arch/a100
+	fi
 	wheel="{{grf_jz_wheel}}"
 	prefix="$PWD/{{grf_jz_native_prefix}}"
 	pyroot="$PWD/{{grf_jz_python_install_dir}}/cpython-{{python}}-linux-x86_64-gnu"
@@ -41,7 +45,7 @@ grf-install-jz python=grf_jz_python:
 	export UV_HTTP_RETRIES="${UV_HTTP_RETRIES:-10}"
 	export TMPDIR="$tmp_dir"
 	uv sync --python {{python}} --group grf --no-install-package gfootball --no-install-package torch --inexact
-	uv pip install --python .venv/bin/python --offline "torch=={{grf_jz_torch}}"
+	uv pip install --python .venv/bin/python "torch=={{grf_jz_torch}}"
 	uv pip install --python .venv/bin/python --no-deps "$wheel"
 	uv run --no-sync --python {{python}} --group grf python -c "import gymnasium, gfootball, torch; print('jz grf+clt env ok')"
 

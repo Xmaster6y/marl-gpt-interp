@@ -2,9 +2,9 @@ defaults:
   - ../data@_global_: 2026-07-22-model
   - _self_
 
-output_dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/experiments/2026-07-22-actor-intervention-example
-graph: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/experiments/2026-07-22-actor-graph-example/graph.json
-clt_dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/experiments/2026-07-22-actor-clt-pilot
+output_dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/experiments/2026-07-22-actor-intervention-example
+graph: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/experiments/2026-07-22-actor-graph-example/graph.json
+clt_dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/experiments/2026-07-22-actor-clt-pilot
 branch: actor
 input: null
 feature_id: null
@@ -12,4 +12,4 @@ factors: [-2.0, -1.0, -0.5, 0.5, 1.0, 2.0]
 random_seeds: [101, 211, 307, 401, 503, 601, 701, 809]
 hydra:
   run:
-    dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/hydra/circuit_tracing/evaluate_intervention/${now:%Y-%m-%d_%H-%M-%S}
+    dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/hydra/circuit_tracing/evaluate_intervention/${now:%Y-%m-%d_%H-%M-%S}

@@ -1,6 +1,6 @@
 repo_id: nortem/marl-gpt-datasets
 revision: b70333a01a9bd7bd8a4ff8d9215dfee9357e6024
-cache_root: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/hf-cache/nortem--marl-gpt-datasets/b70333a01a9bd7bd8a4ff8d9215dfee9357e6024
+cache_root: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/hf-cache/nortem--marl-gpt-datasets/b70333a01a9bd7bd8a4ff8d9215dfee9357e6024
 seed: 0
 concurrency: 2
 retries: 8
@@ -33,4 +33,4 @@ environments:
       - {name: academy_pass_and_shoot_with_keeper, weight: 1, source_prefix: dataset-GRF/academy_pass_and_shoot_with_keeper, destination_prefix: dataset/dataset_grf/trajectories/academy_pass_and_shoot_with_keeper, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
 hydra:
   run:
-    dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/hydra/circuit_tracing/build_balanced_dataset/${now:%Y-%m-%d_%H-%M-%S}
+    dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/hydra/circuit_tracing/build_balanced_dataset/${now:%Y-%m-%d_%H-%M-%S}

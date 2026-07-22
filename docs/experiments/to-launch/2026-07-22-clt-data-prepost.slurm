@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=clt-data
-#SBATCH --account=nwq@v100
+#SBATCH --account=jhr@a100
 #SBATCH --cpus-per-task=2
 #SBATCH --partition=prepost
-#SBATCH --output=/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/slurm/%x-%j.out
-#SBATCH --error=/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/slurm/%x-%j.err
+#SBATCH --output=/lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/slurm/%x-%j.out
+#SBATCH --error=/lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/slurm/%x-%j.err
 #SBATCH --time=12:00:00
 
 set -euo pipefail
 
 work_repo="${SLURM_SUBMIT_DIR:?submit from the repository root}"
-scratch_root="/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp"
+scratch_root="/lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp"
 cd "$work_repo"
 if [[ -f ./secret-env.sh ]]; then
     source ./secret-env.sh

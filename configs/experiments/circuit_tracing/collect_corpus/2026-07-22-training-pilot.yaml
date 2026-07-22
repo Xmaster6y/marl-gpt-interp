@@ -2,7 +2,7 @@ defaults:
   - ../data@_global_: 2026-07-22-training-pilot
   - _self_
 
-output_dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/clt-corpora/2026-07-22-training-pilot
+output_dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/clt-corpora/2026-07-22-training-pilot
 grouping_mode: dataset_source_group
 max_rows_per_source: 0
 max_rows_per_component:
@@ -29,4 +29,4 @@ rows_per_shard: 131072
 storage_dtype: float16
 hydra:
   run:
-    dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/hydra/circuit_tracing/collect_corpus/${now:%Y-%m-%d_%H-%M-%S}
+    dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/hydra/circuit_tracing/collect_corpus/${now:%Y-%m-%d_%H-%M-%S}

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=clt-train
-#SBATCH --account=nwq@v100
+#SBATCH --account=jhr@a100
 #SBATCH --array=0-1
-#SBATCH --cpus-per-task=10
+#SBATCH --cpus-per-task=8
+#SBATCH -C a100
 #SBATCH --gres=gpu:1
-#SBATCH --partition=gpu_p13
 #SBATCH --hint=nomultithread
-#SBATCH --qos=qos_gpu-t3
-#SBATCH --output=/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/slurm/%x-%A_%a.out
-#SBATCH --error=/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/slurm/%x-%A_%a.err
+#SBATCH --qos=qos_gpu_a100-t3
+#SBATCH --output=/lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/slurm/%x-%A_%a.out
+#SBATCH --error=/lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/slurm/%x-%A_%a.err
 #SBATCH --mail-type=FAIL
 #SBATCH --time=20:00:00
 
@@ -20,16 +20,17 @@ case "${SLURM_ARRAY_TASK_ID:?training requires the two-task array}" in
     *) exit 2 ;;
 esac
 work_repo="${SLURM_SUBMIT_DIR:?submit from the repository root}"
-scratch_root="/lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp"
+scratch_root="/lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp"
 job_root="$scratch_root/jobs/${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}"
 cd "$work_repo"
 if command -v module >/dev/null 2>&1; then
     module purge
+    module load arch/a100
 fi
 mkdir -p "$job_root/tmp"
-export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
-export MKL_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
-export NUMEXPR_NUM_THREADS="${SLURM_CPUS_PER_TASK:-10}"
+export OMP_NUM_THREADS="${SLURM_CPUS_PER_TASK:-8}"
+export MKL_NUM_THREADS="${SLURM_CPUS_PER_TASK:-8}"
+export NUMEXPR_NUM_THREADS="${SLURM_CPUS_PER_TASK:-8}"
 export TMPDIR="$job_root/tmp"
 export TORCH_HOME="$scratch_root/.cache/torch"
 export XDG_CACHE_HOME="$scratch_root/.cache"

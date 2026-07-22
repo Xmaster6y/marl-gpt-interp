@@ -1,30 +1,30 @@
-checkpoint: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/checkpoints/marl-gpt-main.pt
-dataset_manifest_path: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/balanced_dataset_manifest.json
+checkpoint: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/checkpoints/marl-gpt-main.pt
+dataset_manifest_path: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/balanced_dataset_manifest.json
 dataset_config:
   smac:
     config: {history_len: 6, history_step: 1, part_of_dataset: 1}
     map_types: [protoss, protoss, terran, terran, zerg, zerg]
     folder_paths:
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/protoss_5_vs_5
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/protoss_5_vs_6
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/terran_5_vs_5
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/terran_5_vs_6
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/zerg_5_vs_5
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/zerg_5_vs_6
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/protoss_5_vs_5
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/protoss_5_vs_6
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/terran_5_vs_5
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/terran_5_vs_6
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/zerg_5_vs_5
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/zerg_5_vs_6
   pogema:
     config: {part_of_dataset: 1}
     folder_paths:
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_pogema_ll/mazes
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_pogema_ll/random
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_pogema_ll/mazes
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_pogema_ll/random
   grf:
     config: {history_len: 6, history_step: 1, part_of_dataset: 1, load_part_file: true}
     folder_paths:
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_grf/trajectories/11vs11a11r_5to10_checkpoint
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_grf/trajectories/11vs11a11r_60to65_checkpoint
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_grf/trajectories/11vs11a11r_99to100_checkpoint
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_grf/trajectories/academy_corner
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_grf/trajectories/academy_counterattack_easy
-      - /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_grf/trajectories/academy_pass_and_shoot_with_keeper
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_grf/trajectories/11vs11a11r_5to10_checkpoint
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_grf/trajectories/11vs11a11r_60to65_checkpoint
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_grf/trajectories/11vs11a11r_99to100_checkpoint
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_grf/trajectories/academy_corner
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_grf/trajectories/academy_counterattack_easy
+      - /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/dataset/dataset_grf/trajectories/academy_pass_and_shoot_with_keeper
 envs: [smac, pogema, grf]
 last_token: true
 env_specific: true

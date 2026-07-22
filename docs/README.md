@@ -5,7 +5,7 @@
 - **Direction:** two independent full-path cross-layer transcoders (CLTs), one for the actor and one for the critic.
 - **Primary object:** input-specific attribution graphs from structured tokens through sparse features and frozen-attention OV paths to action contrasts or action value.
 - **Implementation:** corpus, CLT training, replacement, local graph, pruning, and graph-bound original-model intervention workflows are implemented and covered by local tests.
-- **Launch:** the SCRATCH-backed Jean Zay suite is submitted as jobs `53452`, `53453`, `53454_[0-1]`, and `53455`; the first job is pending for priority and the others are dependency-held. The original zero-runtime chain was replaced because Jean Zay derived an unintended 240 GB request from eight preprocessing CPUs.
+- **Launch:** all `nwq@v100` jobs were cancelled at zero runtime on 2026-07-23. The canonical Jean Zay target is now `jhr@a100`; submission is gated on an A100 runtime and CUDA smoke test in the new `jhr` WORK/SCRATCH roots.
 - **Evidence:** no claim-bearing CLT has been trained; submission and pending scheduler state are operational evidence only, while replacement, graph, intervention, and rollout results remain unavailable.
 - **Paper:** reorganized around circuit tracing; football and TacSIm are downstream steering endpoints rather than the organizing contribution.
 
@@ -21,4 +21,4 @@
 
 ## Next Gate
 
-Wait for the dataset audit and corpus collection, then inspect both branch-specific CLT health and replacement gates. Do not interpret graphs merely because downstream jobs ran; graph interpretation requires the hard audit to pass on held-out data in every environment.
+Pass the `jhr@a100` runtime preflight, submit the dependency-linked suite, then inspect the dataset audit, both branch-specific CLT health reports, and replacement gates. Do not interpret graphs merely because downstream jobs ran; graph interpretation requires the hard audit to pass on held-out data in every environment.

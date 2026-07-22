@@ -1,5 +1,5 @@
-output_dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/experiments/2026-07-22-actor-clt-pilot
-corpus_dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/clt-corpora/2026-07-22-training-pilot
+output_dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/experiments/2026-07-22-actor-clt-pilot
+corpus_dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/clt-corpora/2026-07-22-training-pilot
 branch: actor
 device: cuda:0
 seed: 0
@@ -22,4 +22,4 @@ observability:
   checkpoint_every: 5000
 hydra:
   run:
-    dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/hydra/circuit_tracing/train_clt/${now:%Y-%m-%d_%H-%M-%S}
+    dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/hydra/circuit_tracing/train_clt/${now:%Y-%m-%d_%H-%M-%S}
