@@ -3,8 +3,9 @@
 ## Snapshot
 
 - Project: `marl-gpt-interp`
-- Phase: feature-decomposition readiness
-- Status: the sparse foundation is implemented; the synthetic gate blocks real interpretation and the football branch;
+- Phase: pooled feature-decomposition normalization diagnosis
+- Status: natural pooled SAEs collapsed at widths 512 and 2,048, while per-domain centering/RMS scaling passed health;
+  a global-normalization control is the next gate before any sparsity sweep or feature interpretation;
   no sparse feature-sharing, tactical-transfer, TacSIm-transfer, or trajectory-failure claim is currently supported
 - Program: [Prioritize functional feature accounting](decisions/2026-07-18-prioritize-functional-feature-accounting.md)
 - Paper: [`../latex/`](../latex/)
@@ -66,7 +67,7 @@
 
 ## Planned Analyses
 
-- [Domain-lattice SAE method validation](experiments/2026-07-18-domain-lattice-sae-method-validation.md), synthetic gate first
+- [Domain-lattice SAE method validation](experiments/2026-07-18-domain-lattice-sae-method-validation.md), paused after the synthetic gate and convergence diagnosis failed
 - [Cross-football sparse-feature robustness](experiments/2026-07-19-cross-football-sparse-feature-robustness.md), blocked on the synthetic gate
 - [TacSIm benchmark](experiments/2026-07-18-tacsim-benchmark.md), deferred endpoint
 - [Causal cross-football pressure transfer](experiments/2026-07-15-causal-cross-football-pressure-transfer.md) is superseded as the primary track.

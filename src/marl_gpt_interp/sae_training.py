@@ -30,6 +30,16 @@ def fit_activation_preprocessing(
 
     if mode == "natural":
         return {"mode": mode, "fit_split": "train", "metric_space": "natural_activation"}
+    if mode == "global_center_rms":
+        mean = x.mean(dim=0)
+        centered = x - mean
+        return {
+            "mode": mode,
+            "fit_split": "train",
+            "metric_space": "global_centered_rms_scaled",
+            "mean": mean.tolist(),
+            "rms_scale": activation_norm_factor(centered),
+        }
     if mode != "per_domain_center_rms":
         raise ValueError(f"Unknown activation preprocessing mode {mode!r}")
     means, rms_scales = [], []
@@ -62,6 +72,10 @@ def apply_activation_preprocessing(
     mode = str(preprocessing["mode"])
     if mode == "natural":
         return x
+    if mode == "global_center_rms":
+        mean = torch.tensor(preprocessing["mean"], dtype=x.dtype, device=x.device)
+        scale = torch.tensor(preprocessing["rms_scale"], dtype=x.dtype, device=x.device)
+        return (x - mean) / scale
     if mode != "per_domain_center_rms":
         raise ValueError(f"Unknown activation preprocessing mode {mode!r}")
     result = torch.empty_like(x)
@@ -166,9 +180,6 @@ def validation_metrics(
     reconstruction = torch.cat(reconstructions)
     codes = torch.cat(all_codes)
     result = {f"validation/{key}": value for key, value in sparse_metrics(x, reconstruction, codes).items()}
-    total_variance = torch.var(x, dim=0, unbiased=False).sum().clamp_min(1e-8)
-    residual_variance = torch.var(x - reconstruction, dim=0, unbiased=False).sum()
-    result["validation/explained_variance"] = float(1 - residual_variance / total_variance)
     rates = (codes > 0).float().mean(dim=0)
     for quantile in (0.0, 0.25, 0.5, 0.75, 1.0):
         result[f"validation/feature_density_q{int(100 * quantile):03d}"] = float(torch.quantile(rates, quantile))

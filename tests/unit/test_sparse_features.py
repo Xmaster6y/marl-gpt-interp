@@ -95,6 +95,7 @@ def test_sparse_metrics_and_support_f1():
     x = torch.tensor([[1.0, 0.0], [0.0, 1.0]])
     metrics = sparse_metrics(x, x.clone(), x.clone())
     assert metrics["normalized_mse"] == 0.0
+    assert metrics["explained_variance"] == 1.0
     assert metrics["l0"] == 1.0
     assert support_macro_f1((frozenset({"a"}),), (frozenset({"a"}),)) == 1.0
 
@@ -186,6 +187,16 @@ def test_per_domain_preprocessing_uses_train_statistics_and_balances_rms():
         assert activation_norm_factor(values) == pytest.approx(1.0)
     held_out = apply_activation_preprocessing(torch.tensor([[2.0, 4.0]]), torch.tensor([0]), preprocessing)
     assert torch.allclose(held_out, torch.zeros_like(held_out))
+
+
+def test_global_preprocessing_uses_one_train_mean_and_rms():
+    x = torch.tensor([[1.0, 3.0], [3.0, 5.0], [10.0, 14.0], [14.0, 18.0]])
+    labels = torch.tensor([0, 0, 1, 1])
+    preprocessing = fit_activation_preprocessing(x, labels, ["a", "b"], "global_center_rms")
+    transformed = apply_activation_preprocessing(x, labels, preprocessing)
+    assert torch.allclose(transformed.mean(dim=0), torch.zeros(2), atol=1e-7)
+    assert activation_norm_factor(transformed) == pytest.approx(1.0)
+    assert "domains" not in preprocessing
 
 
 def test_natural_preprocessing_is_identity():

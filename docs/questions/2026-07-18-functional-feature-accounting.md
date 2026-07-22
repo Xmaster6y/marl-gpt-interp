@@ -2,7 +2,10 @@
 
 ## Status
 
-Active. Synthetic method validity is the current gate; real MARL-GPT claims remain blocked until it passes.
+Active, with the pooled SAE now primary and the proposed domain-lattice method paused. Natural pooled SAEs collapsed at
+both tested widths; per-domain centering/RMS scaling repaired feature health. A global-normalization control now gates
+sparsity selection and interpretation. Functional-sharing claims remain blocked until native-policy interventions are
+implemented.
 
 ## Question
 

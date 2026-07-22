@@ -14,6 +14,8 @@ heterogeneous data sources. The architectural lattice alone has weak novelty.
 - Source: [Gao et al., 2024](https://arxiv.org/abs/2406.04093)
 - Contribution: k-sparse autoencoders provide direct sparsity control, reduce dead latents, and expose reconstruction and
   feature-quality scaling frontiers.
+- Sparsity convention: the paper uses `k=32` as a prominent fixed operating point in its scaling figures, but studies
+  sparsity as a scaling variable rather than presenting 32 as a universal optimum.
 - Project relevance: establishes TopK-style sparse dictionary learning and the need to compare models along matched
   reconstruction-sparsity frontiers rather than at one arbitrary width.
 - Limitation for this project: learns one flat dictionary from one activation distribution and does not assign features
@@ -28,6 +30,16 @@ heterogeneous data sources. The architectural lattice alone has weak novelty.
   reconstruction complexity. Per-example TopK is primary.
 - Risk: mixed-domain batches could allocate disproportionate feature activity to high-norm or high-complexity domains;
   any use must stratify the BatchTopK budget by domain and report per-domain diagnostics.
+
+### JumpReLU And Gemma Scope
+
+- Sources: [JumpReLU](https://arxiv.org/abs/2407.14435) and
+  [Gemma Scope](https://arxiv.org/abs/2408.05147).
+- Contribution: directly control or penalize L0 without relying on L1, and evaluate reconstruction-fidelity versus
+  sparsity rather than selecting one sparsity in isolation. Gemma Scope reports a representative residual-stream suite
+  near `L0=50`, not a domain-independent target.
+- Project relevance: `k=32` or `L0≈50` are useful comparison anchors, but MARL-GPT's width-256 final-token activations
+  require their own held-out sparsity-fidelity and interpretability sweep.
 
 ### Routing And Multi-Layer Alternatives
 

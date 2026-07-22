@@ -4,9 +4,9 @@
 
 Builder and scalable configs implemented. The first six-file-per-environment view was materialized on JZ SCRATCH but
 rejected by its audit: five of six GRF files fell below the common row cap and represented only four distinct
-`chunk_*` families. The corrected six-group view passed its structural audit on JZ. The 12-group full-mixture view is
-currently materializing. All views remain non-claim-bearing until episode provenance is validated; activation splits are
-now group-disjoint at the audited candidate-family boundary.
+`chunk_*` families. The corrected six-group and 12-group full-mixture views passed their structural audits on JZ. All
+views remain non-claim-bearing until episode provenance is validated; activation splits are group-disjoint at the
+audited candidate-family boundary.
 
 ## Actual Problem
 
@@ -109,12 +109,12 @@ The launch runs on `prepost`, consumes no GPU allocation, and inherits the JZ lo
 JZ pre/post job `2111291` was submitted for the 12-group `training-small` materialization and fail-closed row audit at
 commit `eff3b2b`.
 
-At the latest 2026-07-20 snapshot, job `2111291` was still running at 4h43m34s with manifest status `downloading`. It had
-finalized 35/36 selected objects and 56,145,159,965/64,562,177,143 bytes, with another 1,092,558,848 bytes in the final
-resumable partial object. Total transferred data was 88.66% of the plan, and the partial had been written 1.3 seconds
-before inspection, so this snapshot shows active acquisition rather than a stalled or completed job. The dependent GPU
-suite is job `2113434` with `afterok:2111291`; it remained pending and had produced no cache, evaluation, or audit
-artifact. Submission and byte progress are not evidence that the dataset or SAE gate passed.
+Job `2111291` completed in 6h13m04s with exit code zero on July 20. Its manifest records 36 physical files totaling
+64,562,177,143 expected bytes, 12 source groups per environment, status `audited_balanced_pending_provenance`, and
+`structural_balance_passed: true`. The row audit found no undersized files and equal 98,304-row caps for GRF, POGEMA,
+and SMAC. The dependent GPU suite `2113434` became eligible and was pending on scheduler priority at the July 21
+inspection. Structural balance authorizes the training-health run; unresolved episode-boundary and shard-family
+provenance still blocks scientific claims.
 
 ## Decision Rule
 

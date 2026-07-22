@@ -306,6 +306,8 @@ def train_sparse_model(
 def sparse_metrics(x: torch.Tensor, reconstruction: torch.Tensor, codes: torch.Tensor) -> dict[str, float]:
     mse = F.mse_loss(reconstruction, x)
     baseline = x.var(unbiased=False).clamp_min(torch.finfo(x.dtype).eps)
+    total_variance = torch.var(x, dim=0, unbiased=False).sum().clamp_min(torch.finfo(x.dtype).eps)
+    residual_variance = torch.var(x - reconstruction, dim=0, unbiased=False).sum()
     active = codes > 0
     rates = active.float().mean(dim=0)
     nonzero_rates = rates[rates > 0]
@@ -315,6 +317,7 @@ def sparse_metrics(x: torch.Tensor, reconstruction: torch.Tensor, codes: torch.T
     return {
         "mse": float(mse),
         "normalized_mse": float(mse / baseline),
+        "explained_variance": float(1 - residual_variance / total_variance),
         "l0": float(active.sum(dim=-1).float().mean()),
         "activation_code_bits": float(entropy.sum()) if entropy.numel() else 0.0,
         "dead_feature_fraction": float((rates == 0).float().mean()),

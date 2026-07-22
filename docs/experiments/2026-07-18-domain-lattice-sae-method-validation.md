@@ -2,10 +2,14 @@
 
 ## Status
 
-Infrastructure implemented, the JZ end-to-end schema smoke completed, and the corrected six-group dataset passed its
-structural audit. The six-group core diagnostic completed and failed its dead-feature health check. The 12-group
-full-training-mixture view is materializing, with its GPU suite submitted behind the acquisition audit. Neither run is
-claim-bearing because upstream episode provenance remains unresolved.
+Infrastructure implemented, the JZ end-to-end schema smoke completed, and both the corrected six-group and 12-group
+datasets passed their structural audits. The six-group core diagnostic completed and failed its dead-feature health
+check. The 12-group full-training-mixture GPU suite is pending on scheduler priority. Neither run is claim-bearing
+because upstream episode provenance remains unresolved.
+
+The prespecified seven-regime synthetic method gate and its 5,000-step balanced convergence diagnostic both failed.
+All lattice method comparisons are therefore blocked pending objective diagnosis or method simplification. The queued
+full-mixture flat SAE remains the training-health gate for the simpler pooled-feature study.
 
 The first real-data pilot is now specified at `layer_03:final`: a balanced pooled TopK SAE with width 2,048, `k=16`,
 and seed 0. It uses the `dictionary-learning` TopK implementation and training recipe, local resumable checkpoints,
@@ -358,38 +362,73 @@ Authoritative core artifacts on JZ WORK are:
 - feature rows: `results/experiments/2026-07-20-layer03-balanced-core-small-topk-w1024-k16-seed0-features/`;
 - final gate: `results/experiments/2026-07-20-layer03-balanced-core-small-suite-audit/`.
 
-Full-mixture job `2113434` is submitted with `afterok:2111291`. It will start only if the 36-file acquisition and
-8,192-row-per-source audit pass. Its strict suite audit will test whether task/scenario diversity repairs held-out feature
-collapse; failure blocks the width, sparsity, and seed sweep.
+Full-mixture job `2113434` completed all stages before its strict audit exited nonzero on feature usage. Structural,
+reconstruction, and L0 checks passed, but 98.49% of held-out features were dead. Task/scenario diversity therefore did
+not repair the natural-activation collapse and the natural width/sparsity/seed sweep remains blocked.
 
 ## Next Steps And Gates
 
-1. **Finish acquisition without changing the mixture.** Let job `2111291` complete its size/hash and row audit. If any
-   source is below 8,192 rows, replace only that representative within the same task and source group; do not relax the
-   common accepted-row budget or remove the task.
-2. **Run the already-submitted full-mixture flat SAE.** Job `2113434` must retain 12 groups and equal examples in every
-   environment/split cell. Record reconstruction, L0, dead features, apparent support, and top-example provenance. This
-   is the decisive training-health result, not a method comparison.
-3. **Branch on held-out feature usage.** If dead-feature fraction is `<=0.50` and every domain meets normalized-MSE gates,
-   proceed to the width/k/seed stability sweep. If collapse persists, freeze the broad sweep and run a bounded diagnostic
-   comparing widths `{512, 2048}` and natural pooled scaling versus a separately reported per-domain-centered/RMS-scaled
-   condition. Do not substitute the scaled diagnostic for the natural-activation result.
-4. **Add semantic rehydration before naming features.** Reconstruct each selected top example from `source_file`,
-   `source_row_index`, scenario, action, reward, and terminal metadata; attach environment-specific state summaries. A
-   feature receives a semantic label only when its top and random-active examples distinguish a reproducible concept.
-5. **Test splitting and stability.** Generate cross-seed decoder matches only as candidates, then require held-out
-   activation fingerprints and matched top-example concepts. One-to-many matches remain candidate feature splits until
-   causal fingerprints agree.
-6. **Test functional universality.** For high-activity, stable candidates first, run batched per-domain ablation and direct
-   contribution substitution through the frozen model remainder. Apparent cross-domain firing alone is never universal
-   support.
-7. **Close claim gates before lattice comparisons.** Obtain authoritative upstream episode/chunk provenance and complete
-   the five-seed synthetic support-recovery gate. Only then launch flat-versus-independent-versus-lattice
-   rate--distortion comparisons or make universality/reuse claims.
+### Five-Seed Synthetic Gate Result
 
-### Queued Post-Health Suite
+The prespecified `2026-07-19-method-gate` completed locally on July 21 across seven assumption-holding regimes, five
+seeds, and the flat, independent, lattice, and constrained-random methods. The gate failed in every regime. The lattice
+never reached the `0.70` decoder-match threshold in any of 35 runs, reached support macro-F1 `>=0.80` in only 2 of 35
+runs, and remained within 5% of the best matched-L0 reconstruction in only 9 of 35 runs. Every regime therefore recorded
+zero stable seeds, despite the lattice's paired support-F1 interval remaining above both learned baselines in all seven
+regimes. Raw metrics and the authoritative summary are under
+`results/experiments/2026-07-19-sparse-support-recovery-gate/`.
 
-The next suite is a mutually exclusive conditional launch rather than an unconditional sweep. Launch artifact
+This is a method-gate failure, not evidence about MARL-GPT. The broad synthetic gate must not be weakened or rerun with
+post-hoc thresholds. The first diagnosis tests only whether 500 optimization steps caused the failure:
+
+- **Question:** Does longer optimization repair the balanced-regime lattice result under otherwise identical data,
+  capacity, sparsity, and seeds?
+- **Config:** `2026-07-21-convergence-diagnostic`, balanced regime only, five seeds, and 5,000 training steps.
+- **Metrics:** the unchanged `0.80` support macro-F1, `0.70` decoder cosine, matched-L0 5% reconstruction tolerance,
+  and four-of-five stable-seed requirement.
+- **Expected result under under-training:** at least four of five seeds pass all three per-seed checks.
+- **Decision:** only if that expectation holds should the full seven-regime gate be rerun at 5,000 steps. Otherwise stop
+  the real-data interpretation path and diagnose or simplify the lattice objective before any method comparison.
+
+The convergence diagnostic completed locally and failed. Zero of five balanced-regime seeds passed all per-seed checks:
+support macro-F1 passed in two seeds, decoder cosine passed in one, and matched-L0 reconstruction passed in none. The
+minimum lattice support macro-F1 was `0.676`; the paired 95% lower bound against the flat SAE became negative at
+`-0.272`; and the aggregate gate again recorded zero stable seeds. Artifacts are under
+`results/experiments/2026-07-21-sparse-support-recovery-convergence/`.
+
+Longer optimization is therefore not a sufficient repair. Do not rerun the seven-regime gate at 5,000 steps. The next
+methodological work must diagnose why the support-masked lattice loses the reconstruction frontier, or simplify the
+method, and must pass this unchanged balanced diagnostic before the broad gate is reconsidered.
+
+Code inspection identifies the first method-specification gap to resolve. The implemented lattice supplies hard
+domain-eligibility masks, but its synthetic trainer optimizes only full-reconstruction MSE. It does not yet implement
+the proposed hierarchical or residual block objective, nor any criterion requiring an eligible universal or pairwise
+latent to be used across every domain in its declared support. A broadly eligible latent can therefore specialize to
+one domain while retaining a universal label. The failed result evaluates this mask-only formulation; it does not
+justify implementing the missing objective without first specifying how that objective avoids forcing artificial
+sharing. That identifiability question is the next design gate.
+
+1. **Preserve the completed acquisition.** Job `2111291` completed with 12 groups per environment, no undersized files,
+   equal 98,304-row audit caps, and structural balance passed. Episode and shard-family provenance remain unresolved.
+2. **Treat the full-mixture flat SAE as a failed natural-activation health result.** Job `2113434` retained 12 groups and
+   equal examples in every environment/split cell, but only 31/2,048 features fired on held-out data.
+3. **Keep the automatic post-health branch diagnostic-only.** A passing primary may measure flat-SAE stability; a health
+   failure may measure width and scaling sensitivity. Neither branch authorizes feature naming or lattice comparison
+   while the synthetic gate is failed.
+4. **Specify support discovery before more method code.** Define an objective that distinguishes universal, pairwise,
+   and private use without making the desired support assignment true by construction. Include a support-permutation or
+   no-shared-factor control that can falsify forced sharing.
+5. **Repair only on synthetic data.** Implement the smallest objective or simplified model justified by that
+   specification, then require the unchanged balanced convergence diagnostic to pass before rerunning all seven regimes.
+6. **Resolve provenance in parallel.** Obtain authoritative upstream episode and `chunk_*`/`part_*` generation semantics;
+   conservative source-group separation is not a substitute for known episode boundaries.
+7. **Resume interpretation only after both gates close.** After synthetic validity and provenance pass, perform semantic
+   rehydration, cross-seed activation validation, batched per-domain ablation, and direct contribution substitution before
+   any flat-versus-independent-versus-lattice rate--distortion or universality claim.
+
+### Full-Mixture And Post-Health Results
+
+The post-health suite was a mutually exclusive conditional launch rather than an unconditional sweep. Launch artifact
 `to-launch/2026-07-20-layer03-post-health-v100.sh` consumes the full-mixture cache and checks the authoritative primary
 suite audit before doing any GPU work:
 
@@ -401,16 +440,37 @@ suite audit before doing any GPU work:
 - if acquisition, collection, or another structural prerequisite fails, neither scientific branch is valid. The
   diagnostic launcher fails closed rather than treating an infrastructure failure as dead-feature evidence.
 
-The per-domain transform is fitted on training rows only and replayed unchanged on validation and test rows. Scaled
-reconstruction errors live in transformed coordinates and are not compared numerically with natural-space
-reconstruction. The diagnostic comparison is whether centering/scaling and/or lower width materially repair held-out
-feature usage at matched `k`; the scaled condition cannot replace the natural corpus in later claims.
+Primary job `2113434` failed only the dead-feature gate after 48m30s. It achieved aggregate normalized MSE `0.000378`,
+SMAC `0.03899`, POGEMA `0.000112`, GRF `0.000115`, and L0 `16.00`, but 2,017/2,048 features were dead. All structural
+checks passed. The natural width-512 control also failed: normalized MSE `0.000349`, L0 `13.00`, and 488/512 dead
+features. Reducing width alone therefore did not repair collapse.
 
-The primary job is still pending, so both arrays are submitted behind mutually exclusive Slurm dependencies: stability
-uses `afterok:2113434`, while the diagnostic branch uses `afternotok:2113434` and additionally requires a written audit
-with all structural checks passing and `health.passed=false`. At commit `b8a375c`, stability array `2114756` and
-diagnostic array `2114755` were accepted by Slurm. These job IDs establish launch state only; neither branch has produced
-evidence, and only one dependency condition can be satisfied by the primary job's terminal state.
+Both per-domain-centered/RMS-scaled controls passed the declared health checks. Width 512 achieved normalized MSE
+`0.02261`, exact L0 `16`, and 62/512 dead features; width 2,048 achieved `0.01951`, exact L0 `16`, and 591/2,048 dead
+features. Scaled errors live in transformed coordinates and are not numerically comparable with natural-space errors.
+The result identifies domain-dependent location/scale as the leading collapse mechanism, but does not yet justify using
+domain labels in the primary preprocessing path.
+
+### Global-Normalization Control
+
+The next suite isolates whether ordinary pooled normalization is sufficient. Fit one mean vector and one RMS scale on
+all balanced training rows without using domain labels, replay that transform unchanged on validation and test rows, and
+train widths `{512,2048}` at fixed `k=16`, seed 0, and 10,000 steps. Launch artifact:
+`to-launch/2026-07-22-layer03-global-normalization-v100.sh`.
+
+- **Hypothesis:** if pooled centering/scaling repairs feature usage, domain-conditioned preprocessing is unnecessary. If
+  only per-domain normalization works, cross-domain mean/scale structure is strong enough that the primary representation
+  choice must be reconsidered before semantic comparison.
+- **Metrics:** unchanged held-out aggregate and per-domain normalized MSE, explained variance, exact L0, dead-feature
+  fraction, activation-code bits, firing-density distribution, and dossiers.
+- **Decision:** prefer global normalization if either width passes health and dossier review. If global fails while
+  per-domain normalization passes, do not launch the `k` sweep; first decide whether domain-conditioned coordinate
+  normalization is compatible with the intended shared-feature claim.
+- **Deferred sparsity sweep:** after choosing a preprocessing space, vary `k={8,16,32,64}` at the healthier width and run
+  multiple seeds only for the retained one or two adjacent values.
+
+The natural stability array `2114756` became dependency-unsatisfied after the primary failure. Diagnostic array
+`2114755` completed all three tasks successfully at the process level and produced the results above.
 
 ### Feature Dossiers And Stability Evidence
 
@@ -437,23 +497,23 @@ These are dependency-held launches, not results.
 
 ### Run Ledger At Latest Snapshot
 
-As of the latest 2026-07-20 inspection, only the schema smoke and six-group core diagnostic had executed to completion.
-The current chain had the following authoritative state:
+As of the July 22 inspection, the schema smoke, corpus audit, primary full-mixture run, and post-health diagnostic had
+executed to completion. The current chain had the following authoritative state:
 
 | Job | Intended work | State | Evidence status |
 | --- | --- | --- | --- |
-| `2111291` | Materialize and audit the 12-group balanced corpus | Running; 35/36 files finalized | Acquisition progress only; dataset audit absent |
-| `2113434` | Collect, train, evaluate, analyze, and strictly audit the primary full-mixture SAE | Pending on `afterok:2111291` | Not run; no result artifacts |
-| `2114755` | Three-condition collapse diagnostic | Pending on primary failure | Not run |
-| `2114756` | Natural width-2,048 seeds 1 and 2 | Pending on primary success | Not run |
-| `2122392` | Diagnostic feature dossiers | Pending on diagnostic completion | Not run |
+| `2111291` | Materialize and audit the 12-group balanced corpus | Completed, exit code zero | Structural balance passed; provenance still blocks claims |
+| `2113434` | Primary natural width-2,048 pooled SAE | Failed strict health audit | Reconstruction passed; 98.49% dead features |
+| `2114755` | Three-condition collapse diagnostic | Completed | Per-domain scaling passed at widths 512 and 2,048; natural width 512 failed |
+| `2114756` | Natural width-2,048 seeds 1 and 2 | Dependency never satisfied | Correctly blocked after primary failure |
+| `2122392` | Diagnostic feature dossiers | Pending on scheduler priority | Not run |
 | `2122395` | Primary feature dossiers | Pending on primary termination | Not run |
 | `2122396` | Stability-seed feature dossiers | Pending on stability completion | Not run |
 | `2122397` | Three pairwise seed-stability comparisons | Pending on stability completion | Not run |
 
-Consequently, the latest scientific result remains core resume job `2112970`: reconstruction and split checks passed,
-but the `0.939` held-out dead-feature fraction failed feature-usage health. No full-mixture, diagnostic, dossier,
-cross-seed stability, semantic, or causal result exists yet.
+The latest real-data result is therefore diagnostic: natural pooled activations collapse at both tested widths, while
+per-domain centering/RMS scaling repairs feature usage. No dossier, semantic, causal, cross-seed, or method-comparison
+result exists yet.
 
 The completed JZ end-to-end smoke used the four `2026-07-20-jz-smoke` configs and
 `archived/2026-07-20-layer03-sae-smoke-v100.sh`. It collected 12 schema-only batches, trained a width-512 TopK SAE for 50
