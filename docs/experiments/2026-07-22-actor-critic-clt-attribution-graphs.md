@@ -2,18 +2,18 @@
 
 ## Status
 
-Implementation and local validation complete. The claim-bearing suite was submitted to Jean Zay on 2026-07-22 from commit `f1ecd747758d6ea4e5d1d15b9ad9fbd010a1d85b`; no scientific result is available yet.
+Implementation and local validation complete. The claim-bearing suite was resubmitted to Jean Zay on 2026-07-22 from launch commit `b4e1deb9a7cab19ae84176f4aa79c1c897b4a69b`; no scientific result is available yet.
 
 Launch state:
 
-- dataset materialization and structural audit: job `36790` (`prepost`);
-- corpus collection: job `36791`, after successful job `36790`;
-- independent actor and critic training: array `36792_[0-1]`, after successful job `36791`;
-- replacement evaluation, hard CLT audit, actor/critic graphs, and example interventions: job `36793`, after both training tasks succeed.
+- dataset materialization and structural audit: job `53452` (`prepost`, two CPUs, 60 GB RAM);
+- corpus collection: job `53453`, after successful job `53452`;
+- independent actor and critic training: array `53454_[0-1]`, after successful job `53453`;
+- replacement evaluation, hard CLT audit, actor/critic graphs, and example interventions: job `53455`, after both training tasks succeed.
 
 All four job records were verified pending with the intended `afterok` dependencies. The staged SCRATCH checkpoint SHA-256 is `c3deaeb67f679657b27e9d3373e42e4104cc9370be6dba60ab5fd0efe7b1ce5a`, identical to the WORK source checkpoint.
 
-A status refresh during the launch-documentation pass still found job `36790` pending for priority, with `36791`, `36792_[0-1]`, and `36793` dependency-held. No job had started or produced a scientific artifact. The complete runtime, storage, quota, and retention contract is recorded in the [Jean Zay setup note](../2026-07-02-grf-jz-setup.md).
+The original records `36790`, `36791`, `36792_[0-1]`, and `36793` were cancelled at zero runtime because Jean Zay derived an unintended 240 GB preprocessing allocation from eight CPUs. Explicit memory directives are rejected on Jean Zay, so the replacement uses two CPUs and the corresponding 60 GB allocation. A status refresh found job `53452` pending for priority, with `53453`, `53454_[0-1]`, and `53455` dependency-held. No job had started or produced a scientific artifact. The complete runtime, storage, quota, and retention contract is recorded in the [Jean Zay setup note](../2026-07-02-grf-jz-setup.md).
 
 ## Question and Hypothesis
 

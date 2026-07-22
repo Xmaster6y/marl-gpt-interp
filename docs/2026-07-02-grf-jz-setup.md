@@ -56,13 +56,13 @@ SCRATCH is not backed up. Under the [IDRIS storage policy](https://www.idris.fr/
 
 ## Submitted Suite
 
-The canonical launcher is [`docs/experiments/to-launch/2026-07-22-actor-critic-clt-suite.sh`](experiments/to-launch/2026-07-22-actor-critic-clt-suite.sh). It submits four dependency-linked Slurm records from implementation commit `f1ecd747758d6ea4e5d1d15b9ad9fbd010a1d85b`:
+The canonical launcher is [`docs/experiments/to-launch/2026-07-22-actor-critic-clt-suite.sh`](experiments/to-launch/2026-07-22-actor-critic-clt-suite.sh). It submits four dependency-linked Slurm records from launch commit `b4e1deb9a7cab19ae84176f4aa79c1c897b4a69b`:
 
-1. `36790`: balanced-dataset materialization and structural audit on `prepost`;
-2. `36791`: V100 corpus collection after `36790` succeeds;
-3. `36792_[0-1]`: independent actor and critic V100 training tasks after `36791` succeeds;
-4. `36793`: replacement evaluation, the hard CLT eligibility audit, both example graphs, and both example interventions after both training tasks succeed.
+1. `53452`: balanced-dataset materialization and structural audit on `prepost`;
+2. `53453`: V100 corpus collection after `53452` succeeds;
+3. `53454_[0-1]`: independent actor and critic V100 training tasks after `53453` succeeds;
+4. `53455`: replacement evaluation, the hard CLT eligibility audit, both example graphs, and both example interventions after both training tasks succeed.
 
-The GPU records use `gpu_p13`, standard `qos_gpu-t3`, one V100 each, and a 20-hour limit. The data record uses `prepost` with a 12-hour limit. `afterok` dependencies prevent training from running on an invalid corpus and prevent graph or intervention analysis from running when either CLT or the replacement audit fails.
+The GPU records use `gpu_p13`, standard `qos_gpu-t3`, one V100 each, and a 20-hour limit. The data record uses `prepost`, two CPUs, the corresponding Jean Zay allocation of 60 GB RAM, and a 12-hour limit. `afterok` dependencies prevent training from running on an invalid corpus and prevent graph or intervention analysis from running when either CLT or the replacement audit fails.
 
-The authoritative status refresh on 2026-07-22 found job `36790` pending for priority and all downstream records pending on their declared dependencies. This is a completed launch process, not a scientific result.
+The initial records `36790`, `36791`, `36792_[0-1]`, and `36793` were cancelled at zero runtime after Slurm revealed that eight preprocessing CPUs implicitly requested 240 GB RAM. Jean Zay rejects explicit memory directives, so the preprocessing request was corrected to two CPUs, which allocates 60 GB. The authoritative status refresh on 2026-07-22 found replacement job `53452` pending for priority and all downstream records pending on their declared dependencies. This is a completed launch process, not a scientific result.

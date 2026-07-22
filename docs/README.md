@@ -5,7 +5,7 @@
 - **Direction:** two independent full-path cross-layer transcoders (CLTs), one for the actor and one for the critic.
 - **Primary object:** input-specific attribution graphs from structured tokens through sparse features and frozen-attention OV paths to action contrasts or action value.
 - **Implementation:** corpus, CLT training, replacement, local graph, pruning, and graph-bound original-model intervention workflows are implemented and covered by local tests.
-- **Launch:** the SCRATCH-backed Jean Zay suite is submitted as jobs `36790`, `36791`, `36792_[0-1]`, and `36793`; the first job is pending for priority and the others are dependency-held.
+- **Launch:** the SCRATCH-backed Jean Zay suite is submitted as jobs `53452`, `53453`, `53454_[0-1]`, and `53455`; the first job is pending for priority and the others are dependency-held. The original zero-runtime chain was replaced because Jean Zay derived an unintended 240 GB request from eight preprocessing CPUs.
 - **Evidence:** no claim-bearing CLT has been trained; submission and pending scheduler state are operational evidence only, while replacement, graph, intervention, and rollout results remain unavailable.
 - **Paper:** reorganized around circuit tracing; football and TacSIm are downstream steering endpoints rather than the organizing contribution.
 
