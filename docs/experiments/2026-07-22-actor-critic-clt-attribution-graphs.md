@@ -13,6 +13,8 @@ Launch state:
 
 All four job records were verified pending with the intended `afterok` dependencies. The staged SCRATCH checkpoint SHA-256 is `c3deaeb67f679657b27e9d3373e42e4104cc9370be6dba60ab5fd0efe7b1ce5a`, identical to the WORK source checkpoint.
 
+A status refresh during the launch-documentation pass still found job `36790` pending for priority, with `36791`, `36792_[0-1]`, and `36793` dependency-held. No job had started or produced a scientific artifact. The complete runtime, storage, quota, and retention contract is recorded in the [Jean Zay setup note](../2026-07-02-grf-jz-setup.md).
+
 ## Question and Hypothesis
 
 Can separate full-path actor and critic CLTs faithfully replace MARL-GPT's MLP computations and reveal recurring causal paths across SMACv2, POGEMA, and GRF?
@@ -101,4 +103,9 @@ Failure blocks graph interpretation. Width or sparsity may be revised once from 
 - [Critic graph config](../../configs/experiments/circuit_tracing/build_graph/2026-07-22-critic-example.yaml)
 - [Actor intervention config](../../configs/experiments/circuit_tracing/evaluate_intervention/2026-07-22-actor-example.yaml)
 - [Critic intervention config](../../configs/experiments/circuit_tracing/evaluate_intervention/2026-07-22-critic-example.yaml)
+- [Suite launcher](to-launch/2026-07-22-actor-critic-clt-suite.sh)
+- [Dataset Slurm record](to-launch/2026-07-22-clt-data-prepost.slurm)
+- [Corpus Slurm record](to-launch/2026-07-22-clt-corpus-v100.slurm)
+- [Actor/critic training Slurm array](to-launch/2026-07-22-clt-train-v100.slurm)
+- [Gated analysis Slurm record](to-launch/2026-07-22-clt-analysis-v100.slurm)
 - [Paper](../../latex/main.tex)
