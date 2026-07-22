@@ -1,3 +1,59 @@
 \section{Methods}
 
-Methods used in the paper.
+\subsection{Two branch-complete cross-layer transcoders}
+
+Let $b\in\{\mathrm{actor},\mathrm{critic}\}$ denote a computational path containing the seven shared MLPs followed by branch MLP $8$. The two CLTs have identical architecture but independent parameters. For layer $\ell$, feature activations are
+\begin{equation}
+    \mathbf{a}^{b,\ell}=\operatorname{JumpReLU}\!\left(W_{\mathrm{enc}}^{b,\ell}\mathbf{x}^{b,\ell}+\mathbf{c}^{b,\ell};\boldsymbol{\theta}^{b,\ell}\right),
+\end{equation}
+where $\mathbf{x}^{b,\ell}$ is the residual stream after attention and before the MLP normalization. A feature born at layer $j$ has a separate decoder write to each target layer $\ell\geq j$. The reconstructed MLP output is
+\begin{equation}
+    \widehat{\mathbf{y}}^{b,\ell}=\mathbf{d}^{b,\ell}+\sum_{j=1}^{\ell}W_{\mathrm{dec}}^{b,j\rightarrow\ell}\mathbf{a}^{b,j}.
+\end{equation}
+Decoder-vector norms are computed over the complete downstream write bundle of a feature, rather than independently per target layer.
+
+We train on natural residual-stream activations with no environment-conditioned centering, scaling, routing, or weights. The layer-balanced objective is
+\begin{equation}
+    \mathcal{L}^{b}=\frac{1}{L}\sum_{\ell=1}^{L}
+    \frac{\|\widehat{\mathbf{y}}^{b,\ell}-\mathbf{y}^{b,\ell}\|_2^2}
+         {\operatorname{Var}(\mathbf{y}^{b,\ell})+\epsilon}
+    +\lambda\frac{1}{L}\sum_{\ell=1}^{L}\sum_i
+    \tanh\!\left(c\,\|W_{\mathrm{dec},i}^{b,\ell\rightarrow\geq\ell}\|_2a_i^{b,\ell}\right).
+\end{equation}
+The first term prevents large-output layers from dominating training. The second approximates an $L_0$ penalty while accounting for the scale of a feature's complete decoder bundle.
+
+\subsection{Token-level corpus}
+
+Every training row is a token position from a complete MARL-GPT input window. The row stores residual inputs and MLP outputs for all seven shared layers and both branch layers. It also preserves environment, source file, source row, audited split group, token index, positional roles, legal actions, selected action, predicted action, and predicted value. Training, validation, and test partitions are disjoint in conservative source groups. These groups are file or chunk-family provenance units and are not asserted to recover individual episode boundaries.
+
+MARL-GPT does not apply an attention mask to nominally padded positions. Such positions are therefore part of the model's actual computation and cannot be declared invalid after the fact. The corpus samples positions uniformly from the complete sequence and always retains the final decision token. Shared tensors are stored once and combined with the relevant branch tensor during actor or critic training.
+
+\subsection{Replacement models}
+
+For global fidelity evaluation, every MLP output on branch $b$ is overwritten by its CLT reconstruction. Attention remains active and is recomputed normally, so reconstruction deviations can compound across layers. We compare the actor replacement with original masked policy logits, and the critic replacement with original action-conditioned value predictions.
+
+For an analyzed decision, we instead form a local error-corrected replacement. On the original forward pass, define
+\begin{equation}
+    \mathbf{e}^{b,\ell}_p=\mathbf{y}^{b,\ell}_p-\widehat{\mathbf{y}}^{b,\ell}_p
+\end{equation}
+at every token $p$ and layer $\ell$. The local model adds $\mathbf{e}^{b,\ell}_p$ back as an explicit input node, freezes attention patterns and normalization denominators, and exactly reproduces the original forward pass at the reference input. Error correction establishes local output equality but does not by itself establish mechanistic faithfulness.
+
+\subsection{Actor and critic targets}
+
+For action selection, a common shift of every action logit has no policy effect. We therefore attribute the legal-action margin
+\begin{equation}
+    g_{\mathrm{actor}}=z_{a^*}-z_{a'},
+\end{equation}
+where $a^*$ is the selected action and $a'$ is the strongest other legal action unless a contrast is specified in advance.
+
+The critic represents $Q(s,a)$ as a categorical distribution over fixed return bins. Expected value is nonlinear in its logits. For action $a$, we use its first-order local scalarization. If $p_k$ and $v_k$ are the original probability and center of bin $k$, and $V=\sum_kp_kv_k$, then
+\begin{equation}
+    g_{\mathrm{critic}}=\sum_k p_k(v_k-V)z_{a,k}.
+\end{equation}
+This has the exact local gradient of expected value with respect to critic logits and retains the linear output required by graph construction.
+
+\subsection{Graph construction and validation}
+
+Graph nodes are combined input-token representations, active CLT features at a token and layer, MLP reconstruction-error vectors, fixed bias residuals, and one output target. Direct edges are activation-times-Jacobian contributions. In the non-causal encoder, attention-mediated edges may connect any source and target token positions, while layer depth preserves acyclicity. Graphs are pruned only after recording retained attribution mass.
+
+Graph hypotheses are tested in the original model. For a source feature or labeled supernode, we predict the sign and relative magnitude of effects on downstream features and the output target. We then ablate or scale its learned cross-layer write bundle, compare observed with predicted effects, and finally evaluate behavior in fresh rollouts. Steering comparisons use norm- and induced-KL-matched random writes so that policy damage is not mistaken for control.

@@ -1,0 +1,5 @@
+manifest_path: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/balanced_dataset_manifest.json
+output_path: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-22-clt-training-pilot/balanced_dataset_audit.json
+hydra:
+  run:
+    dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/hydra/circuit_tracing/audit_balanced_dataset/${now:%Y-%m-%d_%H-%M-%S}

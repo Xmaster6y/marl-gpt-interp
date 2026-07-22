@@ -1,5 +1,0 @@
-game_id,cycle,team,unum,x,y,vx,vy,is_ball
-r1,12,left,7,18,28,0,0,false
-r1,12,right,2,90,40,0,0,false
-r1,13,left,7,21,29,0,0,false
-r1,13,right,2,86,39,0,0,false

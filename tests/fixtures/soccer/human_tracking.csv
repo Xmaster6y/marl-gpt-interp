@@ -1,5 +1,0 @@
-match_id,frame_id,second,team_id,player_id,x,y,vx,vy,is_ball
-h1,1,1.0,home,10,20,34,0,0,false
-h1,1,1.0,away,4,85,34,0,0,false
-h1,2,1.1,home,10,23,33,0,0,false
-h1,2,1.1,away,4,82,35,0,0,false

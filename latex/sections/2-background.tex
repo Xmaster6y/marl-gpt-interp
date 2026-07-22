@@ -1,3 +1,23 @@
 \section{Background}
 
-Background required for the paper.
+\subsection{Generalist multi-agent sequence models}
+
+Transformer policies provide a common representation for variable multi-agent observations and decisions. Multi-Agent Transformer casts cooperative policy optimization as sequence modeling \cite{wen2022mat}; MARL-GPT instead learns a common offline actor--critic model from large trajectory collections spanning several environment families \cite{nesterova2026marlgpt}. The checkpoint studied here has a width-256 non-causal transformer encoder. Seven blocks form a shared trunk, followed by separate actor and critic blocks. The actor head produces logits over a padded action vocabulary, while the critic head produces a categorical return distribution for every action.
+
+The input is a structured sequence rather than natural language. Scalar observation attributes receive learned value projections and embeddings for agent, team, time, and attribute position. An explicit environment token occupies the final position. Non-causal self-attention permits every position to influence every other position. Consequently, an explanation restricted to the final token or to one intermediate layer cannot represent the complete decision mechanism.
+
+\subsection{From sparse representations to sparse computations}
+
+Sparse autoencoders reconstruct a hidden state from a small number of learned directions. They are useful for describing a representation, but a feature that reconstructs $x^\ell$ need not identify the transformation that produces the next model state. A transcoder instead predicts a model component's output from its input. Crosscoders extend sparse coding across layers or models and can consolidate features that persist through the residual stream \cite{lindsey2024crosscoders}.
+
+A cross-layer transcoder specializes this idea for circuit tracing. Features are assigned to encoder layers, but each feature can write to every later MLP output. All layers are trained jointly. Replacing the original MLPs with these writes produces an interpretable approximation in which active sparse features are the nonlinear computational units \cite{ameisen2025circuittracing}.
+
+\subsection{Attribution graphs}
+
+For a fixed input, the CLT replacement can be made locally exact by adding the observed reconstruction error at each layer and token. Attention patterns and normalization denominators are frozen to their values on the original forward pass. The remaining transport between sparse features is linear, so an edge from source feature $s$ to target feature $t$ can be written as
+\begin{equation}
+    A_{s\rightarrow t}=a_s\frac{\partial h_t}{\partial a_s},
+\end{equation}
+where $a_s$ is the source activation and $h_t$ is the target preactivation. The derivative sums paths through the residual stream and attention OV computation without passing through another sparse nonlinearity. Reconstruction-error vectors and input-token representations are retained as explicit graph nodes.
+
+This graph is conditional on the realized attention pattern. It explains information transported by attention, but not why the QK circuit selected that pattern or how a sufficiently large intervention would change it. Original-model perturbations are therefore part of the evidence rather than an optional visualization check.

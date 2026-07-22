@@ -1,0 +1,3 @@
+checkpoint: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/checkpoints/marl-gpt-main.pt
+device: cuda:0
+seed: 0

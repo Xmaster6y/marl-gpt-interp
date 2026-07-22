@@ -1,0 +1,18 @@
+output_dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/experiments/2026-07-22-clt-suite-audit
+actor_metrics: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/experiments/2026-07-22-actor-clt-pilot/final_metrics.json
+critic_metrics: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/experiments/2026-07-22-critic-clt-pilot/final_metrics.json
+replacement_metrics: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/experiments/2026-07-22-clt-replacement-pilot/replacement_metrics.json
+environments: [smac, pogema, grf]
+num_layers: 8
+seed: 0
+gates:
+  maximum_normalized_mse: 0.20
+  maximum_dead_feature_fraction: 0.50
+  minimum_l0: 16
+  maximum_l0: 128
+  maximum_actor_kl: 0.05
+  minimum_action_agreement: 0.90
+  maximum_critic_value_mae: 1.0
+hydra:
+  run:
+    dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/hydra/circuit_tracing/audit_clt_suite/${now:%Y-%m-%d_%H-%M-%S}

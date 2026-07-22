@@ -42,7 +42,7 @@
 \newcommand{\cmark}{\textcolor{green}{\ding{51}}}
 \newcommand{\xmark}{\textcolor{red}{\ding{55}}}
 
-\title{Interpreting the Modelling Gap Between MARL-GPT and Human Football Play}
+\title{Tracing Action and Value Computations in a Generalist Multi-Agent Transformer}
 
 
 % The \author macro works with any number of authors. There are two commands
@@ -66,9 +66,7 @@
 \maketitle
 
 \begin{abstract}
-Recent work on MARL-GPT suggests that transformer-based policies trained offline on large-scale multi-agent trajectories can generalize across diverse environments, including Google Research Football. However, high simulator performance does not imply that such models learn coordination structures that transfer to human football play or support policy improvement in realistic tactical settings. This is especially important for sports analytics, where the goal is not only to optimize reward in a simulator, but also to model, evaluate, improve, and transfer decision-making behavior grounded in human play.
-
-We propose to study this gap by comparing MARL-GPT-style agents, football simulators, and human tracking data through football-relevant tactical concepts. Rather than assuming that simulator performance directly transfers to human play, we will examine whether simulator-trained policies show representations or behaviours related to concepts such as possession, pressure, spacing, support, passing opportunity, and shot opportunity. The project will focus on an initial diagnostic analysis of where simulator-trained agents appear to align with human football behaviour and where they may rely on simulator-specific patterns. The expected outcome is not a complete transfer method, but an initial framework for interpreting the modelling gap between MARL foundation models and human football play. This can provide a basis for later work on policy adaptation, concept-level evaluation, and sports analytics applications.
+Generalist multi-agent policies can act across environments with different observation schemas, agent populations, and action spaces, but behavioral transfer does not reveal whether they reuse a common computation or implement several environment-specific policies inside shared parameters. We develop a circuit-tracing framework for MARL-GPT based on two independent cross-layer transcoders: one spanning the shared transformer and actor branch, and one spanning the shared transformer and critic branch. Each transcoder replaces the multilayer perceptrons along its complete path with sparse features that read from one residual-stream layer and write to every subsequent MLP output. For an individual decision, a local error-corrected replacement model yields an attribution graph from input-token representations, sparse features, and reconstruction-error nodes to either a legal-action logit contrast or a local linearization of action value. Graph edges include information flow through residual connections and the value/output paths of frozen attention, while explicitly leaving attention-pattern formation outside the initial explanatory scope. We define replacement-fidelity, graph-completeness, cross-environment recurrence, and original-model intervention tests needed to distinguish shared causal mechanisms from superficial activation overlap. The framework is designed to support both mechanistic analysis and training-free or training-light policy interventions. This draft specifies the method and evaluation contract; claim-bearing MARL-GPT transcoder results remain pending.
 \end{abstract}
 
 
@@ -80,6 +78,9 @@ We propose to study this gap by comparing MARL-GPT-style agents, football simula
 \input{sections/6-related-work}
 \input{sections/7-conclusion}
 
+\appendix
+\input{sections/A-models}
+\input{sections/B-software}
 
 \bibliographystyle{ieeetr}
 \bibliography{semantic,custom}

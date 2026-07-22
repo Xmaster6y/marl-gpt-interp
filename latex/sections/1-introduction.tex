@@ -1,3 +1,20 @@
 \section{Introduction}
 
-A simple introduction to the paper, with some references \cite{Shapley1988AVF}.
+A single transformer can now represent policies for multi-agent tasks as different as StarCraft micromanagement, grid-based path finding, and simulated football. MARL-GPT is a particularly direct example: it is trained offline on trajectories from SMACv2, POGEMA, and Google Research Football (GRF), and uses one observation encoder and transformer policy across those domains \cite{nesterova2026marlgpt}. Its behavioral results motivate a mechanistic question that aggregate return cannot answer: does the model reuse computations across environments, or merely store environment-specific solutions behind a shared parameterization?
+
+This distinction matters scientifically and operationally. A reusable coordination mechanism should appear in corresponding causal paths from observations to actions and values, should survive changes of environment, and should respond consistently to intervention. In contrast, similar hidden-state geometry or decodability can arise from environment identity, padding conventions, token roles, or other correlates without establishing shared policy computation. The same distinction controls whether an internal representation is a plausible target for steering. An activation direction that predicts an action offline may fail to influence the original policy, or may alter it only by causing nonspecific distribution shift.
+
+We study these questions with cross-layer transcoders (CLTs) and attribution graphs \cite{ameisen2025circuittracing}. A CLT replaces the MLPs along a transformer path with sparse features. A feature reads the residual stream at one layer and has a distinct learned write to every subsequent MLP output. This architecture bridges MLP nonlinearities and exposes direct feature-to-feature interactions, allowing a prompt-local replacement model to be expressed as a directed graph. The graph includes paths mediated by the output/value components of attention under the attention pattern observed on the analyzed input.
+
+MARL-GPT requires an adaptation that is central rather than cosmetic. Its shared encoder forks into actor and critic transformer blocks. We therefore learn two independent full-path CLTs. The actor CLT explains a contrast between legal actions; the critic CLT explains an action-conditioned value prediction. Separate dictionaries avoid assuming that action selection and value estimation use the same sparse computational basis, while matched graph analyses reveal whether their mechanisms converge empirically.
+
+The intended contributions are:
+\begin{itemize}
+    \item a branch-complete CLT formulation for a non-causal, encoder-style multi-agent transformer;
+    \item actor and critic attribution targets that respect legal-action masks and the distributional critic;
+    \item a token-level, source-group-disjoint corpus and local graph construction that exposes reconstruction error rather than hiding it;
+    \item a falsifiable protocol for identifying recurring cross-environment mechanisms and validating them through interventions in the original policy; and
+    \item a route from circuit discovery to training-free or training-light policy steering, including football-centered transfer studies.
+\end{itemize}
+
+The present version is deliberately a method and evaluation draft. Existing representation diagnostics establish that environment information is present in the network, but no trained actor or critic CLT has yet passed the replacement and intervention gates required for a mechanistic claim.

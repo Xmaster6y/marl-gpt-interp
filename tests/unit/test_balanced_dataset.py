@@ -50,7 +50,9 @@ def test_selection_balances_source_groups_across_environments():
         return [RemoteFile(f"{prefix}/file-{index}.pt", 100) for index in range(10)]
 
     selected = build_selection(environments, seed=0, catalog=catalog)
-    assert {environment: sum(item.environment == environment for item in selected) for environment in environments} == {
+    assert {
+        environment: sum(item.environment == environment for item in selected) for environment in environments
+    } == {
         "smac": 6,
         "pogema": 6,
         "grf": 6,
@@ -184,6 +186,4 @@ def test_audited_source_records_resolve_view_and_cache_aliases(tmp_path):
 
     records = audited_source_records(manifest_path, {7: str(cached)})
 
-    assert records == {
-        7: {"environment": "grf", "component": "task", "source_group": "remote/task/chunk_0"}
-    }
+    assert records == {7: {"environment": "grf", "component": "task", "source_group": "remote/task/chunk_0"}}

@@ -1,3 +1,16 @@
 \section{Related Work}
 
-Related work to the paper.
+\paragraph{Transformer policies for multi-agent control.}
+Sequence models provide a route to parameter sharing across heterogeneous agents and tasks. Multi-Agent Transformer studies an encoder--decoder policy trained online \cite{wen2022mat}, whereas MARL-GPT trains a shared offline actor--critic encoder on SMACv2, GRF, and POGEMA trajectories \cite{nesterova2026marlgpt}. These works evaluate behavioral generalization; our focus is whether the frozen generalist policy implements reusable internal computations.
+
+\paragraph{Sparse feature learning.}
+Sparse autoencoders decompose hidden activations into a sparse learned dictionary and have scaled to large language models \cite{bricken2023monosemanticity,templeton2024scaling}. They provide useful feature vocabularies but do not directly replace the transformation performed by an MLP. Transcoders predict component outputs, while sparse crosscoders read or write across several layers or models \cite{lindsey2024crosscoders}. Our method uses CLTs specifically because their downstream write bundles expose shorter feature-to-feature computational paths.
+
+\paragraph{Circuit tracing and attribution graphs.}
+Circuit tracing with CLTs constructs an error-corrected local replacement model, freezes attention patterns and normalization denominators, and attributes output behavior through active sparse features \cite{ameisen2025circuittracing}. The open-source circuit-tracer project provides corresponding tools for supported language-model architectures \cite{hanna2025circuittracer}. MARL-GPT is not one of those architectures: it is non-causal, has structured continuous inputs, action masks, a distributional critic, and an actor--critic fork. We retain the graph semantics while implementing these architectural differences directly.
+
+\paragraph{Interpretability for intervention.}
+Activation patching, ablation, and steering are often used to move from correlation to causal evidence. Our protocol treats attribution graphs as hypotheses and requires interventions in the original policy. It also distinguishes an action-logit margin from value attribution and evaluates behavioral effects with matched random writes and fresh rollouts.
+
+\paragraph{Football behavior and tactical imitation.}
+GRF supplies a controllable football environment within MARL-GPT. TacSIm instead evaluates continuation of real-video-derived tactical trajectories \cite{wen2026tacsim}. The domains have different output contracts, so a CLT-discovered GRF mechanism may guide feature selection or light adaptation but does not remove the need for a TacSIm-compatible trajectory model.

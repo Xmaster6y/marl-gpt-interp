@@ -1,3 +1,3 @@
 # Claims
 
-- [Environment-separated representations with partial POGEMA-GRF sharing](2026-07-06-environment-separated-partial-sharing.md): Tentative.
+- [Recurring causal circuits](2026-07-22-recurring-causal-circuits.md): Tentative; no claim-bearing CLT evidence yet.

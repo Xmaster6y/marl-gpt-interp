@@ -1,0 +1,36 @@
+repo_id: nortem/marl-gpt-datasets
+revision: b70333a01a9bd7bd8a4ff8d9215dfee9357e6024
+cache_root: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/hf-cache/nortem--marl-gpt-datasets/b70333a01a9bd7bd8a4ff8d9215dfee9357e6024
+seed: 0
+concurrency: 2
+retries: 8
+verify_sha256: true
+plan_only: false
+max_rows_per_source: 8192
+environments:
+  smac:
+    source_groups: 12
+    components:
+      - {name: protoss_5_vs_5, weight: 1, source_prefix: dataset-SMACv2/protoss_5_vs_5, destination_prefix: dataset/protoss_5_vs_5, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
+      - {name: protoss_5_vs_6, weight: 1, source_prefix: dataset-SMACv2/protoss_5_vs_6, destination_prefix: dataset/protoss_5_vs_6, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
+      - {name: terran_5_vs_5, weight: 1, source_prefix: dataset-SMACv2/terran_5_vs_5, destination_prefix: dataset/terran_5_vs_5, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
+      - {name: terran_5_vs_6, weight: 1, source_prefix: dataset-SMACv2/terran_5_vs_6, destination_prefix: dataset/terran_5_vs_6, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
+      - {name: zerg_5_vs_5, weight: 1, source_prefix: dataset-SMACv2/zerg_5_vs_5, destination_prefix: dataset/zerg_5_vs_5, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
+      - {name: zerg_5_vs_6, weight: 1, source_prefix: dataset-SMACv2/zerg_5_vs_6, destination_prefix: dataset/zerg_5_vs_6, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
+  pogema:
+    source_groups: 12
+    components:
+      - {name: mazes, weight: 9, source_prefix: dataset-LMAPF/mazes, destination_prefix: dataset/dataset_pogema_ll/mazes}
+      - {name: random, weight: 1, source_prefix: dataset-LMAPF/random, destination_prefix: dataset/dataset_pogema_ll/random}
+  grf:
+    source_groups: 12
+    components:
+      - {name: 11vs11a11r_5to10, weight: 1, source_prefix: dataset-GRF/11vs11a11r_5to10, destination_prefix: dataset/dataset_grf/trajectories/11vs11a11r_5to10_checkpoint, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
+      - {name: 11vs11a11r_60to65, weight: 1, source_prefix: dataset-GRF/11vs11a11r_60to65, destination_prefix: dataset/dataset_grf/trajectories/11vs11a11r_60to65_checkpoint, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
+      - {name: 11vs11a11r_99to100, weight: 1, source_prefix: dataset-GRF/11vs11a11r_99to100, destination_prefix: dataset/dataset_grf/trajectories/11vs11a11r_99to100_checkpoint, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
+      - {name: academy_corner, weight: 1, source_prefix: dataset-GRF/academy_corner, destination_prefix: dataset/dataset_grf/trajectories/academy_corner, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
+      - {name: academy_counterattack_easy, weight: 1, source_prefix: dataset-GRF/academy_counterattack_easy, destination_prefix: dataset/dataset_grf/trajectories/academy_counterattack_easy, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
+      - {name: academy_pass_and_shoot_with_keeper, weight: 1, source_prefix: dataset-GRF/academy_pass_and_shoot_with_keeper, destination_prefix: dataset/dataset_grf/trajectories/academy_pass_and_shoot_with_keeper, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
+hydra:
+  run:
+    dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/hydra/circuit_tracing/build_balanced_dataset/${now:%Y-%m-%d_%H-%M-%S}

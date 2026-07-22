@@ -40,25 +40,10 @@ grf-install-jz python=grf_jz_python:
 	export UV_HTTP_TIMEOUT="${UV_HTTP_TIMEOUT:-300}"
 	export UV_HTTP_RETRIES="${UV_HTTP_RETRIES:-10}"
 	export TMPDIR="$tmp_dir"
-	uv sync --python {{python}} --group grf --group sae --no-install-package gfootball --no-install-package torch --inexact
+	uv sync --python {{python}} --group grf --no-install-package gfootball --no-install-package torch --inexact
 	uv pip install --python .venv/bin/python --offline "torch=={{grf_jz_torch}}"
 	uv pip install --python .venv/bin/python --no-deps "$wheel"
-	uv run --no-sync --python {{python}} --group grf --group sae python -c "import dictionary_learning, gymnasium, gfootball, torch, wandb; print('jz grf+sae env ok')"
-
-sae-install-jz-offline:
-	#!/usr/bin/env bash
-	set -euo pipefail
-	cache_dir="{{jz_scratch_root}}/.cache/uv"
-	tmp_dir="{{jz_scratch_root}}/tmp/setup"
-	test -f results/wheels/sae-jz/dictionary_learning-0.1.0-py3-none-any.whl
-	test -f results/wheels/sae-jz/einops-0.8.2-py3-none-any.whl
-	mkdir -p "$cache_dir" "$tmp_dir"
-	export UV_CACHE_DIR="$cache_dir"
-	export TMPDIR="$tmp_dir"
-	uv pip install --python .venv/bin/python --offline --no-deps \
-		results/wheels/sae-jz/dictionary_learning-0.1.0-py3-none-any.whl \
-		results/wheels/sae-jz/einops-0.8.2-py3-none-any.whl
-	.venv/bin/python -c "from marl_gpt_interp.sae_training import _dictionary_learning_types; _dictionary_learning_types(); print('jz cached-activation SAE env ok')"
+	uv run --no-sync --python {{python}} --group grf python -c "import gymnasium, gfootball, torch; print('jz grf+clt env ok')"
 
 jz-stage-data:
 	#!/usr/bin/env bash
@@ -98,13 +83,6 @@ launch-all dry_run="":
 		fi
 	done
 	shopt -u nullglob
-
-wandb-sync clean="":
-	export WANDB__SERVICE_WAIT=300; \
-	uv run wandb sync results/experiments/*/wandb/offline-run-*; \
-	if [ "{{clean}}" = "clean" ]; then \
-		rm -r results/experiments/*/wandb/offline-run-*; \
-	fi
 
 retrieve cluster folder="":
 	#!/usr/bin/env bash

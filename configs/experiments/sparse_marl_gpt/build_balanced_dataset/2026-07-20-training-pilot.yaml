@@ -1,9 +1,0 @@
-defaults:
-  - _training_mix
-  - _self_
-
-view_root: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-pilot
-environments:
-  smac: {source_groups: 18}
-  pogema: {source_groups: 18}
-  grf: {source_groups: 18}

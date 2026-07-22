@@ -1,3 +1,37 @@
-\section{Experiments}
+\section{Experimental Protocol}
 
-Experiments results.
+\subsection{Research questions}
+
+\paragraph{RQ1: faithful sparse replacement.} Can independent actor and critic CLTs replace all eight MLPs on their paths while maintaining sparse, non-degenerate feature usage and preserving the corresponding policy outputs?
+
+\paragraph{RQ2: shared mechanisms.} Do matched coordination situations in SMACv2, POGEMA, and GRF recruit recurring causal graph motifs, or do they reach similar behavior through environment-specific paths?
+
+\paragraph{RQ3: action--value organization.} Which mechanisms are common to actor and critic graphs, and which selectively affect action preference or predicted return?
+
+\paragraph{RQ4: intervention and steering.} Do graph-selected feature writes cause the predicted changes in the original model, and can they steer behavior more selectively than matched random interventions?
+
+\subsection{Data and splits}
+
+The initial corpus uses the MARL-GPT training-task mixture: six SMACv2 race/map conditions, POGEMA maze and random-map data, and six GRF scenarios. Source contribution is capped at 86,400 unique rows per environment before token sampling, for 259,200 input windows and 16,588,800 sampled token rows. Repeated native-loader epochs are deduplicated by source-file and source-row identity. Splits are assigned by audited source group within each environment. No source group may contribute tokens to more than one split. Because native episode provenance is incomplete for some shards, this is a conservative file/chunk-family split rather than a claim that episode boundaries have been reconstructed. The initial collection samples 64 positions per input window, always including the final decision token; a token-position and role census is reported before training.
+
+Graph discovery uses only training and validation trajectories. Feature labels, recurring motifs, intervention targets, and steering strengths are frozen before test rollouts. Cross-environment tests use matched situation families where possible and report environment-specific results rather than only a pooled aggregate.
+
+\subsection{Replacement gates}
+
+For each CLT we report normalized MLP reconstruction error, layerwise error, mean $L_0$, feature-density quantiles, and dead-feature fraction. Global actor fidelity is evaluated with masked policy KL and top-legal-action agreement. Global critic fidelity is evaluated with mean absolute deviation of expected value over legal actions. These metrics are reported overall and per environment.
+
+A CLT is not promoted to graph interpretation merely because reconstruction is low. It must avoid feature collapse, preserve the branch output in every environment, and produce local graphs whose conclusions are not dominated by reconstruction-error nodes. Thresholds are fixed in the experiment record before claim-bearing analysis.
+
+\subsection{Graph evaluation}
+
+For each target decision we report graph size before and after pruning, retained direct attribution, indirect influence on the target, contribution from error nodes, and sensitivity to the pruning threshold. Recurring motifs are compared using feature activation examples, decoder-write similarity, token roles, signed downstream effects, and intervention fingerprints. Cross-environment recurrence requires agreement across these signals; activation in several environments is only a candidate match.
+
+Mechanistic faithfulness is measured by intervening on graph nodes in the original model and correlating predicted feature-to-feature and feature-to-output effects with observations. Behavioral validation uses fresh rollouts with paired seeds. Primary steering outcomes are task-specific behavior and return; action KL is a scale and damage diagnostic, not the scientific endpoint.
+
+\subsection{Football transfer endpoint}
+
+GRF provides the first semantically grounded steering domain. Candidate mechanisms include pressure response, support, passing opportunity, progression, and shot opportunity. A later training-light study may use CLT graphs to select or constrain adaptations for the TacSIm tactical-imitation benchmark \cite{wen2026tacsim}. This extension remains gated on the official artifact, preprocessing, split, evaluator, and reproduction of a published baseline; the discrete-action MARL-GPT head is not itself a TacSIm trajectory predictor.
+
+\subsection{Current evidence status}
+
+The repository contains the complete data schema, independent actor/critic CLT implementation, global replacement hooks, local error correction, frozen-attention graph construction, and unit-tested toy-model graphs. The claim-bearing balanced corpus, trained CLTs, replacement metrics, graph dossiers, and intervention rollouts have not yet been produced. Accordingly, this section specifies the evaluation contract rather than reporting scientific results.

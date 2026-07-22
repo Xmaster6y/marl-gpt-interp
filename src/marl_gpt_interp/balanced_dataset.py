@@ -72,7 +72,9 @@ def audited_source_records(manifest_path: Path, source_paths: Mapping[int, str])
 
     records: dict[int, dict[str, str]] = {}
     for source_id, source_path in source_paths.items():
-        matches = {tuple(sorted(by_alias[alias].items())) for alias in _path_aliases(Path(source_path)) if alias in by_alias}
+        matches = {
+            tuple(sorted(by_alias[alias].items())) for alias in _path_aliases(Path(source_path)) if alias in by_alias
+        }
         if len(matches) != 1:
             raise ValueError(f"loader source is absent or ambiguous in the audited manifest: {source_path}")
         records[int(source_id)] = dict(matches.pop())
@@ -180,18 +182,19 @@ def build_selection(
                     for group, members in grouped.items()
                     if any(member.size >= minimum_representative_bytes for member in members)
                 }
-            group_candidates = [RemoteFile(group, max(item.size for item in members)) for group, members in grouped.items()]
+            group_candidates = [
+                RemoteFile(group, max(item.size for item in members)) for group, members in grouped.items()
+            ]
             chosen_groups = deterministic_select(
                 group_candidates, counts[name], seed=seed, namespace=f"{source_prefix}:groups"
             )
             for chosen_group in chosen_groups:
                 members = grouped[chosen_group.source_path]
+
                 def rank(item: RemoteFile) -> tuple[int, str]:
                     return (
                         item.size,
-                        hashlib.sha256(
-                            f"{seed}:{chosen_group.source_path}:{item.source_path}".encode()
-                        ).hexdigest(),
+                        hashlib.sha256(f"{seed}:{chosen_group.source_path}:{item.source_path}".encode()).hexdigest(),
                     )
 
                 remote = (
@@ -291,9 +294,7 @@ def materialize_balanced_view(cfg: Mapping[str, Any]) -> dict[str, Any]:
         return catalog_cache[prefix]
 
     selected = build_selection(environments, seed=seed, catalog=catalog)
-    counts = {
-        environment: sum(item.environment == environment for item in selected) for environment in environments
-    }
+    counts = {environment: sum(item.environment == environment for item in selected) for environment in environments}
     if len(set(counts.values())) != 1:
         raise ValueError(f"environment source-group counts are not balanced: {counts}")
     manifest_path = view_root / "balanced_dataset_manifest.json"
@@ -396,9 +397,7 @@ def audit_balanced_view(manifest_path: Path, output_path: Path) -> dict[str, Any
         selected = [row for row in rows if row["environment"] == environment]
         environment_summary[environment] = {
             "physical_files": len(selected),
-            "source_groups": len(
-                {row.get("source_group", row["candidate_shard_family"]) for row in selected}
-            ),
+            "source_groups": len({row.get("source_group", row["candidate_shard_family"]) for row in selected}),
             "candidate_shard_families": len({row["candidate_shard_family"] for row in selected}),
             "raw_rows": sum(row["rows"] for row in selected),
             "accepted_row_cap": sum(row["accepted_row_cap"] for row in selected),

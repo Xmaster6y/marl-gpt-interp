@@ -1,0 +1,25 @@
+output_dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/experiments/2026-07-22-actor-clt-pilot
+corpus_dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/clt-corpora/2026-07-22-training-pilot
+branch: actor
+device: cuda:0
+seed: 0
+model:
+  features_per_layer: [1024, 1024, 1024, 1024, 1024, 1024, 1024, 1024]
+  initial_threshold: 0.01
+  jump_relu_bandwidth: 0.001
+training:
+  steps: 100000
+  batch_size: 4096
+  learning_rate: 0.0003
+  sparsity_coefficient: 0.001
+  sparsity_tanh_scale: 1.0
+  gradient_clip: 1.0
+  resume_from: null
+evaluation:
+  validation_rows: 100000
+observability:
+  log_every: 500
+  checkpoint_every: 5000
+hydra:
+  run:
+    dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/hydra/circuit_tracing/train_clt/${now:%Y-%m-%d_%H-%M-%S}

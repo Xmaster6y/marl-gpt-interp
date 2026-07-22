@@ -1,3 +1,7 @@
-\section{Models Architecture}
+\section{Model Architecture}
 
-Describe the models architecture.
+\paragraph{MARL-GPT checkpoint.}
+The frozen checkpoint contains 7,232,256 parameters, embedding width 256, eight attention heads, maximum block length 700, seven shared non-causal transformer blocks, and one additional block in each actor and critic branch. Each block applies pre-normalized non-causal self-attention followed by a pre-normalized width-$4d$ GELU MLP. The actor reads the final sequence position and emits logits over 20 padded actions before an environment-specific legality mask is applied. The critic emits a categorical return distribution for every action at the same position.
+
+\paragraph{CLT paths.}
+Both CLTs contain eight encoder layers: seven aligned with shared MLP sites and one aligned with the corresponding branch MLP. They do not share learned parameters. A combined activation corpus stores shared inputs and targets once, plus one actor and one critic branch tensor. Linear actor and critic heads remain exact model components rather than transcoder targets.

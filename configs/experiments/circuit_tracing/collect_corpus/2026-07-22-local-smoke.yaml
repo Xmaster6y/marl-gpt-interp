@@ -1,0 +1,18 @@
+defaults:
+  - ../data@_global_: 2026-07-22-training-pilot
+  - _self_
+
+output_dir: results/experiments/2026-07-22-clt-corpus-smoke
+checkpoint: results/marl-gpt-main.pt
+grouping_mode: batch_schema_smoke
+max_rows_per_source: 0
+batch_size: 3
+num_batches: 2
+tokens_per_sequence: 4
+include_output_token: true
+rows_per_shard: 24
+storage_dtype: float32
+device: cpu
+hydra:
+  run:
+    dir: results/hydra/circuit_tracing/collect_corpus/${now:%Y-%m-%d_%H-%M-%S}

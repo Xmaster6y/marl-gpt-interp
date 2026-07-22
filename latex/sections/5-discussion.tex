@@ -1,3 +1,11 @@
-\section{Discussion}
+\section{Discussion and Limitations}
 
-Discussion of the results.
+The proposed analysis is stronger than interpreting a single hidden state because its basic objects are computations that write into later MLP outputs and can be tested interventionally. It nevertheless remains an analysis of an approximate model. Global CLT replacement can drift off the activation distribution on which the transcoders were trained, while a locally error-corrected graph can agree exactly at one input yet respond differently under perturbation. Both replacement fidelity and original-model validation are therefore necessary.
+
+The graph accounts for information transported through frozen attention OV paths, but not for the formation of the attention pattern. A mechanism that primarily changes where the model attends may be underestimated or represented as a fixed input/bias effect. Extending the analysis to QK circuits is a natural second stage if important behavior remains unexplained, but mixing it into the first experiment would make failures difficult to localize.
+
+Sparse features are not guaranteed to correspond one-to-one with human concepts. Features can split, merge, absorb rare mechanisms, or combine several functions. Separate actor and critic CLTs intentionally avoid forcing a common basis, but they also make feature correspondence non-identifiable. Claims about actor--critic sharing must therefore rely on semantic examples and matched causal fingerprints, not feature indices or decoder cosine alone.
+
+The multi-environment corpus has strong nuisance structure. Environment identity, token layout, action masks, agent counts, and observation scales differ. A graph motif is evidence of generalization only when it appears in matched functional situations and survives interventions. Conversely, different sparse decompositions do not prove different underlying mechanisms when the replacement model is non-identifiable.
+
+Finally, steering an internal computation is not equivalent to improving a policy. Large interventions may merely damage calibration, exploit simulator artifacts, or trade one agent's behavior against another's. We therefore separate graph prediction, original-model causal effect, and fresh-rollout outcome. Claims about human football or TacSIm require their own data and evaluator and cannot be inferred from simulator-only graphs.

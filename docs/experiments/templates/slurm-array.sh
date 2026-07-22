@@ -33,9 +33,8 @@ export MKL_NUM_THREADS="${SLURM_CPUS_PER_TASK:-7}"
 export NUMEXPR_NUM_THREADS="${SLURM_CPUS_PER_TASK:-7}"
 
 RUNS=(
-    "--config-name 2026-06-30-smoke seeds=[0]"
-    "--config-name 2026-06-30-smoke seeds=[1]"
-    "--config-name 2026-06-30-smoke seeds=[2]"
+    "--config-name 2026-07-22-actor-pilot"
+    "--config-name 2026-07-22-critic-pilot"
 )
 
 if [ "$SLURM_ARRAY_TASK_ID" -ge "${#RUNS[@]}" ]; then
@@ -43,6 +42,6 @@ if [ "$SLURM_ARRAY_TASK_ID" -ge "${#RUNS[@]}" ]; then
     exit 1
 fi
 
-uv run -m scripts.grf_rollout_stats \
+uv run -m scripts.experiments.circuit_tracing.train_clt \
     ${RUNS[$SLURM_ARRAY_TASK_ID]} \
     hydra.run.dir="results/hydra/<experiment_name>/${SLURM_ARRAY_JOB_ID}_${SLURM_ARRAY_TASK_ID}"

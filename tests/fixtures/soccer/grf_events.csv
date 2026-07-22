@@ -1,3 +1,0 @@
-episode,step,team_id,player_id,type,result,x,y,target_x,target_y
-g1,1,left,1,pass,complete,20,30,32,30
-g1,6,left,2,shot,failed,80,35,105,34

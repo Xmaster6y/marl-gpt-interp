@@ -1,0 +1,12 @@
+defaults:
+  - ../data@_global_: 2026-07-22-training-pilot
+  - _self_
+
+output_dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/experiments/2026-07-22-clt-replacement-pilot
+actor_clt_dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/experiments/2026-07-22-actor-clt-pilot
+critic_clt_dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/experiments/2026-07-22-critic-clt-pilot
+batch_size: 192
+num_batches: 100
+hydra:
+  run:
+    dir: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/hydra/circuit_tracing/evaluate_replacement/${now:%Y-%m-%d_%H-%M-%S}

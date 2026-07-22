@@ -10,11 +10,8 @@ authors = [
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "hydra-core",
-    "ipykernel",
     "loguru",
-    "matplotlib>=3.11.0",
-    "numpy>=2.2.6",
-    "wandb",
+    "torch>=2.8.0",
 ]
 
 [dependency-groups]
@@ -30,12 +27,7 @@ grf = [
     "pyarrow>=20.0.0",
     "pydantic>=2.10",
     "tdhook>=0.1.3",
-    "torch>=2.8.0",
 ]
-sae = [
-    "dictionary-learning>=0.1.0",
-]
-
 [build]
 target-dir = "build/dist"
 

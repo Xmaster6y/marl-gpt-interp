@@ -1,9 +1,0 @@
-defaults:
-  - _self_
-
-manifest_path: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-small/balanced_dataset_manifest.json
-output_path: /lustre/fsn1/projects/rech/nwq/uim47nr/marl-gpt-interp/balanced-datasets/2026-07-20-training-small/balanced_dataset_audit.json
-
-hydra:
-  run:
-    dir: results/hydra/sparse_marl_gpt/audit_balanced_dataset/${now:%Y-%m-%d_%H-%M-%S}

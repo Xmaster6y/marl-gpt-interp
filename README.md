@@ -7,7 +7,7 @@
 [![LaTeX](https://img.shields.io/badge/latex-grey.svg?logo=latex)](https://www.latex-project.org/)
 ![ci](https://github.com/Xmaster6y/marl-gpt-interp/actions/workflows/ci.yml/badge.svg)
 
-Research code and project memory for interpreting MARL-GPT football behavior in Google Research Football.
+Research code and project memory for tracing action and value computations in the frozen MARL-GPT policy. The canonical method uses separate full-path actor and critic cross-layer transcoders (CLTs), prompt-local attribution graphs, and interventions in the original model.
 
 ## Layout
 
@@ -21,41 +21,32 @@ Research code and project memory for interpreting MARL-GPT football behavior in 
 
 ## Commands
 
-Python environment and package commands:
+Install and validate the local environment:
 
 ```bash
 uv sync
 just grf-install
-uv add <package>
-uv run -m scripts.grf_rollout_stats --config-name 2026-06-30-smoke
-```
-
-Reusable recipes:
-
-```bash
-uv tool install rust-just
-just install
-just grf-install
 just checks
 just tests
-just run grf_rollout_stats 2026-06-30-smoke
 ```
 
-The first GRF experiment expects the MARL-GPT checkpoint at `results/marl-gpt-main.pt`.
-The checkpoint is untracked; put it there manually or pass `download_checkpoint=true` to the GRF rollout script.
-Installing `gfootball` requires system CMake and native GRF engine libraries in addition to Python packages.
-Use `just grf-install` after loading CMake and native GRF build dependencies; it uses uv-managed Python and passes that interpreter into the GRF CMake build.
-The current JZ setup path is documented in `docs/2026-07-02-grf-jz-setup.md`.
-Pass an explicit version when needed, for example `just grf-install 3.13` on local macOS if the available Boost.Python is `boost_python313`.
-
-Slurm launch recipes:
+The claim-bearing workflow is config-driven:
 
 ```bash
-bash docs/experiments/to-launch/2026-06-30-grf-rollout-statistics-v100.sh
-just launch-all --dry-run
-just retrieve jz
-just clean
+uv run -m scripts.experiments.circuit_tracing.build_balanced_dataset --config-name 2026-07-22-training-pilot
+uv run -m scripts.experiments.circuit_tracing.audit_balanced_dataset --config-name 2026-07-22-training-pilot
+uv run -m scripts.experiments.circuit_tracing.collect_corpus --config-name 2026-07-22-training-pilot
+uv run -m scripts.experiments.circuit_tracing.train_clt --config-name 2026-07-22-actor-pilot
+uv run -m scripts.experiments.circuit_tracing.train_clt --config-name 2026-07-22-critic-pilot
+uv run -m scripts.experiments.circuit_tracing.evaluate_replacement --config-name 2026-07-22-pilot
+uv run -m scripts.experiments.circuit_tracing.audit_clt_suite --config-name 2026-07-22-pilot
+uv run -m scripts.experiments.circuit_tracing.build_graph --config-name 2026-07-22-actor-example
+uv run -m scripts.experiments.circuit_tracing.build_graph --config-name 2026-07-22-critic-example
+uv run -m scripts.experiments.circuit_tracing.evaluate_intervention --config-name 2026-07-22-actor-example
+uv run -m scripts.experiments.circuit_tracing.evaluate_intervention --config-name 2026-07-22-critic-example
 ```
+
+The frozen checkpoint is expected at `results/marl-gpt-main.pt`. Large datasets and outputs are untracked. The Jean Zay runtime and scratch paths are summarized in [docs/2026-07-02-grf-jz-setup.md](docs/2026-07-02-grf-jz-setup.md); the frozen scientific contract and evidence status live in [docs/README.md](docs/README.md).
 
 ## LaTeX
 
