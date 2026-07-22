@@ -2,7 +2,16 @@
 
 ## Status
 
-Implementation complete locally. Claim-bearing corpus collection, training, graph analysis, and interventions are not launched.
+Implementation and local validation complete. The claim-bearing suite was submitted to Jean Zay on 2026-07-22 from commit `f1ecd747758d6ea4e5d1d15b9ad9fbd010a1d85b`; no scientific result is available yet.
+
+Launch state:
+
+- dataset materialization and structural audit: job `36790` (`prepost`);
+- corpus collection: job `36791`, after successful job `36790`;
+- independent actor and critic training: array `36792_[0-1]`, after successful job `36791`;
+- replacement evaluation, hard CLT audit, actor/critic graphs, and example interventions: job `36793`, after both training tasks succeed.
+
+All four job records were verified pending with the intended `afterok` dependencies. The staged SCRATCH checkpoint SHA-256 is `c3deaeb67f679657b27e9d3373e42e4104cc9370be6dba60ab5fd0efe7b1ce5a`, identical to the WORK source checkpoint.
 
 ## Question and Hypothesis
 
