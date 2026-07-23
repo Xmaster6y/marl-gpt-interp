@@ -12,6 +12,8 @@ The Git checkout and installed environment remain on `$WORK`:
 
 The claim-bearing jobs inject the implementation commit through `EXPERIMENT_GIT_COMMIT`, so run manifests retain the submitted code revision even if documentation is subsequently fast-forwarded on `$WORK`.
 
+The local `jz` Git remote now targets this `jhr` checkout. Before the former `nwq` WORK checkout was removed on 2026-07-23, its durable `results/experiments/`, `results/hydra/`, and `results/slurm/` trees were copied without overwriting newer files and verified against the destination by file count, byte count, and checksum dry-run. The frozen source checkpoint and reusable runtime assets were also staged on `jhr`; runtime setup job `83591` remains responsible for completing and validating the installed environment. Only the old checkout at `/lustre/fswork/projects/rech/nwq/uim47nr/marl-gpt-interp` was deleted; the broader `nwq` project storage and SCRATCH namespace were not touched.
+
 ## WORK/SCRATCH Placement Policy
 
 WORK is the canonical location for code, runtime dependencies, and compact or durable experiment artifacts:
