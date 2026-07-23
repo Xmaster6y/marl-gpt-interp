@@ -2,9 +2,9 @@ defaults:
   - ../data@_global_: 2026-07-22-training-pilot
   - _self_
 
-output_dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/experiments/2026-07-22-critic-graph-example
-clt_dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/experiments/2026-07-22-critic-clt-pilot
-eligibility_audit: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/experiments/2026-07-22-clt-suite-audit/clt_suite_audit.json
+output_dir: /lustre/fswork/projects/rech/jhr/uim47nr/marl-gpt-interp/results/experiments/2026-07-22-critic-graph-example
+clt_dir: /lustre/fswork/projects/rech/jhr/uim47nr/marl-gpt-interp/results/experiments/2026-07-22-critic-clt-pilot
+eligibility_audit: /lustre/fswork/projects/rech/jhr/uim47nr/marl-gpt-interp/results/experiments/2026-07-22-clt-suite-audit/clt_suite_audit.json
 branch: critic
 batch_size: 3
 sample_in_batch: 0
@@ -16,4 +16,4 @@ pruning:
   edge_threshold: 0.98
 hydra:
   run:
-    dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/hydra/circuit_tracing/build_graph/${now:%Y-%m-%d_%H-%M-%S}
+    dir: /lustre/fswork/projects/rech/jhr/uim47nr/marl-gpt-interp/results/hydra/circuit_tracing/build_graph/${now:%Y-%m-%d_%H-%M-%S}

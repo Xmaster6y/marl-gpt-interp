@@ -30,7 +30,7 @@ If MARL-GPT reuses computation, matched situations should recruit corresponding 
 - Audited source-group-disjoint train, validation, and test splits. These groups are file or chunk-family provenance units, not reconstructed episode identities.
 - Uniform sample of 64 model-visible token positions per input window, always including the final output position.
 - Exactly one pass over 259,200 capped source rows (86,400 per environment), yielding 16,588,800 token rows; repeated loader epochs are deduplicated by source-file and source-row identity.
-- The float16 tensor payload is approximately 152.9 GB (142.4 GiB) before JSONL metadata and filesystem overhead. The corpus, checkpoints, metrics, graphs, Hydra state, Slurm logs, caches, and per-job temporary files are all written under `$SCRATCH/marl-gpt-interp/`. The Git checkout and software environment remain on `$WORK`; no generated claim-bearing artifact is written there during the suite.
+- The float16 tensor payload is approximately 152.9 GB (142.4 GiB) before JSONL metadata and filesystem overhead. Bulky datasets, Hugging Face downloads, activation corpora, caches, and per-job temporary files are written under the `jhr` SCRATCH root. The Git checkout, software environment, frozen checkpoint, trained CLTs, metrics, audits, graphs, interventions, Hydra metadata, and Slurm logs remain under the `jhr` WORK checkout.
 
 The actor graph targets the selected legal-action logit minus the strongest other legal-action logit. The critic graph targets the local linearization of expected value for the selected action. Attention patterns and normalization denominators are frozen for local attribution; attention OV transport is included and QK pattern formation is not.
 

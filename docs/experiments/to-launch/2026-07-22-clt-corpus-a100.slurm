@@ -6,8 +6,8 @@
 #SBATCH --gres=gpu:1
 #SBATCH --hint=nomultithread
 #SBATCH --qos=qos_gpu_a100-t3
-#SBATCH --output=/lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/slurm/%x-%j.out
-#SBATCH --error=/lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/slurm/%x-%j.err
+#SBATCH --output=/lustre/fswork/projects/rech/jhr/uim47nr/marl-gpt-interp/results/slurm/%x-%j.out
+#SBATCH --error=/lustre/fswork/projects/rech/jhr/uim47nr/marl-gpt-interp/results/slurm/%x-%j.err
 #SBATCH --mail-type=FAIL
 #SBATCH --time=20:00:00
 

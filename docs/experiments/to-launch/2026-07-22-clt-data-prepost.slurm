@@ -3,8 +3,8 @@
 #SBATCH --account=jhr@a100
 #SBATCH --cpus-per-task=2
 #SBATCH --partition=prepost
-#SBATCH --output=/lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/slurm/%x-%j.out
-#SBATCH --error=/lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/slurm/%x-%j.err
+#SBATCH --output=/lustre/fswork/projects/rech/jhr/uim47nr/marl-gpt-interp/results/slurm/%x-%j.out
+#SBATCH --error=/lustre/fswork/projects/rech/jhr/uim47nr/marl-gpt-interp/results/slurm/%x-%j.err
 #SBATCH --time=12:00:00
 
 set -euo pipefail

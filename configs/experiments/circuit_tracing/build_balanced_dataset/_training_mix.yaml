@@ -33,4 +33,4 @@ environments:
       - {name: academy_pass_and_shoot_with_keeper, weight: 1, source_prefix: dataset-GRF/academy_pass_and_shoot_with_keeper, destination_prefix: dataset/dataset_grf/trajectories/academy_pass_and_shoot_with_keeper, group_pattern: '(chunk_\d+)', representative_policy: smallest_above_minimum, minimum_representative_bytes: 8000000}
 hydra:
   run:
-    dir: /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp/hydra/circuit_tracing/build_balanced_dataset/${now:%Y-%m-%d_%H-%M-%S}
+    dir: /lustre/fswork/projects/rech/jhr/uim47nr/marl-gpt-interp/results/hydra/circuit_tracing/build_balanced_dataset/${now:%Y-%m-%d_%H-%M-%S}

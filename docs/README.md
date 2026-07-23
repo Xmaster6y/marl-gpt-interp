@@ -14,7 +14,7 @@
 - [Research question](questions/2026-07-22-cross-environment-circuit-tracing.md)
 - [Method decision and prior-history summary](decisions/2026-07-22-adopt-actor-critic-clts.md)
 - [Primary experiment](experiments/2026-07-22-actor-critic-clt-attribution-graphs.md)
-- [Jean Zay runtime and SCRATCH contract](2026-07-02-grf-jz-setup.md)
+- [Jean Zay runtime and WORK/SCRATCH contract](2026-07-02-grf-jz-setup.md)
 - [CLT and attribution-graph literature](literature/2026-07-22-cross-layer-transcoders-and-attribution-graphs.md)
 - [Tentative claim](claims/2026-07-22-recurring-causal-circuits.md)
 - [Paper](../latex/main.tex)

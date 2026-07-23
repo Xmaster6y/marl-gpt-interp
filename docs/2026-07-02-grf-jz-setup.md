@@ -12,47 +12,53 @@ The Git checkout and installed environment remain on `$WORK`:
 
 The claim-bearing jobs inject the implementation commit through `EXPERIMENT_GIT_COMMIT`, so run manifests retain the submitted code revision even if documentation is subsequently fast-forwarded on `$WORK`.
 
-## SCRATCH Contract
+## WORK/SCRATCH Placement Policy
 
-The suite sets its SCRATCH root explicitly rather than relying on the login shell's default project variables:
+WORK is the canonical location for code, runtime dependencies, and compact or durable experiment artifacts:
 
 ```text
-/lustre/fsn1/projects/rech/jhr/uim47nr
+/lustre/fswork/projects/rech/jhr/uim47nr/marl-gpt-interp
 ```
 
-The project root is therefore:
+SCRATCH is reserved for bulky, reconstructible datasets, activation corpora, downloads, caches, and temporary files:
 
 ```text
 /lustre/fsn1/projects/rech/jhr/uim47nr/marl-gpt-interp
 ```
 
-All generated files from the CLT suite use this root:
+The suite sets both roots explicitly rather than relying on the login shell's default project variables.
 
-| Content | SCRATCH location |
+| Durable or compact content | WORK location |
 |---|---|
-| Staged frozen model | `checkpoints/marl-gpt-main.pt` |
+| Git checkout and installed environment | repository root and `.venv/` |
+| Frozen source checkpoint | `results/marl-gpt-main.pt` |
+| Trained CLTs and final checkpoints | `results/experiments/` |
+| Metrics, audits, graphs, and interventions | `results/experiments/` |
+| Hydra configuration and run metadata | `results/hydra/` |
+| Slurm standard output and errors | `results/slurm/` |
+| A100 preflight evidence | `results/preflight/` |
+
+| Bulky or reconstructible content | SCRATCH location |
+|---|---|
 | Balanced dataset view | `balanced-datasets/2026-07-22-clt-training-pilot/` |
 | Pinned Hugging Face source cache | `hf-cache/` |
 | Combined actor/critic tensor corpus | `clt-corpora/2026-07-22-training-pilot/` |
-| Trained CLTs, metrics, audits, graphs, and interventions | `experiments/` |
-| Hydra run state | `hydra/` |
-| Slurm standard output and errors | `slurm/` |
 | Shared package/model caches | `.cache/` |
 | Per-job temporary and offline logging data | `jobs/` |
 
-The Git checkout, installed runtime, native GRF libraries, and original source checkpoint remain on `$WORK`. The launcher copies the checkpoint to SCRATCH before submission and refuses to proceed if an existing staged copy differs. The verified SHA-256 of both copies is:
+Do not place full datasets, Hugging Face downloads, activation tensors, CLT corpora, or other large regenerable intermediates on WORK. Compact metadata colocated with a SCRATCH dataset, such as its manifest and structural audit, may remain beside that dataset when doing so preserves an atomic data gate. The verified SHA-256 of the WORK source checkpoint is:
 
 ```text
 c3deaeb67f679657b27e9d3373e42e4104cc9370be6dba60ab5fd0efe7b1ce5a
 ```
 
-No generated claim-bearing artifact is written to `$WORK` by the submitted suite. The local-only smoke config remains intentionally relative to `results/` and is not used by Jean Zay jobs.
+Claim-bearing artifacts are intentionally written to WORK so they survive SCRATCH cleanup and are easy to retrieve. The local-only smoke config remains relative to `results/`; the A100 preflight also writes its small smoke artifact and commit marker under WORK `results/preflight/`.
 
 ## Capacity and Retention
 
 The `jhr` capacity check on 2026-07-23 reported a 5 TB WORK limit with effectively no project usage. Its SCRATCH path resides on a 400 TB filesystem with only 12 KB attributed to `jhr` and no enforced group quota. The estimated float16 tensor payload for the corpus is 152.9 GB (142.4 GiB), before JSONL metadata and filesystem overhead, so capacity is not a launch blocker.
 
-SCRATCH is not backed up. Under the [IDRIS storage policy](https://www.idris.fr/static/intro/doc_nouvel_utilisateur-eng.html), files that have not been read or modified for 30 days may be purged. Active access resets the inactivity window; selected manifests, metrics, graphs, and final checkpoints must therefore be archived after the experiment rather than treated as permanent SCRATCH storage.
+SCRATCH is not backed up. Under the [IDRIS storage policy](https://www.idris.fr/static/intro/doc_nouvel_utilisateur-eng.html), files that have not been read or modified for 30 days may be purged. Active access resets the inactivity window; the bulky dataset and activation corpus are therefore regenerable inputs, while durable claim-bearing artifacts stay on WORK.
 
 ## A100 Launch Contract
 
