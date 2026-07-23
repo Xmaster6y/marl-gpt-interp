@@ -5,7 +5,7 @@
 - **Direction:** two independent full-path cross-layer transcoders (CLTs), one for the actor and one for the critic.
 - **Primary object:** input-specific attribution graphs from structured tokens through sparse features and frozen-attention OV paths to action contrasts or action value.
 - **Implementation:** corpus, CLT training, replacement, local graph, pruning, and graph-bound original-model intervention workflows are implemented and covered by local tests.
-- **Launch:** all `nwq@v100` jobs were cancelled at zero runtime on 2026-07-23. The canonical Jean Zay target is now `jhr@a100`; submission is gated on an A100 runtime and CUDA smoke test in the new `jhr` WORK/SCRATCH roots.
+- **Launch:** all `nwq@v100` jobs were cancelled at zero runtime on 2026-07-23. The canonical Jean Zay target is now `jhr@a100`; runtime setup job `83591` is priority-pending on `prepost`, and the claim-bearing suite remains gated on setup plus the A100 CUDA/model smoke.
 - **Evidence:** no claim-bearing CLT has been trained; submission and pending scheduler state are operational evidence only, while replacement, graph, intervention, and rollout results remain unavailable.
 - **Paper:** reorganized around circuit tracing; football and TacSIm are downstream steering endpoints rather than the organizing contribution.
 

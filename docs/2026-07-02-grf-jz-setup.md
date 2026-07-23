@@ -71,6 +71,8 @@ The canonical launcher is [`docs/experiments/to-launch/2026-07-22-actor-critic-c
 
 The GPU records use `-C a100`, `qos_gpu_a100-t3`, one 80 GB A100, eight CPUs, approximately 58.5 GB of proportional host RAM, and a 20-hour limit. The data record uses `prepost`, two CPUs, the corresponding Jean Zay allocation of 60 GB RAM, and a 12-hour limit. `afterok` dependencies prevent training from running on an invalid corpus and prevent graph or intervention analysis from running when either CLT or the replacement audit fails.
 
+Runtime setup job `83591` was submitted under `jhr@a100` on 2026-07-23 and is priority-pending on `prepost`. No A100 preflight or claim-bearing job has been submitted yet.
+
 ## Cancelled V100 History
 
 The records `36790`, `36791`, `36792_[0-1]`, `36793`, `53452`, `53453`, `53454_[0-1]`, and `53455` were all cancelled at zero runtime. The first chain exposed Jean Zay's implicit 30 GB-per-prepost-CPU policy; the corrected second chain remained priority- or dependency-pending until the project migration. Neither chain produced logs, manifests, corpora, checkpoints, metrics, graphs, interventions, or scientific evidence.

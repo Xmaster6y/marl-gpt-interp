@@ -2,7 +2,7 @@
 
 ## Status
 
-Implementation and local validation complete. All earlier `nwq@v100` records were cancelled at zero runtime on 2026-07-23, and no scientific artifact was produced. The canonical launch target is now `jhr@a100`, with separate `jhr` WORK and SCRATCH roots; submission requires the A100 runtime preflight to pass first.
+Implementation and local validation complete. All earlier `nwq@v100` records were cancelled at zero runtime on 2026-07-23, and no scientific artifact was produced. The canonical launch target is now `jhr@a100`, with separate `jhr` WORK and SCRATCH roots. Runtime setup job `83591` is priority-pending on `prepost`; claim-bearing submission requires setup and the exact-commit A100 preflight to pass first.
 
 The A100 chain retains the same scientific dependency contract:
 
