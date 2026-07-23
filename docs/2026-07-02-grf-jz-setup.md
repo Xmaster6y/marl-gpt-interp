@@ -2,7 +2,7 @@
 
 ## Runtime Contract
 
-The canonical cluster environment uses Python 3.12.11, PyTorch 2.8, the repository's pinned GRF wheel, and the `grf` dependency group. `just grf-install-jz` prepares the runtime. The primary GPU target is `jhr@a100`; every GPU job loads `arch/a100` before using the project environment. CLT training depends only on PyTorch and no longer installs the former SAE/dictionary-learning stack.
+The canonical cluster environment uses Python 3.12.11, PyTorch 2.8, the repository's pinned GRF wheel, and the `grf` dependency group. The [runtime setup job](experiments/to-launch/2026-07-23-jhr-a100-runtime-setup.slurm) runs `just grf-install-jz` on `prepost`; do not perform the metadata-heavy installation on a shared login node. The primary GPU target is `jhr@a100`; every GPU job loads `arch/a100` before using the project environment. CLT training depends only on PyTorch and no longer installs the former SAE/dictionary-learning stack.
 
 The Git checkout and installed environment remain on `$WORK`:
 
